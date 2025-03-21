@@ -18,7 +18,7 @@ const submitFeedback = async (req, res, next) => {
     }
 };
 
-const getEventFeedback = async (req, res, next) => {
+const getEventFeedbacks = async (req, res, next) => {
     try {
         const feedbacks = await Feedback.find({ eventId: req.params.eventId });
 
@@ -28,4 +28,4 @@ const getEventFeedback = async (req, res, next) => {
     }
 };
 
-export { submitFeedback, getEventFeedback };
+export { submitFeedback, getEventFeedbacks };

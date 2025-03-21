@@ -1,4 +1,4 @@
-import { User } from "../models/user.model.js";
+import { User } from "../models/volunteer.model.js";
 import { generateForgotPasswordEmailTemplate } from "../utils/emailTemplates.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { sendToken } from "../utils/sendToken.js";
