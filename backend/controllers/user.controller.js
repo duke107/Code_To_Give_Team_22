@@ -148,7 +148,7 @@ export const forgotPassword= async(req,res)=>{
     });
     
     if (!user) {
-        return next(new ErrorHandler("Invalid email.", 400));
+        return res.status(400).json({success:false,message:"Invalid email"})
     }
     
     const resetToken = user.getResetPasswordToken();
@@ -205,7 +205,7 @@ export const resetPassword=async(req,res)=>{
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     await user.save();
-    sendToken(user,200,"Password reset successfully",res);
+    return res.status(200).json({success:true,message:"Password reset successfully."})
 
 
 }

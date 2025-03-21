@@ -69,8 +69,61 @@ const authSlice = createSlice({
             state.loading = false;
             state.error = action.payload;
         },
+        resetAuthSlice(state) {
+            state.error = null;
+            state.loading = false;
+            state.message = null;
+            state.user = state.user;
+            state.isAuthenticated = state.isAuthenticated;
+        },
+        getUserRequest(state) {
+            state.loading = true;
+            state.error = null;
+            state.message = null;
+        },
+        getUserSuccess(state, action) {
+            state.loading = false;
+            state.user = action.payload.user;
+            state.isAuthenticated = true;
+        },
+        getUserFailed(state) {
+            state.loading = false;
+            state.user = null;
+            state.isAuthenticated = false;
+        },
+        forgotPasswordRequest(state) {
+            state.loading = true;
+            state.error = null;
+            state.message = null;
+        },
+        forgotPasswordSuccess(state, action) {
+            state.loading = false;
+            state.message = action.payload.message;
+        },
+        forgotPasswordFailed(state,action) {
+            state.loading = false;
+            state.error = action.payload;
+        },
+        resetPasswordRequest(state) {
+            state.loading = true;
+            state.error = null;
+            state.message = null;
+        },
+        resetPasswordSuccess(state, action) {
+            state.loading = false;
+            state.message = action.payload.message;
+        },
+        resetPasswordFailed(state) {
+            state.loading = false;
+            state.error = action.payload;
+        },
+
     }
 });
+
+export const resetAuthSlice = () => (dispatch) => {
+    dispatch(authSlice.actions.resetAuthSlice());
+  };
 
 export const register = (data) => async (dispatch) => {
     dispatch(authSlice.actions.registerRequest());
@@ -128,14 +181,69 @@ export const logout = () => async (dispatch) => {
     await axios
         .get("http://localhost:3000/api/v1/auth/logout", {
             withCredentials: true,
-            headers: {
-                "Content-Type": "application/json",
-            },
         })
         .then((res) => {
-            dispatch(authSlice.actions.logoutSuccess());
+            dispatch(authSlice.actions.logoutSuccess(res.data.message));
+            dispatch(authSlice.actions.resetAuthSlice())
         })
         .catch((error) => {
             dispatch(authSlice.actions.logoutFailed(error.response.data.message));
         });
 };
+
+export const getUser = () => async (dispatch) => {
+    dispatch(authSlice.actions.getUserRequest());
+    await axios
+        .get("http://localhost:3000/api/v1/auth/profile", {
+            withCredentials: true,
+        })
+        .then((res) => {
+            dispatch(authSlice.actions.getUserSuccess(res.data));
+        })
+        .catch((error) => {
+            dispatch(authSlice.actions.getUserFailed(error.response.data.message));
+        });
+};
+
+export const forgotPassword = (email) => async (dispatch) => {
+    dispatch(authSlice.actions.forgotPasswordRequest());
+    await axios
+        .post("http://localhost:3000/api/v1/auth/password/forgot", { email }, {
+            withCredentials: true,
+            headers: {
+                "Content-Type": "application/json",
+            },
+        })
+        .then((res) => {
+            dispatch(authSlice.actions.forgotPasswordSuccess(res.data));
+        })
+        .catch((error) => {
+            dispatch(authSlice.actions.forgotPasswordFailed(error?.response?.data?.message || "Something went wrong"));
+        });
+};
+
+
+export const resetPassword = (data, token) => async (dispatch) => {
+    dispatch(authSlice.actions.resetPasswordRequest());
+    await axios
+        .put(
+            `http://localhost:3000/api/v1/auth/password/reset/${token}`,
+            data,
+            {
+                withCredentials: true,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        )
+        .then((res) => {
+            dispatch(authSlice.actions.resetPasswordSuccess(res.data));
+        })
+        .catch((error) => {
+            dispatch(
+                authSlice.actions.resetPasswordFailed(error.response.data.message)
+            );
+        });
+};
+
+export default  authSlice.reducer;
