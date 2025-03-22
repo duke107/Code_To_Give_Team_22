@@ -17,6 +17,7 @@ import MainLayout from './components/MainLayout'
 import React, { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { getUser } from './redux/slices/authSlice'
+import Event from './components/Event'
 
 function App() {
   const dispatch = useDispatch()
@@ -38,7 +39,7 @@ function App() {
           <Route path="/events" element={<Events />} />
           <Route path="/change-details" element={<ChangeDetails />} />
           <Route path="/create" element={<CreateEvent />} />
-          <Route path="/event/:slug" element={<ChangeDetails />} />
+          <Route path="/event/:slug" element={<Event />} />
         </Route>
 
         <Route path="/login" element={<Login />} />

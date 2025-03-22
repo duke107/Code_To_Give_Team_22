@@ -47,7 +47,7 @@ function Events() {
   };
 
   const handleViewEvent = (slug) => {
-    navigate(`/post/${slug}`);
+    navigate(`/event/${slug}`);
   };
 
   return (
