@@ -1,22 +1,38 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose from "mongoose";
 
-const eventSchema = new Schema({
-    title: {
-        type: String,
-        required: true
-    },
-    description: {
-        type: String,
-        required: true
-    },
-    startDate: {
-        type: Date,
-        required: true
-    },
-    endDate: {
-        type: Date,
-        required: true
-    }
-}, { timestamps: true });
+// Sub-schema for volunteering positions
+const VolunteeringPositionSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  slots: { type: Number, required: true },
+});
 
-export const Event = mongoose.model("Event", eventSchema);
+// Main event schema
+const EventSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true },
+    slug: { type: String, unique: true },
+    content: { type: String },
+    image: { type: String },
+    eventLocation: { type: String, required: true },
+    eventStartDate: { type: Date, required: true },
+    eventEndDate: { type: Date, required: true },
+    volunteeringPositions: [VolunteeringPositionSchema],
+    // New field to store the user who created the event.
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  },
+  { timestamps: true }
+);
+
+// Pre-validate hook to create a slug from the title
+EventSchema.pre("validate", function (next) {
+  if (this.title) {
+    this.slug = this.title
+      .split(" ")
+      .join("-")
+      .toLowerCase()
+      .replace(/[^a-zA-Z0-9-]/g, "");
+  }
+  next();
+});
+
+export default mongoose.model("Event", EventSchema);

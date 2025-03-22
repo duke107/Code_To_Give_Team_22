@@ -1,7 +1,9 @@
-import { Volunteer } from "../models/volunteer.model.js";
+import { Admin } from "../models/admin.model.js";
+import { Organizer } from "../models/organizer.model.js";
 import { sendToken } from "../utils/sendToken.js";
 import { sendVerificationCode } from "../utils/sendVerificationCode.js";
 import { sendPasswordReset } from "../utils/sendPasswordReset.js";
+import { sendOrganizerApprovalRequest } from "../utils/sendOrganizerApprovalRequest.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
@@ -21,16 +23,16 @@ export const register = async (req, res) => {
             });
         }
         const hashedPassword = await bcrypt.hash(password, 10);
-        const volunteer = await Volunteer.create({ 
+        const organizer = await Organizer.create({ 
             name, phone, email, password: hashedPassword, skills, location, availability
         });
-        const verificationCode = await volunteer.generateVerificationCode();
+        const verificationCode = await organizer.generateVerificationCode();
         return await sendVerificationCode(verificationCode, email, res);
     } catch (error) {
         if (error.code === 11000) {
             return res.status(409).json({
                 success: false,
-                message: "Volunteer already exists"
+                message: "Organizer already exists"
             });
         } else {
             console.log("Something went wrong", error.stack);
@@ -51,23 +53,23 @@ export const mailVerificationCode = async (req, res) => {
                 message: "Provide email" 
             });
         }
-        const volunteer = await Volunteer.findOne({ email });
+        const organizer = await Organizer.findOne({ email });
 
-        if(!volunteer) {
+        if(!organizer) {
             return res.status(404).json({ 
                 success: false, 
-                message: "No volunteer found"                 
+                message: "No organizer found"                 
             });
         }
 
-        if(volunteer.emailVerified) {
+        if(organizer.emailVerified) {
             return res.status(409).json({ 
                 success: false, 
                 message: "Email has already been verified"                 
             });
         }
 
-        const verificationCode = await volunteer.generateVerificationCode();
+        const verificationCode = await organizer.generateVerificationCode();
         return await sendVerificationCode(verificationCode, email, res);
     } catch(error) {
         console.log("Something went wrong", error.stack);
@@ -88,23 +90,23 @@ export const verifyVerificationCode = async (req, res) => {
             });
         }
 
-        const volunteer = await Volunteer.findOne({ email });
+        const organizer = await Organizer.findOne({ email });
 
-        if(!volunteer) {
+        if(!organizer) {
             return res.status(404).json({ 
                 success: false, 
-                message: "No volunteer found" 
+                message: "No organizer found" 
             });
         }
 
-        if(volunteer.emailVerified) {
+        if(organizer.emailVerified) {
             return res.status(409).json({ 
                 success: false, 
                 message: "Email has already been verified" 
             });
         }
 
-        if(volunteer.verificationCode !== Number(verificationCode)) {
+        if(organizer.verificationCode !== Number(verificationCode)) {
             return res.status(401).json({ 
                 success: false, 
                 message: "Incorrect verification code" 
@@ -112,7 +114,7 @@ export const verifyVerificationCode = async (req, res) => {
         }
 
         const currentTime = Date.now();
-        const verificationCodeExpireTime = new Date(volunteer.verificationCodeExpire);
+        const verificationCodeExpireTime = new Date(organizer.verificationCodeExpire);
 
         if(currentTime > verificationCodeExpireTime) {
             return res.status(410).json({ 
@@ -121,10 +123,10 @@ export const verifyVerificationCode = async (req, res) => {
             });
         }
 
-        volunteer.verificationCode = null;
-        volunteer.verificationCodeExpire = null;
-        volunteer.emailVerified = true;
-        await volunteer.save({ validateModifiedOnly: true });
+        organizer.verificationCode = null;
+        organizer.verificationCodeExpire = null;
+        organizer.emailVerified = true;
+        await organizer.save({ validateModifiedOnly: true });
 
         return res.status(200).json({ 
             success: true, 
@@ -148,16 +150,16 @@ export const login = async (req, res) => {
                 message: "Provide email and password" 
             });
         }
-        const volunteer = await Volunteer.findOne({ email, emailVerified: true }).select("+password");
+        const organizer = await Organizer.findOne({ email, emailVerified: true }).select("+password");
 
-        if (!volunteer) {
+        if (!organizer) {
             return res.status(401).json({ 
                 sucess: false, 
                 message: "Incorrect email or password" 
             });
         }
 
-        const isPasswordMatched = await bcrypt.compare(password, volunteer.password);
+        const isPasswordMatched = await bcrypt.compare(password, organizer.password);
 
         if (!isPasswordMatched) {
             return res.status(401).json({ 
@@ -165,7 +167,7 @@ export const login = async (req, res) => {
                 message: "Incorrect email or password" 
             });
         }
-        sendToken(volunteer, 200, "Volunteer logged in successfully", res);
+        sendToken(organizer, 200, "Organizer logged in successfully", res);
     } catch (error) {
         console.log("Something went wrong", error.stack);
         return res.status(500).json({
@@ -175,17 +177,17 @@ export const login = async (req, res) => {
     }
 };
 
-export const getVolunteer = async (req, res) => {  
+export const getOrganizer = async (req, res) => {  
     try {
         const { id } = req;
-        const volunteer = await Volunteer.findById(id);
-        if (!volunteer) {
+        const organizer = await Organizer.findById(id);
+        if (!organizer) {
             return res.status(404).json({ 
                 success: false, 
-                message: "Volunteer not found" 
+                message: "Organizer not found" 
             });
         }
-        return res.status(200).json({ volunteer });
+        return res.status(200).json({ organizer });
     } catch (error) {
         console.log("Something went wrong", error.stack);
         return res.status(500).json({
@@ -198,18 +200,18 @@ export const getVolunteer = async (req, res) => {
 export const mailPasswordReset = async (req, res) => {
     try {
         const { email } = req.body;
-        const volunteer = await Volunteer.findOne({
+        const organizer = await Organizer.findOne({
             email,
             emailVerified: true,
         });
         
-        if (!volunteer) {
+        if (!organizer) {
             return res.status(404).json({
                 success: false,
-                message: "No volunteer found"
+                message: "No organizer found"
             });
         }
-        const resetToken = await volunteer.generateResetPasswordToken();
+        const resetToken = await organizer.generateResetPasswordToken();
         const resetPasswordUrl = `${process.env.FRONTEND_URL}/password/reset/${resetToken}`;
         return await sendPasswordReset(resetPasswordUrl, email, res);
     } catch (error) {
@@ -235,15 +237,15 @@ export const verifyPasswordReset = async (req, res) => {
             });
         }
 
-        const volunteer = await Volunteer.findOne({ email });
-        if(!volunteer) {
+        const organizer = await Organizer.findOne({ email });
+        if(!organizer) {
             return res.status(404).json({ 
                 success: false, 
-                message: "No volunteer found" 
+                message: "No organizer found" 
             });
         }
 
-        if(resetPasswordToken !== volunteer.resetPasswordToken) {
+        if(resetPasswordToken !== organizer.resetPasswordToken) {
             return res.status(401).json({ 
                 success: false, 
                 message: "Incorrect reset password token" 
@@ -251,7 +253,7 @@ export const verifyPasswordReset = async (req, res) => {
         }
 
         const currentTime = Date.now();
-        const resetPasswordTokenExpireTime = new Date(volunteer.resetPasswordTokenExpire);
+        const resetPasswordTokenExpireTime = new Date(organizer.resetPasswordTokenExpire);
 
         if(currentTime > resetPasswordTokenExpireTime) {
             return res.status(410).json({ 
@@ -276,10 +278,10 @@ export const verifyPasswordReset = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
-        volunteer.password = hashedPassword;
-        volunteer.resetPasswordToken = null;
-        volunteer.resetPasswordTokenExpire = null;
-        await volunteer.save();
+        organizer.password = hashedPassword;
+        organizer.resetPasswordToken = null;
+        organizer.resetPasswordTokenExpire = null;
+        await organizer.save();
 
         return res.status(200).json({
             success:true,
@@ -308,4 +310,47 @@ export const logout = async (req, res) => {
                 message: "Something went wrong"
             });
         }
+};
+
+export const sendApproveRequest = async (req, res) => {
+    try {
+        const { id } = req;
+        const organizer = await Organizer.findById(id);
+        if (!organizer) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Organizer not found" 
+            });
+        }
+
+        if (organizer.accountVerified) {
+            return res.status(409).json({ 
+                success: false, 
+                message: "Organizer has already been approved" 
+            });
+        }
+
+        const admin = Admin.findOne({ email: process.env.ADMIN_EMAIL });
+        if (!admin) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Admin not found" 
+            });
+        }
+        admin.pendingApprovals.push(organizer);
+        await admin.save();
+        return await sendOrganizerApprovalRequest(
+            organizer.name,
+            organizer.email,
+            process.env.ADMIN_EMAIL,
+            res
+        );
+
+    } catch (error) {
+        console.log("Something went wrong", error.stack);
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong"
+        });
+    }
 };
