@@ -12,6 +12,7 @@ import notificationRouter from "./routes/notification.route.js"
 import feedbackRouter from "./routes/feedback.route.js"
 import donationRouter from "./routes/donation.route.js"
 import volunteerRouter from "./routes/volunteer.route.js";
+import organizerRouter from "./routes/organizer.route.js";
 
 export const app = express();
 
@@ -34,6 +35,7 @@ app.use("/api/v1/notification", notificationRouter)
 app.use("/api/v1/feedback", feedbackRouter)
 app.use("/api/v1/donate", donationRouter)
 app.use("/api/v1/volunteer", volunteerRouter);
+app.use("/api/v1/organizer", organizerRouter);
 connectDB()
 
 // app.listen(3000, () => {

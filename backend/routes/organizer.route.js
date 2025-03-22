@@ -1,5 +1,5 @@
 import express from "express"
-import { register, mailVerificationCode, verifyVerificationCode, login, getVolunteer, mailPasswordReset, verifyPasswordReset, logout } from "../controllers/volunteer.controller.js";
+import { register, mailVerificationCode, verifyVerificationCode, login, getOrganizer, mailPasswordReset, verifyPasswordReset, logout } from "../controllers/organizer.controller.js";
 import { isAuthenticated } from "../middlewares/auth2.middleware.js";
 
 const router = express.Router();
@@ -9,7 +9,7 @@ router.post("/mail-verification-code", mailVerificationCode);
 router.post("/verify-verification-code", verifyVerificationCode);
 router.post("/login", login);
 router.get("/logout", isAuthenticated, logout);
-router.get("/profile", isAuthenticated, getVolunteer);
+router.get("/profile", isAuthenticated, getOrganizer);
 router.post("/password/forgot", mailPasswordReset);
 router.put("/password/reset/:token", verifyPasswordReset);
 
