@@ -1,57 +1,59 @@
-import Razorpay from 'razorpay'
-import  dotenv from "dotenv";
-dotenv.config();
-const RAZORPAY_ID_KEY=process.env.RAZORPAY_ID_KEY
-const RAZORPAY_SECRET_KEY=process.env.RAZORPAY_SECRET_KEY;
-const razorpayInstance = new Razorpay({
-    key_id: RAZORPAY_ID_KEY,
-    key_secret: RAZORPAY_SECRET_KEY
-});
+import stripe from "stripe";
+import dotenv from "dotenv";
+import { Donation } from "../models/donation.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
-export const renderProductPage = async(req,res)=>{
+dotenv.config({ path: "./config/config.env" });
 
+const stripeInstance = stripe(process.env.STRIPE_SECRET_KEY);
+
+const makeDonation = async (req, res, next) => {
     try {
-        
-        res.render('product');
+        const { amount, donorName, email, message } = req.body;
 
-    } catch (error) {
-        console.log(error.message);
-    }
-
-}
-
-export const createOrder = async(req,res)=>{
-    try {
-        const amount = req.body.amount*100
-        const options = {
-            amount: amount,
-            currency: 'INR',
-            receipt: 'razorUser@gmail.com'
+        if (!amount || !donorName || !email) {
+            return next(new ApiError(400, "Amount, donor name, and email are required"));
         }
 
-        razorpayInstance.orders.create(options, 
-            (err, order)=>{
-                if(!err){
-                    res.status(200).send({
-                        success:true,
-                        msg:'Order Created',
-                        order_id:order.id,
-                        amount:amount,
-                        key_id:RAZORPAY_ID_KEY,
-                        product_name:req.body.name,
-                        description:req.body.description,
-                        contact:"0000000007",
-                        name: "Ash):here",
-                        email: "sayHiToAsh@gmail.com"
-                    });
-                }
-                else{
-                    res.status(400).send({success:false,msg:'Something went wrong!'});
-                }
-            }
+        const paymentIntent = await stripeInstance.paymentIntents.create({
+            amount: amount * 100,
+            currency: "INR",
+            receipt_email: email,
+            metadata: { donorName, message },
+            payment_method_types: ["card"],  //payment method needed for stripe
+        });
+
+        const newDonation = new Donation({
+            donorName,
+            email,
+            amount,
+            orderId: paymentIntent.id,
+            paymentId: paymentIntent.id,  //*using orderid as payment id becuase its unique
+            status: "created",
+            message: message || "Supporting a good cause",
+        });
+
+        await newDonation.save();
+        //saving the payment details to db
+
+        return res.status(200).json(
+            new ApiResponse(200, {
+                order_id: paymentIntent.id,
+                amount,
+                currency: "INR",
+                key_id: process.env.STRIPE_PUBLISHABLE_KEY,
+                donorName,
+                email,
+                message: message || "Supporting a good cause",
+                clientSecret: paymentIntent.client_secret,
+            }, "Donation initiated successfully")
         );
 
     } catch (error) {
-        console.log(error.message);
+        console.error("Error in initialising Donation:", error);
+        return next(new ApiError(500, "Error initiating donation"));
     }
-}
+};
+
+export default makeDonation;
