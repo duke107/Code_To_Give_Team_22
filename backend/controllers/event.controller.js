@@ -1,4 +1,9 @@
 import Event from '../models/event.model.js'
+
+import { User } from '../models/user.model.js'; // adjust the path as needed
+import { Task } from '../models/task.model.js';
+import mongoose from 'mongoose';
+
 // Create a new event
 export const createEvent = async (req, res) => {
   try {
@@ -47,21 +52,48 @@ export const createEvent = async (req, res) => {
 };
 
 
-
-// Get an event by slug
 export const getEventBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
     const event = await Event.findOne({ slug })
-      .populate('createdBy', 'name email') // populates createdBy with only name and email fields
-      .populate('registeredVolunteers', 'name email') // populates global registered volunteers
-      .populate('volunteeringPositions.registeredUsers', 'name email'); // populates each position's registeredUsers
+      .populate('createdBy', 'name email')
+      .populate('registeredVolunteers', 'name email')
+      .populate('volunteeringPositions.registeredUsers', 'name email');
 
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
-    
-    return res.status(200).json(event);
+
+    // Convert event to plain object for modification
+    const eventObj = event.toObject();
+
+    // For each volunteering position, attach tasks for each registered volunteer.
+    await Promise.all(
+      eventObj.volunteeringPositions.map(async (position) => {
+        position.registeredUsers = await Promise.all(
+          position.registeredUsers.map(async (volunteer) => {
+            const volunteerIdStr = volunteer._id.toString();
+            const eventIdStr = eventObj._id.toString();
+            console.log('Fetching tasks for volunteer:', volunteerIdStr, 'and event:', eventIdStr);
+            const eventObjectId = new mongoose.Types.ObjectId(eventIdStr);
+            const volunteerObjectId = new mongoose.Types.ObjectId(volunteerIdStr);
+
+            const tasks = await Task.find(
+              {
+                event: eventObjectId,
+                assignedTo: volunteerObjectId
+              },
+              "description status"
+            );
+            console.log('Found tasks:', tasks);
+            return { ...volunteer, tasks };
+          })
+        );
+        return position;
+      })
+    );
+
+    return res.status(200).json(eventObj);
   } catch (error) {
     console.error("Error fetching event:", error);
     return res.status(500).json({ message: "Server error", error: error.message });
@@ -128,6 +160,7 @@ export const getEvents = async (req, res) => {
   }
 };
 
+
 export const registerVolunteer = async (req, res) => {
   try {
     const { id, positionId } = req.body; // expecting volunteer id and position id
@@ -166,9 +199,131 @@ export const registerVolunteer = async (req, res) => {
     }
 
     await event.save();
+
+    // Now, update the user document to include this event in the user's events array
+    const userDoc = await User.findById(id);
+    if (userDoc) {
+      const alreadyRegistered = userDoc.events.some(
+        (e) => e.eventId.toString() === event._id.toString()
+      );
+      if (!alreadyRegistered) {
+        userDoc.events.push({
+          eventId: event._id,
+          eventDate: new Date(),
+          tasks: [] // initialize with an empty array for tasks
+        });
+        await userDoc.save();
+      }
+    }
+
     return res.status(200).json({ success: true, message: "Volunteer registered" });
   } catch (error) {
     console.error("Error registering volunteer:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+
+export const assignTask = async (req, res) => {
+  try {
+    const { volunteerId, eventId, tasks } = req.body;
+
+    // Validate required fields
+    if (!volunteerId || !eventId || !tasks || !Array.isArray(tasks)) {
+      return res.status(400).json({ message: "Missing required fields or tasks is not an array" });
+    }
+
+    // Filter out any tasks with empty descriptions
+    const validTasks = tasks
+      .map(task => task.description.trim())
+      .filter(desc => desc);
+
+    if (validTasks.length === 0) {
+      return res.status(400).json({ message: "Please provide at least one valid task description." });
+    }
+
+    // Create tasks for each valid description
+    const createdTasks = [];
+    for (const description of validTasks) {
+      const task = await Task.create({
+        event: eventId,
+        assignedTo: volunteerId,
+        description,
+        status: 'pending', // default status
+      });
+      createdTasks.push(task);
+    }
+
+    // Find the user document for the volunteer
+    const user = await User.findById(volunteerId);
+    if (!user) {
+      return res.status(404).json({ message: "Volunteer not found" });
+    }
+
+    // Find the event entry in the user's events array
+    let userEvent = user.events.find(
+      (ev) => ev.eventId.toString() === eventId.toString()
+    );
+
+    // Prepare an array of task references to add
+    const taskRefs = createdTasks.map(task => ({ taskId: task._id }));
+
+    if (userEvent) {
+      // If the event entry exists, push all new tasks' references
+      userEvent.tasks.push(...taskRefs);
+    } else {
+      // If not, create a new event entry with the tasks
+      user.events.push({
+        eventId,
+        eventDate: new Date(),
+        tasks: taskRefs,
+      });
+    }
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Tasks assigned successfully",
+      tasks: createdTasks
+    });
+  } catch (error) {
+    console.error("Error assigning task:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const updateTaskStatus = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { status } = req.body;
+    console.log('====================================');
+    console.log("here");
+    console.log('====================================');
+
+    // Validate that status is provided and is one of the allowed values
+    if (!status) {
+      return res.status(400).json({ message: "Status is required." });
+    }
+    if (!['pending', 'completed'].includes(status)) {
+      return res.status(400).json({ message: "Invalid status value. Must be 'pending' or 'completed'." });
+    }
+
+    // Update the task with the new status
+    const updatedTask = await Task.findByIdAndUpdate(
+      taskId,
+      { status },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedTask) {
+      return res.status(404).json({ message: "Task not found." });
+    }
+
+    return res.status(200).json({ message: "Task status updated successfully", task: updatedTask });
+  } catch (error) {
+    console.error("Error updating task status:", error);
     return res.status(500).json({ message: "Server error", error: error.message });
   }
 };

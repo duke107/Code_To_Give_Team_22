@@ -13,14 +13,13 @@ import feedbackRouter from "./routes/feedback.route.js"
 import donationRouter from "./routes/donation.route.js"
 import volunteerRouter from "./routes/volunteer.route.js";
 import organizerRouter from "./routes/organizer.route.js";
-
 export const app = express();
 
 config({path:"./config/config.env"});
 
 app.use(cors({
     origin:["http://localhost:5173"],
-    methods:["GET","POST","PUT","DELETE"],
+    methods:["GET","POST","PUT","DELETE","PATCH"],
     credentials:true,
 }));
 
