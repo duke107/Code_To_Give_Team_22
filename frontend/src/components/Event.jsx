@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 function Event() {
-  const { slug } = useParams(); // Extract 'slug' from URL
+  const { slug } = useParams();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [registering, setRegistering] = useState(false);
+  const [message, setMessage] = useState(null);
+  const state = useSelector((state) => state.auth);
 
   useEffect(() => {
     const fetchEventDetails = async () => {
@@ -13,14 +17,16 @@ function Event() {
         const res = await fetch(`http://localhost:3000/api/v1/events/${slug}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          credentials: 'include'
         });
+        
 
         if (!res.ok) {
           throw new Error(`Error ${res.status}: ${res.statusText}`);
         }
 
         const data = await res.json();
+        console.log(data);
         setEvent(data);
       } catch (err) {
         setError(err.message);
@@ -31,6 +37,35 @@ function Event() {
 
     fetchEventDetails();
   }, [slug]);
+
+  const handleRegister = async () => {
+    if (!event) return;
+    setRegistering(true);
+    setMessage(null);
+    console.log(state.user._id);
+    try {
+      const res = await fetch(`http://localhost:3000/api/v1/events/${slug}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ id: state.user._id }), // Sending ID in the body
+      });
+
+      const data = await res.json();
+      if (res.status === 409) {
+        setMessage({ type: 'info', text: 'Already registered' });
+        return;        
+      }
+      if (!res.ok) {
+        throw new Error(data.message || `Error ${res.status}`);
+      }
+      else setMessage({ type: 'success', text: 'Successfully registered for the event!' });
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setRegistering(false);
+    }
+  };
 
   if (loading) return <p className="text-center text-gray-500">Loading event details...</p>;
   if (error) return <p className="text-center text-red-500">Error: {error}</p>;
@@ -65,6 +100,28 @@ function Event() {
       )}
 
       <p className="text-gray-500 mt-4 text-sm">Created by: {event.createdBy?.name || "Unknown"}</p>
+
+      {/* Register Button */}
+      <button
+        className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:bg-gray-400"
+        onClick={handleRegister}
+        disabled={registering}
+      >
+        {registering ? "Registering..." : "Register for Event"}
+      </button>
+
+      {/* Show Registration Message */}
+      {message && (
+        <p className={`mt-3 text-center ${
+          message.type === 'success' 
+            ? 'text-green-600' 
+            : (message.type === 'info' 
+            ? 'text-yellow-600' 
+            : 'text-red-600')
+        }`}>
+          {message.text}
+        </p>
+      )}
     </div>
   );
 }

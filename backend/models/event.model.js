@@ -17,6 +17,7 @@ const EventSchema = new mongoose.Schema(
     eventStartDate: { type: Date, required: true },
     eventEndDate: { type: Date, required: true },
     volunteeringPositions: [VolunteeringPositionSchema],
+    registeredVolunteers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     // New field to store the user who created the event.
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },
