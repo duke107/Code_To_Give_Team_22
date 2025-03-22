@@ -20,6 +20,7 @@ import React, { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { getUser } from './redux/slices/authSlice'
 import Event from './components/Event'
+import FullStory from './pages/FullStory'
 
 function App() {
   const dispatch = useDispatch()
@@ -30,8 +31,8 @@ function App() {
 
   return (
     <Router>
+      <TranslateButton/>
       <Routes>
-        <TranslateButton/>
         {/* Routes that require Header & Footer */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
@@ -43,6 +44,8 @@ function App() {
           <Route path="/change-details" element={<ChangeDetails />} />
           <Route path="/create" element={<CreateEvent />} />
           <Route path="/event/:slug" element={<Event />} />
+          <Route path="/gallery" element={<Gallery />} />
+          <Route path="/stories/:id" element={<FullStory />} />
         </Route>
 
         <Route path="/login" element={<Login />} />

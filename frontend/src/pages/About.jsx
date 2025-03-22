@@ -1,14 +1,18 @@
-import React from 'react'
+import React from "react";
+import AboutPeople from "../components/AboutPeople";
+import AboutStats from "../components/AboutStats";
+import AboutMission from "../components/AboutMission";
+import AboutGraph from "../components/AboutGraph";
 
-function About() {
+const About = () => {
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <h1 className="text-4xl font-bold text-gray-800 mb-4">About Us</h1>
-      <p className="text-gray-700 max-w-3xl mx-auto">
-        This page provides an overview of our mission, history, and the impact we create in the community.
-      </p>
+    <div>
+      <AboutMission />
+      <AboutPeople />
+      <AboutStats />
+      <AboutGraph />
     </div>
-  )
-}
+  );
+};
 
-export default About
+export default About;

@@ -92,9 +92,10 @@ export const login = async (req, res) => {
     const {email,password} =req.body;
     if(!email || !password){
       return res.status(400).json({ msg: "Please fill in all fields" });
-    }
+        }
+        console.log(email)
     const user = await User.findOne({ email, accountVerified: true }).select("+password");
-
+    console.log(user)
     if (!user) {
 
         return res.status(400).json({ msg: "User not found" });
