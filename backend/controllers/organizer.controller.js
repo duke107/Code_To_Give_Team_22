@@ -1,13 +1,15 @@
+import { Admin } from "../models/admin.model.js";
 import { Organizer } from "../models/organizer.model.js";
 import { sendToken } from "../utils/sendToken.js";
 import { sendVerificationCode } from "../utils/sendVerificationCode.js";
 import { sendPasswordReset } from "../utils/sendPasswordReset.js";
+import { sendOrganizerApprovalRequest } from "../utils/sendOrganizerApprovalRequest.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
 export const register = async (req, res) => {
     try {
-        const { name, phone, email, password, location } = req.body;
+        const { name, phone, email, password, skills, location, availability } = req.body;
         if (!name || !phone || !email || !password || !location) {
             return res.status(400).json({ 
                 success: false,
@@ -22,7 +24,7 @@ export const register = async (req, res) => {
         }
         const hashedPassword = await bcrypt.hash(password, 10);
         const organizer = await Organizer.create({ 
-            name, phone, email, password: hashedPassword, location
+            name, phone, email, password: hashedPassword, skills, location, availability
         });
         const verificationCode = await organizer.generateVerificationCode();
         return await sendVerificationCode(verificationCode, email, res);
@@ -54,15 +56,15 @@ export const mailVerificationCode = async (req, res) => {
         const organizer = await Organizer.findOne({ email });
 
         if(!organizer) {
-            return res.status(400).json({ 
+            return res.status(404).json({ 
                 success: false, 
                 message: "No organizer found"                 
             });
         }
 
         if(organizer.emailVerified) {
-            return res.status(200).json({ 
-                success: true, 
+            return res.status(409).json({ 
+                success: false, 
                 message: "Email has already been verified"                 
             });
         }
@@ -91,21 +93,21 @@ export const verifyVerificationCode = async (req, res) => {
         const organizer = await Organizer.findOne({ email });
 
         if(!organizer) {
-            return res.status(400).json({ 
+            return res.status(404).json({ 
                 success: false, 
                 message: "No organizer found" 
             });
         }
 
         if(organizer.emailVerified) {
-            return res.status(200).json({ 
-                success: true, 
+            return res.status(409).json({ 
+                success: false, 
                 message: "Email has already been verified" 
             });
         }
 
         if(organizer.verificationCode !== Number(verificationCode)) {
-            return res.status(400).json({ 
+            return res.status(401).json({ 
                 success: false, 
                 message: "Incorrect verification code" 
             });
@@ -115,7 +117,7 @@ export const verifyVerificationCode = async (req, res) => {
         const verificationCodeExpireTime = new Date(organizer.verificationCodeExpire);
 
         if(currentTime > verificationCodeExpireTime) {
-            return res.status(400).json({ 
+            return res.status(410).json({ 
                 success: false, 
                 message: "Verification code expired" 
             });
@@ -126,7 +128,10 @@ export const verifyVerificationCode = async (req, res) => {
         organizer.emailVerified = true;
         await organizer.save({ validateModifiedOnly: true });
 
-        return res.status(200).json({ success: true, message: "Email successfully verified" });
+        return res.status(200).json({ 
+            success: true, 
+            message: "Email successfully verified" 
+        });
     } catch(error) {
         console.log("Something went wrong", error.stack);
         return res.status(500).json({
@@ -148,7 +153,7 @@ export const login = async (req, res) => {
         const organizer = await Organizer.findOne({ email, emailVerified: true }).select("+password");
 
         if (!organizer) {
-            return res.status(400).json({ 
+            return res.status(401).json({ 
                 sucess: false, 
                 message: "Incorrect email or password" 
             });
@@ -157,7 +162,7 @@ export const login = async (req, res) => {
         const isPasswordMatched = await bcrypt.compare(password, organizer.password);
 
         if (!isPasswordMatched) {
-            return res.status(400).json({ 
+            return res.status(401).json({ 
                 sucess: false, 
                 message: "Incorrect email or password" 
             });
@@ -175,12 +180,6 @@ export const login = async (req, res) => {
 export const getOrganizer = async (req, res) => {  
     try {
         const { id } = req;
-        if (!id) {
-            return res.status(400).json({
-                success: false,
-                message: "ID is required" 
-            });
-        }
         const organizer = await Organizer.findById(id);
         if (!organizer) {
             return res.status(404).json({ 
@@ -207,7 +206,7 @@ export const mailPasswordReset = async (req, res) => {
         });
         
         if (!organizer) {
-            return res.status(400).json({
+            return res.status(404).json({
                 success: false,
                 message: "No organizer found"
             });
@@ -240,14 +239,14 @@ export const verifyPasswordReset = async (req, res) => {
 
         const organizer = await Organizer.findOne({ email });
         if(!organizer) {
-            return res.status(400).json({ 
+            return res.status(404).json({ 
                 success: false, 
                 message: "No organizer found" 
             });
         }
 
         if(resetPasswordToken !== organizer.resetPasswordToken) {
-            return res.status(400).json({ 
+            return res.status(401).json({ 
                 success: false, 
                 message: "Incorrect reset password token" 
             });
@@ -257,7 +256,7 @@ export const verifyPasswordReset = async (req, res) => {
         const resetPasswordTokenExpireTime = new Date(organizer.resetPasswordTokenExpire);
 
         if(currentTime > resetPasswordTokenExpireTime) {
-            return res.status(400).json({ 
+            return res.status(410).json({ 
                 success: false, 
                 message: "Reset password token expired" 
             });
@@ -265,15 +264,15 @@ export const verifyPasswordReset = async (req, res) => {
 
         if(password !== confirmPassword) {
             return res.status(400).json({
-                success:false,
-                message:"Passwords do not match"
+                success: false,
+                message: "Passwords do not match"
             });
         }
 
-        if(password.length<8 || password.length>16){
+        if(password.length < 8 || password.length > 16){
             return res.status(400).json({
-                success:false,
-                message:"Password must be between 8 and 16 characters"
+                success: false,
+                message: "Password must be between 8 and 16 characters"
             });
         }
 
@@ -311,4 +310,47 @@ export const logout = async (req, res) => {
                 message: "Something went wrong"
             });
         }
+};
+
+export const sendApproveRequest = async (req, res) => {
+    try {
+        const { id } = req;
+        const organizer = await Organizer.findById(id);
+        if (!organizer) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Organizer not found" 
+            });
+        }
+
+        if (organizer.accountVerified) {
+            return res.status(409).json({ 
+                success: false, 
+                message: "Organizer has already been approved" 
+            });
+        }
+
+        const admin = Admin.findOne({ email: process.env.ADMIN_EMAIL });
+        if (!admin) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Admin not found" 
+            });
+        }
+        admin.pendingApprovals.push(organizer);
+        await admin.save();
+        return await sendOrganizerApprovalRequest(
+            organizer.name,
+            organizer.email,
+            process.env.ADMIN_EMAIL,
+            res
+        );
+
+    } catch (error) {
+        console.log("Something went wrong", error.stack);
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong"
+        });
+    }
 };
