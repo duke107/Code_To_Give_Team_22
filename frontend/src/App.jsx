@@ -33,7 +33,16 @@ const App = () => {
       <Router>
           <Routes>
             <Route element={<MainLayout />}>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Home />}>
+          {/* When the user visits '/', redirect them to '/dashboard' */}
+          <Route index element={<Navigate to="/dashboard" />} />
+
+          {/* Nested routes within Home */}
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="events" element={<Events />} />
+          <Route path="change-details" element={<ChangeDetails />} />
+          <Route path="/event/:slug" element={<ChangeDetails />} />
+        </Route>
             <Route path="/about" element={<About />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/donate" element={<Donate />} />
@@ -46,27 +55,7 @@ const App = () => {
           </Routes>
           <ToastContainer theme='dark'/>
       </Router>
-    <Router>
-      <Routes>
-      <Route path="/" element={<Home />}>
-          {/* When the user visits '/', redirect them to '/dashboard' */}
-          <Route index element={<Navigate to="/dashboard" />} />
-
-          {/* Nested routes within Home */}
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="events" element={<Events />} />
-          <Route path="change-details" element={<ChangeDetails />} />
-          <Route path="/event/:slug" element={<ChangeDetails />} />
-        </Route>
-        <Route path="/create" element={<CreateEvent />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/password/forgot" element={<ForgotPassword />} />
-        <Route path="/otp-verification/:email" element={<OTP />} />
-        <Route path="/password/reset/:token" element={<ResetPassword />} />
-      </Routes>
-      <ToastContainer theme='dark' />
-    </Router>
+   
   );
 };
 
