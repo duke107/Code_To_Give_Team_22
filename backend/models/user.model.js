@@ -43,9 +43,11 @@ const userSchema= new mongoose.Schema({
             ]
         }
       ],
-      avatar:{
-        public_id:String,
-        url:String,
+      avatar:{ type: String },
+      location: { type: String },
+      availability: {
+          weekdays: { type: Boolean, default: false },
+          weekends: { type: Boolean, default: false }
       },
       verificationCode: Number,
       verificationCodeExpire:Date,

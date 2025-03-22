@@ -172,6 +172,9 @@ export const login = (data) => async (dispatch) => {
             dispatch(authSlice.actions.loginSuccess(res.data));
         })
         .catch((error) => {
+            console.log('====================================');
+            console.log(error.message);
+            console.log('====================================');
             dispatch(authSlice.actions.loginFailed(error.response.data.message));
         });
 };

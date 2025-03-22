@@ -1,3 +1,4 @@
+import { log } from "console";
 import { User } from "../models/user.model.js";
 import { generateForgotPasswordEmailTemplate } from "../utils/emailTemplates.js";
 import { sendEmail } from "../utils/sendEmail.js";
@@ -209,4 +210,95 @@ export const resetPassword=async(req,res)=>{
 
 
 }
+
+export const updateUser = async (req, res) => {
+    try {
+        console.log('====================================');
+        console.log(req.body);
+        console.log('====================================');
+      const { user_id } = req.body;
+      if (!user_id) {
+        return res.status(400).json({ message: "No user_id provided" });
+      }
+      const user = await User.findById(user_id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+  
+
+      if (typeof req.body.location !== "undefined") {
+        user.location = req.body.location;
+      }
+  
+      if (typeof req.body.weekdays !== "undefined") {
+        user.availability.weekdays =
+          req.body.weekdays === "true" || req.body.weekdays === true;
+      }
+      if (typeof req.body.weekends !== "undefined") {
+        user.availability.weekends =
+          req.body.weekends === "true" || req.body.weekends === true;
+      }
+  
+      if (typeof req.body.avatarURL !== "undefined") {
+        user.avatar = req.body.avatarURL;
+      }
+  
+      await user.save();
+  
+      return res.status(200).json({
+        message: "User updated successfully",
+        user,
+      });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      return res.status(500).json({
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  };
+
+  export const updatePassword = async (req, res) => {
+    try {
+      const { user_id, oldPassword, newPassword } = req.body;
+  
+      // Basic validation
+      if (!user_id || !oldPassword || !newPassword) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+  
+      // Check new password length
+      if (newPassword.length < 8 || newPassword.length > 16) {
+        return res
+          .status(400)
+          .json({ message: "Password must be between 8 and 16 characters." });
+      }
+  
+      // Find user and include password field
+      const user = await User.findById(user_id).select("+password");
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+  
+      // Check if oldPassword is correct
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: "Old password is incorrect" });
+      }
+  
+      // Hash the new password
+      const saltRounds = 10; // Adjust as needed
+      const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+  
+      user.password = hashedPassword;
+      await user.save();
+  
+      return res.status(200).json({ message: "Password updated successfully" });
+    } catch (error) {
+      console.error("Error updating password:", error);
+      return res
+        .status(500)
+        .json({ message: "Server error", error: error.message });
+    }
+  };
 
