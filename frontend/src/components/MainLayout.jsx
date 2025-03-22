@@ -3,13 +3,13 @@ import { Outlet } from 'react-router-dom'
 import Header from './Header'
 import Footer from './Footer'
 
-function MainLayout() {
+const MainLayout = () => {
   return (
     <>
       <Header />
-      <main>
+      <div className="min-h-screen">
         <Outlet />
-      </main>
+      </div>
       <Footer />
     </>
   )
