@@ -45,3 +45,27 @@ export function generateForgotPasswordEmailTemplate(resetPasswordUrl){
     </footer>
 </div>`
 }
+
+export function generateOrganizerApprovalEmailTemplate(organizerName, organizerEmail) {
+    return `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #000; color: #fff;">
+
+    <h2 style="color: #fff; text-align: center;">Organizer Approval Request</h2>
+
+    <p style="font-size: 16px; color: #ccc;">Dear Admin,</p>
+
+    <p style="font-size: 16px; color: #ccc;">A new organizer has requested approval to join the platform. Below are the details:</p>
+
+    <div style="margin: 20px 0; padding: 15px; border: 1px solid #fff; border-radius: 5px; background-color: #111;">
+        <p style="font-size: 16px; color: #fff;"><strong>Name:</strong> ${organizerName}</p>
+        <p style="font-size: 16px; color: #fff;"><strong>Email:</strong> ${organizerEmail}</p>
+    </div>
+
+    <p style="font-size: 16px; color: #ccc;">Please review and take the necessary action.</p>
+
+    <footer style="margin-top: 20px; text-align: center; font-size: 14px; color: #666;">
+        <p>Thank you,<br>Bookblors Team</p>
+        <p style="font-size: 12px; color: #444;">This is an automated message. Please do not reply to this email.</p>
+    </footer>
+
+</div>`
+}

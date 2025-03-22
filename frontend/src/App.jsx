@@ -12,6 +12,11 @@ import OTP from './pages/OTP'
 import ResetPassword from './pages/ResetPassword'
 import { useDispatch, useSelector } from 'react-redux'
 import { getUser } from './redux/slices/authSlice'
+import About from './pages/About'
+import Gallery from './pages/Gallery'
+import Donate from './pages/Donate'
+import MainLayout from './components/MainLayout'
+
 import CreateEvent from './pages/CreateEvent'
 import Dashboard from './components/Dashboard'
 import Events from './components/Events'
@@ -25,6 +30,22 @@ const App = () => {
     dispatch(getUser());
   }, [])
   return (
+      <Router>
+          <Routes>
+            <Route element={<MainLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/gallery" element={<Gallery />} />
+            <Route path="/donate" element={<Donate />} />
+          </Route>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/password/forgot" element={<ForgotPassword />} />
+              <Route path="/otp-verification/:email" element={<OTP />} />
+              <Route path="/password/reset/:token" element={<ResetPassword />} />
+          </Routes>
+          <ToastContainer theme='dark'/>
+      </Router>
     <Router>
       <Routes>
       <Route path="/" element={<Home />}>
