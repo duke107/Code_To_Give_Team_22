@@ -23,6 +23,7 @@ import Event from './components/Event'
 import FullStory from './pages/FullStory'
 import EventOrganiser from './components/EventOrganiser'
 import EventsUser from './components/EventsUser'
+import ScreenReaderButton from './ScreenReaderButton'
 function App() {
   const dispatch = useDispatch();
 
@@ -38,6 +39,7 @@ function App() {
 
   return (
     <Router>
+      <ScreenReaderButton />
       <TranslateButton />
       <Routes>
         {/* Routes that require Header & Footer */}
