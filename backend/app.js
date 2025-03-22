@@ -10,6 +10,7 @@ import eventRouter from "./routes/event.route.js"
 import applicationRouter from "./routes/application.route.js"
 import notificationRouter from "./routes/notification.route.js"
 import feedbackRouter from "./routes/feedback.route.js"
+import volunteerRouter from "./routes/volunteer.route.js";
 
 export const app = express();
 
@@ -30,4 +31,9 @@ app.use("/api/v1/events", eventRouter)
 app.use("/api/v1/application", applicationRouter)
 app.use("/api/v1/notification", notificationRouter)
 app.use("/api/v1/feedback", feedbackRouter)
+app.use("/api/v1/volunteer", volunteerRouter);
 connectDB()
+
+app.listen(3000, () => {
+    console.log("Started listening at port 3000");
+});
