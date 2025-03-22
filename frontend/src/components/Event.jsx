@@ -9,6 +9,9 @@ function Event() {
   const [error, setError] = useState(null);
   const [registering, setRegistering] = useState(false);
   const [message, setMessage] = useState(null);
+  const [showModal, setShowModal] = useState(false); // Modal visibility state
+  const [selectedPositionId, setSelectedPositionId] = useState(null); // Selected position id
+  const [isRegistered, setIsRegistered] = useState(false); // Track registration status
   const state = useSelector((state) => state.auth);
 
   useEffect(() => {
@@ -20,14 +23,20 @@ function Event() {
           credentials: 'include'
         });
         
-
         if (!res.ok) {
           throw new Error(`Error ${res.status}: ${res.statusText}`);
         }
 
         const data = await res.json();
-        console.log(data);
         setEvent(data);
+
+        // Optionally, check if the user is already registered by scanning through registered volunteers
+        if (data.registeredVolunteers && state.user) {
+          const registered = data.registeredVolunteers.some(
+            (volunteer) => volunteer._id.toString() === state.user._id.toString()
+          );
+          setIsRegistered(registered);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -36,30 +45,47 @@ function Event() {
     };
 
     fetchEventDetails();
-  }, [slug]);
+  }, [slug, state.user]);
 
-  const handleRegister = async () => {
-    if (!event) return;
+  // Opens the modal
+  const openModal = () => {
+    setMessage(null);
+    setSelectedPositionId(null);
+    setShowModal(true);
+  };
+
+  // Closes the modal
+  const closeModal = () => {
+    setShowModal(false);
+  };
+
+  // Handles the confirm button click in the modal
+  const handleConfirm = async () => {
+    if (!event || !selectedPositionId) {
+      setMessage({ type: 'error', text: 'Please select a volunteering position.' });
+      return;
+    }
     setRegistering(true);
     setMessage(null);
-    console.log(state.user._id);
+
     try {
       const res = await fetch(`http://localhost:3000/api/v1/events/${slug}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ id: state.user._id }), // Sending ID in the body
+        body: JSON.stringify({ id: state.user._id, positionId: selectedPositionId }),
       });
 
       const data = await res.json();
       if (res.status === 409) {
-        setMessage({ type: 'info', text: 'Already registered' });
-        return;        
-      }
-      if (!res.ok) {
+        setMessage({ type: 'info', text: data.message || 'Already registered' });
+      } else if (!res.ok) {
         throw new Error(data.message || `Error ${res.status}`);
+      } else {
+        setMessage({ type: 'success', text: 'Successfully registered for the event!' });
+        setIsRegistered(true); // Mark user as registered
+        closeModal();
       }
-      else setMessage({ type: 'success', text: 'Successfully registered for the event!' });
     } catch (err) {
       setMessage({ type: 'error', text: err.message });
     } finally {
@@ -71,7 +97,7 @@ function Event() {
   if (error) return <p className="text-center text-red-500">Error: {error}</p>;
 
   return (
-    <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6">
+    <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6 relative">
       <h1 className="text-3xl font-bold text-gray-900 mb-4">{event.title}</h1>
 
       {event.image && (
@@ -90,9 +116,9 @@ function Event() {
         <div className="mt-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">🙌 Volunteering Positions</h2>
           <ul className="list-disc list-inside text-gray-700">
-            {event.volunteeringPositions.map((position, index) => (
-              <li key={index}>
-                <span className="font-semibold">{position.title}</span> - {position.slots}
+            {event.volunteeringPositions.map((position) => (
+              <li key={position._id}>
+                <span className="font-semibold">{position.title}</span> - {position.slots} slots available
               </li>
             ))}
           </ul>
@@ -101,26 +127,68 @@ function Event() {
 
       <p className="text-gray-500 mt-4 text-sm">Created by: {event.createdBy?.name || "Unknown"}</p>
 
-      {/* Register Button */}
-      <button
-        className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:bg-gray-400"
-        onClick={handleRegister}
-        disabled={registering}
-      >
-        {registering ? "Registering..." : "Register for Event"}
-      </button>
+      {/* If the user is already registered, display a success message; otherwise show the register button */}
+      {isRegistered ? (
+        <p className="text-center text-green-600 mt-6 font-bold">
+          You have successfully registered for this event as a volunteer.
+        </p>
+      ) : (
+        <button
+          className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:bg-gray-400"
+          onClick={openModal}
+          disabled={registering}
+        >
+          {registering ? "Processing..." : "Register for Event"}
+        </button>
+      )}
 
-      {/* Show Registration Message */}
+      {/* Registration Message */}
       {message && (
         <p className={`mt-3 text-center ${
-          message.type === 'success' 
-            ? 'text-green-600' 
-            : (message.type === 'info' 
-            ? 'text-yellow-600' 
-            : 'text-red-600')
+          message.type === 'success' ? 'text-green-600' :
+          message.type === 'info' ? 'text-yellow-600' : 'text-red-600'
         }`}>
           {message.text}
         </p>
+      )}
+
+      {/* Modal for selecting volunteering position */}
+      {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-md">
+            <h2 className="text-xl font-bold mb-4">Choose a Volunteering Position</h2>
+            <ul className="mb-4">
+              {event.volunteeringPositions.map((position) => (
+                <li key={position._id} className="mb-2">
+                  <button
+                    onClick={() => setSelectedPositionId(position._id)}
+                    className={`w-full text-left py-2 px-4 rounded border 
+                      ${selectedPositionId === position._id ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                    disabled={position.slots <= 0 || registering}
+                  >
+                    {position.title} {position.slots <= 0 && '(No slots available)'}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <div className="flex gap-4">
+              <button
+                onClick={handleConfirm}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg"
+                disabled={registering}
+              >
+                {registering ? "Confirming..." : "Confirm"}
+              </button>
+              <button
+                onClick={closeModal}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg"
+                disabled={registering}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

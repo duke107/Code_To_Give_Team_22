@@ -9,21 +9,28 @@ function Register() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [location, setLocation] = useState(''); // New state for location
 
     const dispatch = useDispatch();
     const {
-        loading, error, message, user, isAuthenticated
+        loading, error, message, isAuthenticated
     } = useSelector(state => state.auth);
 
     const navigateTo = useNavigate();
 
     const handleRegister = (e) => {
         e.preventDefault();
+        // Ensure location is provided before proceeding
+        if (!location) {
+            toast.error("Please enter your location");
+            return;
+        }
         const data = new FormData();
         data.append('name', name);
         data.append('email', email);
         data.append('password', password);
-        dispatch(register(data))
+        data.append('location', location); // Append location to the form data
+        dispatch(register(data));
     }
 
     if (isAuthenticated) {
@@ -38,26 +45,23 @@ function Register() {
             toast.error(error);
             dispatch(resetAuthSlice());
         }
-        
-    }, [dispatch, isAuthenticated, error, loading])
+    }, [dispatch, isAuthenticated, error, loading, message, email, navigateTo])
 
     const leftVariants = {
-        initial: { opacity: 0, x: "-50%" }, // Move out to left
+        initial: { opacity: 0, x: "-50%" },
         animate: { opacity: 1, x: "0%", transition: { duration: 0.5, ease: "easeInOut" } },
-        exit: { opacity: 0, x: "50%", transition: { duration: 0.5, ease: "easeInOut" } } // Move out to right
+        exit: { opacity: 0, x: "50%", transition: { duration: 0.5, ease: "easeInOut" } }
     };
     
     const rightVariants = {
-        initial: { opacity: 0, x: "50%" }, // Move out to right
+        initial: { opacity: 0, x: "50%" },
         animate: { opacity: 1, x: "0%", transition: { duration: 0.5, ease: "easeInOut" } },
-        exit: { opacity: 0, x: "-50%", transition: { duration: 0.5, ease: "easeInOut" } } // Move out to left
+        exit: { opacity: 0, x: "-50%", transition: { duration: 0.5, ease: "easeInOut" } }
     };
-    
-    
-    
+
     return (
         <>
-            <div className="flex flex-col justify-center md:flex-row h-screen y-">
+            <div className="flex flex-col justify-center md:flex-row h-screen">
                 {/* LEFT SIDE */}
                 <motion.div
                     className="hidden w-full md:w-1/2 bg-black text-white md:flex flex-col items-center justify-center p-8 rounded-tr-[80px] rounded-br-[80px]"
@@ -87,11 +91,9 @@ function Register() {
                     exit="exit"
                     variants={leftVariants}
                 >
-
                     <div className="w-full max-w-sm">
                         <div className="flex justify-center mb-5">
-                            <div className=" sm:flex-row items-center justify-center gap-5">
-                                {/* <img src='https://samarthanam.org/wp-content/uploads/2023/10/samarthanam-logo.jpg' alt="logo" className="h-auto w-27 object-cover" /> */}
+                            <div className="sm:flex-row items-center justify-center gap-5">
                                 <h3 className="font-medium text-4xl overflow-hidden">Sign Up</h3>
                             </div>
                         </div>
@@ -126,6 +128,16 @@ function Register() {
                                     className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
                                 />
                             </div>
+                            {/* New location field */}
+                            <div className="mb-2">
+                                <input
+                                    type="text"
+                                    value={location}
+                                    onChange={(e) => setLocation(e.target.value)}
+                                    placeholder="Location"
+                                    className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
+                                />
+                            </div>
                             <div className="block md:hidden font-semibold mt-5">
                                 <p>Already have Account?</p>
                                 <Link to="/login" className="text-sm text-gray-500 hover:underline">
@@ -146,4 +158,4 @@ function Register() {
     )
 }
 
-export default Register
+export default Register;

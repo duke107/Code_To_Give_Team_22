@@ -9,13 +9,23 @@ export const createEvent = async (req, res) => {
       eventLocation,
       eventStartDate,
       eventEndDate,
-      volunteeringPositions,
+      volunteeringPositions, // expecting an array of positions
       user_id, // expecting user_id in the request body
     } = req.body;
 
     // Basic validation for required fields
     if (!title || !eventLocation || !eventStartDate || !eventEndDate || !user_id) {
       return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    // Ensure volunteeringPositions is an array and initialize each position's registeredUsers to []
+    let processedVolunteeringPositions = [];
+    if (volunteeringPositions && Array.isArray(volunteeringPositions)) {
+      processedVolunteeringPositions = volunteeringPositions.map((position) => ({
+        title: position.title,
+        slots: position.slots,
+        registeredUsers: [] // initialize registeredUsers as empty array
+      }));
     }
 
     const event = await Event.create({
@@ -25,7 +35,7 @@ export const createEvent = async (req, res) => {
       eventLocation,
       eventStartDate,
       eventEndDate,
-      volunteeringPositions,
+      volunteeringPositions: processedVolunteeringPositions,
       createdBy: user_id, // storing the id of the user who created the event
     });
 
@@ -37,16 +47,20 @@ export const createEvent = async (req, res) => {
 };
 
 
+
 // Get an event by slug
 export const getEventBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
-    const event = await Event.findOne({ slug }).populate("createdBy");
+    const event = await Event.findOne({ slug })
+      .populate('createdBy', 'name email') // populates createdBy with only name and email fields
+      .populate('registeredVolunteers', 'name email') // populates global registered volunteers
+      .populate('volunteeringPositions.registeredUsers', 'name email'); // populates each position's registeredUsers
 
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
-
+    
     return res.status(200).json(event);
   } catch (error) {
     console.error("Error fetching event:", error);
@@ -100,6 +114,9 @@ export const getEvents = async (req, res) => {
     if (req.query.createdBy) {
       query.createdBy = req.query.createdBy;
     }
+    if (req.query.location) {
+      query.eventLocation = req.query.location;
+    }
 
     // Fetch events from the database based on the query, sorted by creation date
     const events = await Event.find(query).sort({ createdAt: -1 });
@@ -113,21 +130,45 @@ export const getEvents = async (req, res) => {
 
 export const registerVolunteer = async (req, res) => {
   try {
-    const { id } = req.body;
+    const { id, positionId } = req.body; // expecting volunteer id and position id
     const { slug } = req.params;
-    const event = await Event.findOne({ slug });
 
+    // Find the event by slug
+    const event = await Event.findOne({ slug });
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
-    if (event.registeredVolunteers.includes(id)) {
-      return res.status(409).json({ success: false, message: "Volunteer already registered" });
+
+    // Find the specific volunteering position by its _id
+    const position = event.volunteeringPositions.id(positionId);
+    if (!position) {
+      return res.status(404).json({ message: "Volunteering position not found" });
     }
-    event.registeredVolunteers.push(id);
+
+    // Check if there are available slots for this position
+    if (position.slots <= 0) {
+      return res.status(409).json({ message: "No available slots for this position" });
+    }
+
+    // Check if the volunteer is already registered for this position
+    if (position.registeredUsers.includes(id)) {
+      return res.status(409).json({ success: false, message: "Volunteer already registered for this position" });
+    }
+
+    // Register the volunteer for the specified position
+    position.registeredUsers.push(id);
+    // Decrement the available slots for that position
+    position.slots = position.slots - 1;
+
+    // Optionally, update global registeredVolunteers if not already included
+    if (!event.registeredVolunteers.includes(id)) {
+      event.registeredVolunteers.push(id);
+    }
+
     await event.save();
-    return res.status(200).json( {success: true, message: "Volunteer registered"} );
+    return res.status(200).json({ success: true, message: "Volunteer registered" });
   } catch (error) {
-    console.error("Error fetching event:", error);
+    console.error("Error registering volunteer:", error);
     return res.status(500).json({ message: "Server error", error: error.message });
   }
-}
+};

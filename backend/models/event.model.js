@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 
-// Sub-schema for volunteering positions
+// Sub-schema for volunteering positions, now with a registeredUsers field
 const VolunteeringPositionSchema = new mongoose.Schema({
   title: { type: String, required: true },
   slots: { type: Number, required: true },
+  registeredUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 });
 
 // Main event schema
@@ -17,8 +18,9 @@ const EventSchema = new mongoose.Schema(
     eventStartDate: { type: Date, required: true },
     eventEndDate: { type: Date, required: true },
     volunteeringPositions: [VolunteeringPositionSchema],
+    // Optional: global list of registered volunteers (if needed)
     registeredVolunteers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    // New field to store the user who created the event.
+    // Field to store the user who created the event
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },
   { timestamps: true }
