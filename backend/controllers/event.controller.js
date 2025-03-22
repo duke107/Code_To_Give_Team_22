@@ -42,7 +42,6 @@ export const getEventBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
     const event = await Event.findOne({ slug }).populate("createdBy");
-    console.log(event);
 
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
@@ -111,3 +110,24 @@ export const getEvents = async (req, res) => {
     return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+export const registerVolunteer = async (req, res) => {
+  try {
+    const { id } = req.body;
+    const { slug } = req.params;
+    const event = await Event.findOne({ slug });
+
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+    if (event.registeredVolunteers.includes(id)) {
+      return res.status(409).json({ success: false, message: "Volunteer already registered" });
+    }
+    event.registeredVolunteers.push(id);
+    await event.save();
+    return res.status(200).json( {success: true, message: "Volunteer registered"} );
+  } catch (error) {
+    console.error("Error fetching event:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+}
