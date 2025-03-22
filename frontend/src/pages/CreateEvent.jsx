@@ -13,6 +13,7 @@ import "react-datepicker/dist/react-datepicker.css"
 import { HiPlus, HiTrash, HiMicrophone, HiStop, HiUpload, HiLocationMarker, HiCalendar } from "react-icons/hi"
 import { useSelector } from "react-redux"
 
+
 const modules = {
   toolbar: [
     [{ header: "1" }, { header: "2" }, { font: [] }],
@@ -50,16 +51,16 @@ export default function CreateEvent() {
   const toggleButtonRef = useRef(null)
   const quillRef = useRef(null)
   const finalTranscriptRef = useRef("")
-  const [language, setLanguage] = useState("en-UK")
+  const [language, setLanguage] = useState("en-US")
   const [showDropdown, setShowDropdown] = useState(false)
   
   const {
     loading, error, message, user, isAuthenticated
 } = useSelector(state => state.auth);
 
-console.log('====================================');
-console.log(user);
-console.log('====================================');
+// console.log('====================================');
+// console.log(user);
+// console.log('====================================');
   // Image upload handler
   const handleUploadImage = async () => {
     try {
@@ -196,6 +197,7 @@ console.log('====================================');
       recognitionRef.current.lang = lang
       recognitionRef.current.start()
       setIsRecording(true)
+      console.log("started recording")
     }
   }
 
@@ -214,7 +216,10 @@ console.log('====================================');
     if (isRecording) {
       stopRecording(e)
     } else {
-      setShowDropdown(true)
+      console.log("triggered recording")
+      //TODO: will do the language dropdown later on
+      // setShowDropdown(true)
+      startRecording(language)
     }
   }
 
@@ -230,6 +235,18 @@ console.log('====================================');
       editor.setText(transcript)
     }
   }, [transcript])
+
+  const indianLanguages = [
+    { code: "hi-IN", label: "Hindi" },
+    { code: "bn-IN", label: "Bengali" },
+    { code: "ta-IN", label: "Tamil" },
+    { code: "te-IN", label: "Telugu" },
+    { code: "kn-IN", label: "Kannada" },
+    { code: "ml-IN", label: "Malayalam" },
+    { code: "gu-IN", label: "Gujarati" },
+    { code: "mr-IN", label: "Marathi" },
+    { code: "pa-IN", label: "Punjabi" },
+  ];
 
   return (
     <div className="bg-gray-50 min-h-screen font-sans text-gray-800">
@@ -372,7 +389,7 @@ console.log('====================================');
                     onClick={handleToggleRecording}
                     ref={toggleButtonRef}
                     color={isRecording ? "failure" : "info"}
-                    className="px-4 py-2 rounded text-white font-medium"
+                    className="bg-red-600 px-4 py-2 rounded text-white font-medium"
                     size="lg"
                   >
                     {isRecording ? (
@@ -387,25 +404,20 @@ console.log('====================================');
                       </>
                     )}
                   </Button>
+                  {/* {showDropdown && !isRecording && console.log("Dropdown visible?")} */}
                   {showDropdown && !isRecording && (
-                    <Card className="absolute bottom-12 right-0 w-40 p-0 z-20">
+                    <Card className="absolute bottom-12 right-0 w-48 p-0 z-50" onClick={(e) => e.stopPropagation()}>
                       <ul className="divide-y divide-gray-200">
-                        <li>
-                          <button
-                            onClick={() => handleLanguageSelect("en-US")}
-                            className="block w-full px-4 py-2 text-left hover:bg-blue-100 text-blue-700 font-medium"
-                          >
-                            English
-                          </button>
-                        </li>
-                        <li>
-                          <button
-                            onClick={() => handleLanguageSelect("hi-IN")}
-                            className="block w-full px-4 py-2 text-left hover:bg-green-100 text-green-700 font-medium"
-                          >
-                            Hindi
-                          </button>
-                        </li>
+                        {indianLanguages.map((lang) => (
+                          <li key={lang.code}>
+                            <button
+                              onClick={() => handleLanguageSelect(lang.code)}
+                              className="block w-full px-4 py-2 text-left hover:bg-blue-100 text-blue-700 font-medium"
+                            >
+                              {lang.label}
+                            </button>
+                          </li>
+                        ))}
                       </ul>
                     </Card>
                   )}
@@ -415,62 +427,72 @@ console.log('====================================');
 
             {/* Volunteering Positions */}
             <Card>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-blue-700">Volunteering Positions</h2>
-                <Button type="button" onClick={addVolPosition} color="success" pill size="md" className="font-medium">
-                  <HiPlus className="mr-2 h-5 w-5" />
-                  Add Position
-                </Button>
-              </div>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold text-blue-700">Volunteering Positions</h2>
+                  <Button
+                    type="button"
+                    onClick={addVolPosition}
+                    color="success"
+                    pill
+                    size="md"
+                    className="font-medium bg-blue-600"
+                  >
+                    <HiPlus className="mr-2 h-5 w-5" />
+                    Add Position
+                  </Button>
+                </div>
 
-              <div className="space-y-4">
-                {volPositions.map((position, index) => (
-                  <Card key={index} className="bg-gray-50">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <div className="mb-2 block">
-                          <Label htmlFor={`position-title-${index}`} value="Position Title" />
+                <div className="space-y-4">
+                  {volPositions.map((position, index) => (
+                    <Card key={index} className="bg-gray-50 p-1">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div>
+                          <div className="mb-1">
+                            <Label htmlFor={`position-title-${index}`} value="Position Title" />
+                          </div>
+                          <TextInput
+                            id={`position-title-${index}`}
+                            type="text"
+                            placeholder="Enter position title"
+                            value={position.title}
+                            onChange={(e) => handlePositionChange(index, "title", e.target.value)}
+                            required
+                            className="px-0 py-2"
+                          />
                         </div>
-                        <TextInput
-                          id={`position-title-${index}`}
-                          type="text"
-                          placeholder="Enter position title"
-                          value={position.title}
-                          onChange={(e) => handlePositionChange(index, "title", e.target.value)}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <div className="mb-2 block">
-                          <Label htmlFor={`position-slots-${index}`} value="Number of Slots" />
+                        <div>
+                          <div className="mb-1">
+                            <Label htmlFor={`position-slots-${index}`} value="Number of Slots" />
+                          </div>
+                          <TextInput
+                            id={`position-slots-${index}`}
+                            type="number"
+                            placeholder="Enter slots needed"
+                            value={position.slots}
+                            onChange={(e) => handlePositionChange(index, "slots", e.target.value)}
+                            required
+                            className="px-0 py-2"
+                          />
                         </div>
-                        <TextInput
-                          id={`position-slots-${index}`}
-                          type="number"
-                          placeholder="Enter slots needed"
-                          value={position.slots}
-                          onChange={(e) => handlePositionChange(index, "slots", e.target.value)}
-                          required
-                        />
                       </div>
-                    </div>
-                    <div className="flex justify-end mt-4">
-                      <Button
-                        type="button"
-                        onClick={() => removeVolPosition(index)}
-                        color="red"
-                        size="sm"
-                        disabled={volPositions.length === 1}
-                        className="font-medium"
-                      >
-                        <HiTrash className="mr-2 h-5 w-5" />
-                        Remove Position
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </Card>
+                      <div className="flex justify-end mt-0">
+                        <Button
+                          type="button"
+                          onClick={() => removeVolPosition(index)}
+                          color="red"
+                          size="sm"
+                          disabled={volPositions.length === 1}
+                          className="font-medium bg-red-500 py-1"
+                        >
+                          <HiTrash className="mr-2 h-5 w-5" />
+                          Remove Position
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </Card>
+
 
             {/* Create Event Button */}
             <Button
