@@ -41,7 +41,8 @@ export const createEvent = async (req, res) => {
 export const getEventBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
-    const event = await Event.findOne({ slug });
+    const event = await Event.findOne({ slug }).populate("createdBy");
+    console.log(event);
 
     if (!event) {
       return res.status(404).json({ message: "Event not found" });

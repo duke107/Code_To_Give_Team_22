@@ -1,66 +1,62 @@
-import { useEffect, useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import Home from './pages/Home'
+import About from './pages/About'
+import Gallery from './pages/Gallery'
+import Donate from './pages/Donate'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
 import OTP from './pages/OTP'
 import ResetPassword from './pages/ResetPassword'
-import { useDispatch, useSelector } from 'react-redux'
-import { getUser } from './redux/slices/authSlice'
-import About from './pages/About'
-import Gallery from './pages/Gallery'
-import Donate from './pages/Donate'
-import MainLayout from './components/MainLayout'
-
 import CreateEvent from './pages/CreateEvent'
 import Dashboard from './components/Dashboard'
 import Events from './components/Events'
 import ChangeDetails from './components/ChangeDetails'
 import Translate from "./TranslateButton";
 import TranslateButton from './TranslateButton'
-const App = () => {
+import MainLayout from './components/MainLayout'
+import React, { useEffect } from 'react'
+import { useDispatch } from 'react-redux'
+import { getUser } from './redux/slices/authSlice'
+import Event from './components/Event'
 
-  const { user, isAuthenticated } = useSelector((state) => state.auth)
-  const dispatch = useDispatch();
+function App() {
+  const dispatch = useDispatch()
 
   useEffect(() => {
-    dispatch(getUser());
-  }, [])
+    dispatch(getUser())
+  }, [dispatch])
+
   return (
-      <Router>
+    <Router>
+      <Routes>
         <TranslateButton/>
-          <Routes>
-            <Route element={<MainLayout />}>
-            <Route path="/" element={<Home />}>
-          {/* When the user visits '/', redirect them to '/dashboard' */}
-          <Route index element={<Navigate to="/dashboard" />} />
-
-          {/* Nested routes within Home */}
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="events" element={<Events />} />
-          <Route path="change-details" element={<ChangeDetails />} />
-          <Route path="/event/:slug" element={<ChangeDetails />} />
+        {/* Routes that require Header & Footer */}
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/gallery" element={<Gallery />} />
+          <Route path="/donate" element={<Donate />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/change-details" element={<ChangeDetails />} />
+          <Route path="/create" element={<CreateEvent />} />
+          <Route path="/event/:slug" element={<Event />} />
         </Route>
-        <Route path="/create" element={<CreateEvent />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/gallery" element={<Gallery />} />
-            <Route path="/donate" element={<Donate />} />
-          </Route>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/password/forgot" element={<ForgotPassword />} />
-              <Route path="/otp-verification/:email" element={<OTP />} />
-              <Route path="/password/reset/:token" element={<ResetPassword />} />
-          </Routes>
-          <ToastContainer theme='dark'/>
-      </Router>
-   
-  );
-};
 
-export default App;
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/password/forgot" element={<ForgotPassword />} />
+        <Route path="/otp-verification/:email" element={<OTP />} />
+        <Route path="/password/reset/:token" element={<ResetPassword />} />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+      <ToastContainer theme="dark" />
+    </Router>
+  )
+}
+
+export default App

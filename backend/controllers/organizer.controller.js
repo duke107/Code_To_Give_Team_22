@@ -1,3 +1,5 @@
+// import { Admin } from "../models/admin.model.js";
+//!make admin.model.js first please!
 
 import { Organizer } from "../models/organizer.model.js";
 import { sendToken } from "../utils/sendToken.js";
@@ -313,45 +315,47 @@ export const logout = async (req, res) => {
         }
 };
 
-export const sendApproveRequest = async (req, res) => {
-    try {
-        const { id } = req;
-        const organizer = await Organizer.findById(id);
-        if (!organizer) {
-            return res.status(404).json({ 
-                success: false, 
-                message: "Organizer not found" 
-            });
-        }
 
-        if (organizer.accountVerified) {
-            return res.status(409).json({ 
-                success: false, 
-                message: "Organizer has already been approved" 
-            });
-        }
+//!There was no admin.model.js please make that first
+// export const sendApproveRequest = async (req, res) => {
+//     try {
+//         const { id } = req;
+//         const organizer = await Organizer.findById(id);
+//         if (!organizer) {
+//             return res.status(404).json({ 
+//                 success: false, 
+//                 message: "Organizer not found" 
+//             });
+//         }
 
-        const admin = Admin.findOne({ email: process.env.ADMIN_EMAIL });
-        if (!admin) {
-            return res.status(404).json({ 
-                success: false, 
-                message: "Admin not found" 
-            });
-        }
-        admin.pendingApprovals.push(organizer);
-        await admin.save();
-        return await sendOrganizerApprovalRequest(
-            organizer.name,
-            organizer.email,
-            process.env.ADMIN_EMAIL,
-            res
-        );
+//         if (organizer.accountVerified) {
+//             return res.status(409).json({ 
+//                 success: false, 
+//                 message: "Organizer has already been approved" 
+//             });
+//         }
 
-    } catch (error) {
-        console.log("Something went wrong", error.stack);
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong"
-        });
-    }
-};
+//         const admin = Admin.findOne({ email: process.env.ADMIN_EMAIL });
+//         if (!admin) {
+//             return res.status(404).json({ 
+//                 success: false, 
+//                 message: "Admin not found" 
+//             });
+//         }
+//         admin.pendingApprovals.push(organizer);
+//         await admin.save();
+//         return await sendOrganizerApprovalRequest(
+//             organizer.name,
+//             organizer.email,
+//             process.env.ADMIN_EMAIL,
+//             res
+//         );
+
+//     } catch (error) {
+//         console.log("Something went wrong", error.stack);
+//         return res.status(500).json({
+//             success: false,
+//             message: "Something went wrong"
+//         });
+//     }
+// };
