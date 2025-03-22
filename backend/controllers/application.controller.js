@@ -21,6 +21,7 @@ const applyForEvent = async (req, res, next) => {
         next(error);
     }
 };
+
 const getEventApplications = async (req, res, next) => {
     try {
         const { eventId } = req.params;

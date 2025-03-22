@@ -17,11 +17,12 @@ import Translate from "./TranslateButton";
 import TranslateButton from './TranslateButton'
 import MainLayout from './components/MainLayout'
 import React, { useEffect } from 'react'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { getUser } from './redux/slices/authSlice'
 import Event from './components/Event'
 import FullStory from './pages/FullStory'
-
+import EventOrganiser from './components/EventOrganiser'
+import EventsUser from './components/EventsUser'
 function App() {
   const dispatch = useDispatch();
 
@@ -30,10 +31,14 @@ function App() {
   }, [dispatch]);
 
   const { user } = useSelector((state) => state.auth);
+  console.log('====================================');
+  console.log(user);
+  console.log('====================================');
+
 
   return (
     <Router>
-      <TranslateButton/>
+      <TranslateButton />
       <Routes>
         {/* Routes that require Header & Footer */}
         <Route element={<MainLayout />}>
@@ -51,10 +56,13 @@ function App() {
           />
           <Route path="/change-details" element={<ChangeDetails />} />
           <Route path="/create" element={<CreateEvent />} />
-          <Route path="/event/:slug" element={<Event />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/stories/:id" element={<FullStory />} />
-          <Route path="/event/:slug" element={ user && user.role === "Event Organiser" ? <EventOrganiser /> : <Event />} />
+          <Route
+            path="/event/:slug"
+            element={user && user.role === "Event Organiser" ? <EventOrganiser /> : <Event />}
+          />
+
         </Route>
 
         <Route path="/login" element={<Login />} />
