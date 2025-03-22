@@ -12,6 +12,11 @@ import OTP from './pages/OTP'
 import ResetPassword from './pages/ResetPassword'
 import { useDispatch, useSelector } from 'react-redux'
 import { getUser } from './redux/slices/authSlice'
+import About from './pages/About'
+import Gallery from './pages/Gallery'
+import Donate from './pages/Donate'
+import MainLayout from './components/MainLayout'
+
 const App = () => {
 
   const {user,isAuthenticated}= useSelector((state)=>state.auth)
@@ -23,7 +28,12 @@ const App = () => {
   return (
       <Router>
           <Routes>
-              <Route path="/" element={<Home />} />
+            <Route element={<MainLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/gallery" element={<Gallery />} />
+            <Route path="/donate" element={<Donate />} />
+          </Route>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/password/forgot" element={<ForgotPassword />} />

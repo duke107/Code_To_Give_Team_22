@@ -3,9 +3,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { register, resetAuthSlice } from '../redux/slices/authSlice';
 import { toast } from 'react-toastify';
+import { motion } from "framer-motion";
 
 function Register() {
-
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -41,15 +41,34 @@ function Register() {
         
     }, [dispatch, isAuthenticated, error, loading])
 
+    const leftVariants = {
+        initial: { opacity: 0, x: "-50%" }, // Move out to left
+        animate: { opacity: 1, x: "0%", transition: { duration: 0.5, ease: "easeInOut" } },
+        exit: { opacity: 0, x: "50%", transition: { duration: 0.5, ease: "easeInOut" } } // Move out to right
+    };
+    
+    const rightVariants = {
+        initial: { opacity: 0, x: "50%" }, // Move out to right
+        animate: { opacity: 1, x: "0%", transition: { duration: 0.5, ease: "easeInOut" } },
+        exit: { opacity: 0, x: "-50%", transition: { duration: 0.5, ease: "easeInOut" } } // Move out to left
+    };
+    
+    
     
     return (
         <>
-            <div className="flex flex-col justify-center md:flex-row h-screen">
+            <div className="flex flex-col justify-center md:flex-row h-screen y-">
                 {/* LEFT SIDE */}
-                <div className="hidden w-full md:w-1/2 bg-black text-white md:flex flex-col items-center justify-center p-8 rounded-tr-[80px] rounded-br-[80px]">
+                <motion.div
+                    className="hidden w-full md:w-1/2 bg-black text-white md:flex flex-col items-center justify-center p-8 rounded-tr-[80px] rounded-br-[80px]"
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    variants={rightVariants}
+                >
                     <div className="text-center h-[376px]">
                         <div className="flex justify-center mb-12">
-                            <img src='https://samarthanam.org/wp-content/uploads/2023/10/samarthanam-logo.jpg' alt="logo" className="mb-12 h-44 w-auto" />
+                            <img src='https://org1.hyundai.com/content/dam/hyundai/in/en/images/hyundai-story/samrath/samarthanam_logo.png' alt="logo" className="mb-12 h-44 w-auto" />
                         </div>
                         <p className="text-gray-300 mb-12">Already have Account? Sign in now.</p>
                     </div>
@@ -59,14 +78,21 @@ function Register() {
                     >
                         SIGN IN
                     </Link>
-                </div>
+                </motion.div>
                 {/* RIGHT SIDE */}
-                <div className="w-full md:w-1/2 flex items-center justify-center bg-white p-8">
+                <motion.div
+                    className="w-full md:w-1/2 flex items-center justify-center bg-white p-8"
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    variants={leftVariants}
+                >
+
                     <div className="w-full max-w-sm">
-                        <div className="flex justify-center mb-12">
-                            <div className="flex flex-col-reverse sm:flex-row items-center justify-center gap-5">
+                        <div className="flex justify-center mb-5">
+                            <div className=" sm:flex-row items-center justify-center gap-5">
+                                {/* <img src='https://samarthanam.org/wp-content/uploads/2023/10/samarthanam-logo.jpg' alt="logo" className="h-auto w-27 object-cover" /> */}
                                 <h3 className="font-medium text-4xl overflow-hidden">Sign Up</h3>
-                                <img src='https://samarthanam.org/wp-content/uploads/2023/10/samarthanam-logo.jpg' alt="logo" className="h-auto w-24 object-cover" />
                             </div>
                         </div>
                         <p className="text-gray-800 text-center mb-12">
@@ -114,7 +140,7 @@ function Register() {
                             </button>
                         </form>
                     </div>
-                </div>
+                </motion.div>
             </div>
         </>
     )

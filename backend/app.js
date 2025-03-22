@@ -27,7 +27,6 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
 app.use("/api/v1/auth", authRouter)
-// console.log("MongoDB URI:", process.env.MONGO_URI);
 app.use("/api/v1/events", eventRouter)
 app.use("/api/v1/application", applicationRouter)
 app.use("/api/v1/notification", notificationRouter)
