@@ -1,32 +1,93 @@
-import React from 'react'
-import { useSelector, useDispatch } from 'react-redux'
-import { Navigate } from 'react-router-dom'
-import { logout } from '../redux/slices/authSlice'
- // Adjust the path as needed
+// Home.jsx
+import React from 'react';
+import { Outlet, NavLink } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { logout } from '../redux/slices/authSlice';
+import { Navigate } from 'react-router-dom';
 
 function Home() {
-    const state = useSelector((state) => state.auth)
-    const dispatch = useDispatch()
+  const state = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
 
-    const handleLogout = () => {
-        dispatch(logout())
-    }
+  const handleLogout = () => {
+    dispatch(logout());
+  };
 
-    if (!state.isAuthenticated) {
-        return <Navigate to="/login" />
-    }
+  // If user is not authenticated, redirect to login
+  if (!state.isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
 
-    return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-            <h1 className="text-4xl font-semibold text-gray-800 mb-4">Home</h1>
-            <button
-                onClick={handleLogout}
-                className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md"
-            >
-                Logout
-            </button>
+  return (
+    <div className="flex min-h-screen">
+      {/* Sidebar */}
+      <aside className="bg-gray-800 text-white w-64 flex flex-col p-6">
+        {/* Logo Section */}
+        <div className="mb-8">
+          <img
+            src="https://samarthanam.org/wp-content/uploads/2023/10/samarthanam-logo.jpg"
+            alt="LOGO"
+            className="h-10 w-auto"
+          />
         </div>
-    )
+
+        {/* Navigation Links */}
+        <nav className="flex-1">
+          <ul>
+            <li className="mb-2">
+              <NavLink
+                to="/dashboard"
+                className={({ isActive }) =>
+                  `block p-2 rounded transition-colors ${
+                    isActive ? 'bg-gray-700' : 'hover:bg-gray-700'
+                  }`
+                }
+              >
+                Dashboard
+              </NavLink>
+            </li>
+            <li className="mb-2">
+              <NavLink
+                to="/events"
+                className={({ isActive }) =>
+                  `block p-2 rounded transition-colors ${
+                    isActive ? 'bg-gray-700' : 'hover:bg-gray-700'
+                  }`
+                }
+              >
+                Events
+              </NavLink>
+            </li>
+            <li className="mb-2">
+              <NavLink
+                to="/change-details"
+                className={({ isActive }) =>
+                  `block p-2 rounded transition-colors ${
+                    isActive ? 'bg-gray-700' : 'hover:bg-gray-700'
+                  }`
+                }
+              >
+                Change Details
+              </NavLink>
+            </li>
+          </ul>
+        </nav>
+
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded mt-auto"
+        >
+          Logout
+        </button>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 bg-gray-100 p-6">
+        <Outlet />
+      </main>
+    </div>
+  );
 }
 
-export default Home
+export default Home;
