@@ -1,4 +1,4 @@
-import { Admin } from "../models/admin.model.js";
+
 import { Organizer } from "../models/organizer.model.js";
 import { sendToken } from "../utils/sendToken.js";
 import { sendVerificationCode } from "../utils/sendVerificationCode.js";
@@ -6,6 +6,7 @@ import { sendPasswordReset } from "../utils/sendPasswordReset.js";
 import { sendOrganizerApprovalRequest } from "../utils/sendOrganizerApprovalRequest.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+
 
 export const register = async (req, res) => {
     try {

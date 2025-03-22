@@ -21,6 +21,8 @@ import CreateEvent from './pages/CreateEvent'
 import Dashboard from './components/Dashboard'
 import Events from './components/Events'
 import ChangeDetails from './components/ChangeDetails'
+import Translate from "./TranslateButton";
+import TranslateButton from './TranslateButton'
 const App = () => {
 
   const { user, isAuthenticated } = useSelector((state) => state.auth)
@@ -31,6 +33,7 @@ const App = () => {
   }, [])
   return (
       <Router>
+        <TranslateButton/>
           <Routes>
             <Route element={<MainLayout />}>
             <Route path="/" element={<Home />}>
@@ -43,6 +46,7 @@ const App = () => {
           <Route path="change-details" element={<ChangeDetails />} />
           <Route path="/event/:slug" element={<ChangeDetails />} />
         </Route>
+        <Route path="/create" element={<CreateEvent />} />
             <Route path="/about" element={<About />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/donate" element={<Donate />} />

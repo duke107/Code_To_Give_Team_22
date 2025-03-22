@@ -22,14 +22,7 @@ function Home() {
     <div className="flex min-h-screen">
       {/* Sidebar */}
       <aside className="bg-gray-800 text-white w-64 flex flex-col p-6">
-        {/* Logo Section */}
-        <div className="mb-8">
-          <img
-            src="https://samarthanam.org/wp-content/uploads/2023/10/samarthanam-logo.jpg"
-            alt="LOGO"
-            className="h-10 w-auto"
-          />
-        </div>
+       
 
         {/* Navigation Links */}
         <nav className="flex-1">
@@ -73,13 +66,7 @@ function Home() {
           </ul>
         </nav>
 
-        {/* Logout Button */}
-        <button
-          onClick={handleLogout}
-          className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded mt-auto"
-        >
-          Logout
-        </button>
+        
       </aside>
 
       {/* Main Content */}
