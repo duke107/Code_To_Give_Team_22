@@ -9,6 +9,7 @@ import { sendOrganizerApprovalRequest } from "../utils/sendOrganizerApprovalRequ
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
+
 export const register = async (req, res) => {
     try {
         const { name, phone, email, password, skills, location, availability } = req.body;

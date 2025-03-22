@@ -13,10 +13,13 @@ import CreateEvent from './pages/CreateEvent'
 import Dashboard from './components/Dashboard'
 import Events from './components/Events'
 import ChangeDetails from './components/ChangeDetails'
+import Translate from "./TranslateButton";
+import TranslateButton from './TranslateButton'
 import MainLayout from './components/MainLayout'
 import React, { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { getUser } from './redux/slices/authSlice'
+import Event from './components/Event'
 
 function App() {
   const dispatch = useDispatch()
@@ -28,6 +31,7 @@ function App() {
   return (
     <Router>
       <Routes>
+        <TranslateButton/>
         {/* Routes that require Header & Footer */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
@@ -38,7 +42,7 @@ function App() {
           <Route path="/events" element={<Events />} />
           <Route path="/change-details" element={<ChangeDetails />} />
           <Route path="/create" element={<CreateEvent />} />
-          <Route path="/event/:slug" element={<ChangeDetails />} />
+          <Route path="/event/:slug" element={<Event />} />
         </Route>
 
         <Route path="/login" element={<Login />} />

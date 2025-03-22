@@ -1,32 +1,80 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+// Home.jsx
+import React from 'react';
+import { Outlet, NavLink } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { logout } from '../redux/slices/authSlice';
+import { Navigate } from 'react-router-dom';
 
 function Home() {
-  return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Hero Section */}
-      <div className="h-[70vh] relative flex flex-col items-center justify-center bg-blue-600 text-white text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Samarthanam</h1>
-        <p className="text-lg max-w-2xl mx-auto">
-          Empowering lives and creating opportunities.
-        </p>
-        <Link
-          to="/donate"
-          className="mt-6 px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg shadow-md hover:bg-gray-200 transition duration-300"
-        >
-          Donate Now
-        </Link>
-      </div>
+  const state = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
 
-      {/* Mission Section */}
-      <div className="p-8 text-center">
-        <h2 className="text-3xl font-semibold mb-6">Our Mission</h2>
-        <p className="max-w-3xl mx-auto text-gray-700">
-          We strive to empower the disabled and create a more inclusive world through education, rehabilitation, and innovation.
-        </p>
-      </div>
+  const handleLogout = () => {
+    dispatch(logout());
+  };
+
+  // If user is not authenticated, redirect to login
+  if (!state.isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  return (
+    <div className="flex min-h-screen">
+      {/* Sidebar */}
+      <aside className="bg-gray-800 text-white w-64 flex flex-col p-6">
+       
+
+        {/* Navigation Links */}
+        <nav className="flex-1">
+          <ul>
+            <li className="mb-2">
+              <NavLink
+                to="/dashboard"
+                className={({ isActive }) =>
+                  `block p-2 rounded transition-colors ${
+                    isActive ? 'bg-gray-700' : 'hover:bg-gray-700'
+                  }`
+                }
+              >
+                Dashboard
+              </NavLink>
+            </li>
+            <li className="mb-2">
+              <NavLink
+                to="/events"
+                className={({ isActive }) =>
+                  `block p-2 rounded transition-colors ${
+                    isActive ? 'bg-gray-700' : 'hover:bg-gray-700'
+                  }`
+                }
+              >
+                Events
+              </NavLink>
+            </li>
+            <li className="mb-2">
+              <NavLink
+                to="/change-details"
+                className={({ isActive }) =>
+                  `block p-2 rounded transition-colors ${
+                    isActive ? 'bg-gray-700' : 'hover:bg-gray-700'
+                  }`
+                }
+              >
+                Change Details
+              </NavLink>
+            </li>
+          </ul>
+        </nav>
+
+        
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 bg-gray-100 p-6">
+        <Outlet />
+      </main>
     </div>
-  )
+  );
 }
 
-export default Home
+export default Home;
