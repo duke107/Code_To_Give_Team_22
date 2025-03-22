@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "name": "Dr. Mahantesh G",
+    "title": "Founder & CEO",
+    "image": "/people/founder.webp",
+    "bio": "A three-time National Award recipient who is working on the empowerment of the disabled and making India inclusive. He is Disability rights advocate, motivational speaker, an avid traveler, technology follower, blind cricket player, English literature enthusiast, notable academician, role model to millions of people and a true visionary"
+  },
+  {
+    "id": 2,
+    "name": "Bob Smith",
+    "title": "Chief Operating Officer",
+    "image": "/assets/team/bob.jpg",
+    "bio": "Bob brings decades of operational experience to streamline our initiatives."
+  },
+  {
+    "id": 3,
+    "name": "Carla Gomez",
+    "title": "Director of Programs",
+    "image": "/assets/team/carla.jpg",
+    "bio": "Carla oversees our program development and ensures impactful outcomes."
+  }
+]

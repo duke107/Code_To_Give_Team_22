@@ -1,14 +1,24 @@
-import React from 'react'
+import React, { useEffect, useState } from "react";
+import StoryCard from "../components/StoryCard.jsx";
+import storiesData from "../data/stories.json";
 
-function Gallery() {
+const Gallery = () => {
+  const [stories, setStories] = useState([]);
+
+  useEffect(() => {
+    setStories(storiesData);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <h1 className="text-4xl font-bold text-gray-800 mb-4">Gallery</h1>
-      <p className="text-gray-700 max-w-3xl mx-auto">
-        This page will showcase images and media that highlight our initiatives and success stories.
-      </p>
+    <div className="container mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">Success Stories</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {stories.map((story) => (
+          <StoryCard key={story.id} story={story} />
+        ))}
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default Gallery
+export default Gallery;

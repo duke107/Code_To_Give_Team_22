@@ -13,7 +13,7 @@ function Events() {
     user,
     isAuthenticated
   } = useSelector(state => state.auth);
-
+  console.log(user)
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -38,9 +38,10 @@ function Events() {
         console.error("Error fetching events:", error);
       }
     };
+    
 
     fetchEvents();
-  }, [user._id]);
+  }, [user]);
 
   const handleAddEvent = () => {
     navigate('/create');
