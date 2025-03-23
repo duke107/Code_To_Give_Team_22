@@ -24,6 +24,12 @@ function Event() {
   const [improvementSuggestions, setImprovementSuggestions] = useState("");
   const [feedbacks, setFeedbacks] = useState([]);
 
+  // Testimonial states
+  const [showTestimonialModal, setShowTestimonialModal] = useState(false);
+  const [testimonialName, setTestimonialName] = useState('');
+  const [testimonialPosition, setTestimonialPosition] = useState(''); // volunteering position
+  const [testimonialContent, setTestimonialContent] = useState('');
+
   // Fetch event details including tasks (populated via backend)
   const fetchEventDetails = async () => {
     try {
@@ -79,7 +85,7 @@ function Event() {
     }
   };
 
-  // Registration logic for non-registered users (if needed)
+  // Registration logic for non-registered users
   const openModal = () => {
     setMessage(null);
     setSelectedPositionId(null);
@@ -187,6 +193,51 @@ function Event() {
   }, [event]);
   
 
+  // Testimonial Modal handlers
+  const openTestimonialModal = () => {
+    // Pre-fill the name field if available from auth state
+    setTestimonialName(state.user ? state.user.name : '');
+    setTestimonialPosition('');
+    setTestimonialContent('');
+    setShowTestimonialModal(true);
+  };
+
+  const closeTestimonialModal = () => {
+    setShowTestimonialModal(false);
+  };
+
+  const handleTestimonialSubmit = async () => {
+    if (!testimonialName || !testimonialContent || !testimonialPosition) {
+      toast.error('Please fill in all testimonial fields.');
+      return;
+    }
+    const testimonialPayload = {
+      name: testimonialName,
+      eventId: event._id,
+      eventTitle: event.title, // optional, if you need to store it
+      volunteeringPosition: testimonialPosition,
+      testimonial: testimonialContent,
+      userId: state.user._id,
+    };
+    try {
+      const res = await fetch('http://localhost:3000/api/v1/events/submitTestimonial', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(testimonialPayload),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Error submitting testimonial');
+      }
+      await res.json();
+      toast.success("Thank you for sharing your experience!");
+      closeTestimonialModal();
+    } catch (err) {
+      toast.error(`Error submitting testimonial: ${err.message}`);
+    }
+  };
+
   if (loading) return <p className="text-center text-gray-500">Loading event details...</p>;
   if (error) return <p className="text-center text-red-500">Error: {error}</p>;
   if (!event) return <p className="text-center text-gray-500">No event data available.</p>;
@@ -197,6 +248,16 @@ function Event() {
     position.registeredUsers?.forEach((volunteer) => {
       if (volunteer._id.toString() === state.user._id.toString()) {
         userTasks = volunteer.tasks || [];
+      }
+    });
+  });
+
+  // Extract volunteering positions that the current user registered for (for testimonial dropdown)
+  let registeredPositions = [];
+  event.volunteeringPositions?.forEach((position) => {
+    position.registeredUsers?.forEach((volunteer) => {
+      if (volunteer._id.toString() === state.user._id.toString()) {
+        registeredPositions.push(position);
       }
     });
   });
@@ -296,8 +357,27 @@ function Event() {
       </div>
     )}
 
+      {/* Give Feedback Button - Visible only if registered */}
+      {isRegistered && (
+        <button
+          onClick={openFeedbackModal}
+          className="w-full mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition"
+        >
+          Give Feedback
+        </button>
+      )}
 
-      {/* Registration Modal (if not registered) */}
+      {/* Testimonial Button - Visible only if registered */}
+      {isRegistered && (
+        <button
+          onClick={openTestimonialModal}
+          className="w-full mt-6 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg transition"
+        >
+          Want to share your experience? Leave a testimonial
+        </button>
+      )}
+
+      {/* Registration Modal */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-md">
@@ -429,6 +509,81 @@ function Event() {
               </button>
               <button
                 onClick={closeFeedbackModal}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Testimonial Modal */}
+      {showTestimonialModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-md">
+            <h2 className="text-xl font-bold mb-4">Leave a Testimonial</h2>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-semibold mb-1">
+                Your Name
+              </label>
+              <input
+                type="text"
+                value={testimonialName}
+                onChange={(e) => setTestimonialName(e.target.value)}
+                className="w-full border rounded p-2"
+                placeholder="Enter your name"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-semibold mb-1">
+                Event
+              </label>
+              <input
+                type="text"
+                value={event.title}
+                className="w-full border rounded p-2 bg-gray-100"
+                disabled
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-semibold mb-1">
+                Volunteering Position
+              </label>
+              <select
+                value={testimonialPosition}
+                onChange={(e) => setTestimonialPosition(e.target.value)}
+                className="w-full border rounded p-2"
+              >
+                <option value="">Select a position</option>
+                {registeredPositions.map((position) => (
+                  <option key={position._id} value={position.title}>
+                    {position.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-semibold mb-1">
+                Testimonial
+              </label>
+              <textarea
+                value={testimonialContent}
+                onChange={(e) => setTestimonialContent(e.target.value)}
+                className="w-full border rounded p-2"
+                rows="4"
+                placeholder="Share your experience..."
+              ></textarea>
+            </div>
+            <div className="flex gap-4">
+              <button
+                onClick={handleTestimonialSubmit}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg"
+              >
+                Submit
+              </button>
+              <button
+                onClick={closeTestimonialModal}
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg"
               >
                 Cancel
