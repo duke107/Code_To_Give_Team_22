@@ -5,6 +5,7 @@ import { Task } from '../models/task.model.js';
 import mongoose from 'mongoose';
 import { Notification } from '../models/notification.model.js';
 import { sendRegistrationNotification } from './notification.controller.js';
+import {io} from "../server.js"
 
 // Create a new event
 export const createEvent = async (req, res) => {
@@ -54,11 +55,12 @@ export const createEvent = async (req, res) => {
 
     // For each user, create a notification about the new event
     for (const user of usersInArea) {
-      await Notification.create({
+      const notification = await Notification.create({
         userId: user._id,
         message: `New event "${event.title}" is listed in your area.`,
         type: "reminder"
       });
+      io.to(user._id.toString()).emit("new-notification", notification);
     }
 
     return res.status(201).json(event);
@@ -219,6 +221,13 @@ export const registerVolunteer = async (req, res) => {
 
     //sending a notification to the creator about new joinee
     await sendRegistrationNotification(event, req.body.id);
+
+    //socket io part:
+    console.log("emitting notification")
+    io.to(event.createdBy.toString()).emit("new-notification", {
+      message: `A new volunteer registered for your event "${event.title}".`,
+      type: "registration"
+    });
 
     // Now, update the user document to include this event in the user's events array
     const userDoc = await User.findById(id);
