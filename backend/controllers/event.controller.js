@@ -314,6 +314,23 @@ export const assignTask = async (req, res) => {
 
     await user.save();
 
+    const event = await Event.findById(eventId);
+    if (event) {
+      const notifMsg = `You have been assigned new tasks for event "${event.title}"`;
+      // Create a notification for the volunteer
+      await Notification.create({
+        userId: volunteerId,
+        message: notifMsg,
+        type: "task-assigned"
+      });
+      //emit notification from socketio 
+      io.to(volunteerId.toString()).emit("new-notification", {
+        message: notifMsg,
+        type: "task-assigned",
+        isRead: false
+      });
+    }
+
     return res.status(200).json({
       success: true,
       message: "Tasks assigned successfully",
@@ -341,15 +358,27 @@ export const updateTaskStatus = async (req, res) => {
       return res.status(400).json({ message: "Invalid status value. Must be 'pending' or 'completed'." });
     }
 
-    // Update the task with the new status
-    const updatedTask = await Task.findByIdAndUpdate(
-      taskId,
-      { status },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedTask) {
+    const task = await Task.findById(taskId);
+    if(!task)
       return res.status(404).json({ message: "Task not found." });
+    const previousStatus = task.status;
+
+    task.status = status; //update status here
+    const updatedTask = await task.save();
+
+    //now generate notification only if task has been completed
+    if (previousStatus === "pending" && status === "completed") {
+      const event = await Event.findById(task.event);
+      if (event) {
+        const msg = `Task "${task.description}" for event "${event.title}" has been marked completed by "${task.assignedTo}"`;
+        const notification = await Notification.create({
+          userId: event.createdBy,
+          message: msg,
+          type: "task-complete"
+        })
+
+        io.to(event.createdBy.toString(), notification);
+      }
     }
 
     return res.status(200).json({ message: "Task status updated successfully", task: updatedTask });
