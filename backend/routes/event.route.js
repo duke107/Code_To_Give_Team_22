@@ -1,7 +1,7 @@
 import express from "express";
 
 import { isAuthenticated } from "../middlewares/auth.middleware.js";
-import { createEvent, deleteEvent, getEventBySlug, getEvents, updateEvent, registerVolunteer, assignTask, updateTaskStatus, createFeedback, getFeedbacksForEvent } from "../controllers/event.controller.js";
+import { createEvent, deleteEvent, getEventBySlug, getEvents, updateEvent, registerVolunteer, assignTask, updateTaskStatus, createFeedback, getFeedbacksForEvent, submitTestimonial, getRecentTestimonials } from "../controllers/event.controller.js";
 
 const router = express.Router();
 
@@ -9,8 +9,10 @@ const router = express.Router();
 router.post("/create",isAuthenticated, createEvent);
 router.post("/assign",isAuthenticated, assignTask);
 router.post("/submitFeedback",isAuthenticated,createFeedback)
+router.post("/submitTestimonial",isAuthenticated,submitTestimonial)
 router.get("/getEvents",isAuthenticated, getEvents);
 router.get("/feedbacks",isAuthenticated, getFeedbacksForEvent );
+router.get("/getRecentTestimonials",isAuthenticated, getRecentTestimonials);
 // Get event by slug
 router.get("/:slug",isAuthenticated, getEventBySlug);
 
