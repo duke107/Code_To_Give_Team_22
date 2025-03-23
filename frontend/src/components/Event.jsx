@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 
 function Event() {
   const { slug } = useParams();
@@ -13,6 +14,14 @@ function Event() {
   const [selectedPositionId, setSelectedPositionId] = useState(null); // For registration
   const [isRegistered, setIsRegistered] = useState(false);
   const state = useSelector((state) => state.auth);
+
+  // Feedback states
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [enjoyed, setEnjoyed] = useState(null); // "yes" or "no"
+  const [enjoyedFeedback, setEnjoyedFeedback] = useState("");
+  const [notEnjoyedFeedback, setNotEnjoyedFeedback] = useState("");
+  const [improvementSuggestions, setImprovementSuggestions] = useState("");
 
   // Fetch event details including tasks (populated via backend)
   const fetchEventDetails = async () => {
@@ -37,6 +46,7 @@ function Event() {
       }
     } catch (err) {
       setError(err.message);
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -49,9 +59,6 @@ function Event() {
   // Update task status (toggle pending/completed)
   const handleUpdateTaskStatus = async (taskId, currentStatus) => {
     const newStatus = currentStatus === 'pending' ? 'completed' : 'pending';
-    console.log('====================================');
-    console.log(taskId);
-    console.log('====================================');
     try {
       const res = await fetch(`http://localhost:3000/api/v1/events/updateTask/${taskId}`, {
         method: 'PATCH',
@@ -63,10 +70,11 @@ function Event() {
       if (!res.ok) {
         throw new Error(data.message || `Error ${res.status}`);
       }
+      toast.success("Task status updated successfully");
       // Re-fetch event details to update tasks
       fetchEventDetails();
     } catch (err) {
-      alert(`Error updating task status: ${err.message}`);
+      toast.error(`Error updating task status: ${err.message}`);
     }
   };
 
@@ -83,7 +91,7 @@ function Event() {
 
   const handleConfirm = async () => {
     if (!event || !selectedPositionId) {
-      setMessage({ type: 'error', text: 'Please select a volunteering position.' });
+      toast.error('Please select a volunteering position.');
       return;
     }
     setRegistering(true);
@@ -98,19 +106,62 @@ function Event() {
       });
       const data = await res.json();
       if (res.status === 409) {
-        setMessage({ type: 'info', text: data.message || 'Already registered' });
+        toast.info(data.message || 'Already registered');
       } else if (!res.ok) {
         throw new Error(data.message || `Error ${res.status}`);
       } else {
-        setMessage({ type: 'success', text: 'Successfully registered for the event!' });
+        toast.success('Successfully registered for the event!');
         setIsRegistered(true);
         closeModal();
       }
     } catch (err) {
-      setMessage({ type: 'error', text: err.message });
+      toast.error(err.message);
     } finally {
       setRegistering(false);
       fetchEventDetails();
+    }
+  };
+
+  // Feedback Modal handlers
+  const openFeedbackModal = () => {
+    setRating(5);
+    setEnjoyed(null);
+    setEnjoyedFeedback("");
+    setNotEnjoyedFeedback("");
+    setImprovementSuggestions("");
+    setShowFeedbackModal(true);
+  };
+
+  const closeFeedbackModal = () => {
+    setShowFeedbackModal(false);
+  };
+
+  const handleFeedbackSubmit = async () => {
+    const feedbackPayload = {
+      rating,
+      enjoyed,
+      comments: enjoyed === "yes" ? enjoyedFeedback : notEnjoyedFeedback,
+      suggestions: improvementSuggestions,
+      eventId: event._id,
+      userId: state.user._id,
+    };
+
+    try {
+      const res = await fetch('http://localhost:3000/api/v1/events/submitFeedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(feedbackPayload),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Error submitting feedback');
+      }
+      await res.json();
+      toast.success("Thank you for your feedback!");
+      closeFeedbackModal();
+    } catch (err) {
+      toast.error(`Error submitting feedback: ${err.message}`);
     }
   };
 
@@ -198,6 +249,14 @@ function Event() {
         </div>
       )}
 
+      {/* Give Feedback Button */}
+      <button
+        onClick={openFeedbackModal}
+        className="w-full mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition"
+      >
+        Give Feedback
+      </button>
+
       {/* Registration Modal (if not registered) */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -229,6 +288,108 @@ function Event() {
                 onClick={closeModal}
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg"
                 disabled={registering}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Feedback Modal */}
+      {showFeedbackModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-md">
+            <h2 className="text-xl font-bold mb-4">Give Feedback</h2>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-semibold mb-1">
+                Rate the event: {rating}
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="10"
+                value={rating}
+                onChange={(e) => setRating(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div className="mb-4">
+              <p className="text-gray-700 font-semibold mb-1">
+                Did you enjoy volunteering with us?
+              </p>
+              <div className="flex items-center gap-4">
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    name="enjoyed"
+                    value="yes"
+                    checked={enjoyed === "yes"}
+                    onChange={() => setEnjoyed("yes")}
+                    className="form-radio"
+                  />
+                  <span className="ml-2">Yes</span>
+                </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    name="enjoyed"
+                    value="no"
+                    checked={enjoyed === "no"}
+                    onChange={() => setEnjoyed("no")}
+                    className="form-radio"
+                  />
+                  <span className="ml-2">No</span>
+                </label>
+              </div>
+            </div>
+            {enjoyed === "yes" && (
+              <div className="mb-4">
+                <label className="block text-gray-700 font-semibold mb-1">
+                  What did you enjoy/like most in the event?
+                </label>
+                <textarea
+                  value={enjoyedFeedback}
+                  onChange={(e) => setEnjoyedFeedback(e.target.value)}
+                  className="w-full border rounded p-2"
+                  rows="3"
+                ></textarea>
+              </div>
+            )}
+            {enjoyed === "no" && (
+              <div className="mb-4">
+                <label className="block text-gray-700 font-semibold mb-1">
+                  What went wrong?
+                </label>
+                <textarea
+                  value={notEnjoyedFeedback}
+                  onChange={(e) => setNotEnjoyedFeedback(e.target.value)}
+                  className="w-full border rounded p-2"
+                  rows="3"
+                ></textarea>
+              </div>
+            )}
+            <div className="mb-4">
+              <label className="block text-gray-700 font-semibold mb-1">
+                Suggest any improvements or changes
+              </label>
+              <textarea
+                value={improvementSuggestions}
+                onChange={(e) => setImprovementSuggestions(e.target.value)}
+                className="w-full border rounded p-2"
+                rows="2"
+              ></textarea>
+            </div>
+            <div className="flex gap-4">
+              <button
+                onClick={handleFeedbackSubmit}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg"
+              >
+                Submit Feedback
+              </button>
+              <button
+                onClick={closeFeedbackModal}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg"
               >
                 Cancel
               </button>

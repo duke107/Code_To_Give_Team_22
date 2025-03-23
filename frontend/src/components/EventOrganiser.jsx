@@ -12,6 +12,12 @@ function EventOrganiser() {
   const [selectedVolunteer, setSelectedVolunteer] = useState(null);
   const [taskInputs, setTaskInputs] = useState(['']); // Array of task description strings
 
+  // State for feedback dropdown
+  const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackError, setFeedbackError] = useState(null);
+  const [feedbacks, setFeedbacks] = useState([]);
+
   // Fetch event details including volunteer tasks from the backend
   useEffect(() => {
     const fetchEventDetails = async () => {
@@ -37,6 +43,38 @@ function EventOrganiser() {
 
     fetchEventDetails();
   }, [slug]);
+
+  // Function to fetch feedback for the event
+  const fetchFeedbacks = async () => {
+    setFeedbackLoading(true);
+    setFeedbackError(null);
+    try {
+      // Adjust the endpoint to match your API route for fetching feedback by event ID
+      const res = await fetch(`http://localhost:3000/api/v1/events/feedbacks?eventId=${event._id}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        throw new Error(`Error ${res.status}: ${res.statusText}`);
+      }
+      const data = await res.json();
+      setFeedbacks(data);
+    } catch (err) {
+      setFeedbackError(err.message);
+    } finally {
+      setFeedbackLoading(false);
+    }
+  };
+
+  // Toggle the feedback dropdown panel
+  const toggleFeedback = () => {
+    // When opening, fetch the feedbacks
+    if (!feedbackVisible) {
+      fetchFeedbacks();
+    }
+    setFeedbackVisible(!feedbackVisible);
+  };
 
   // Opens the task assignment modal for a specific volunteer
   const openTaskModal = (volunteer) => {
@@ -115,7 +153,7 @@ function EventOrganiser() {
   if (!event) return <p className="text-center text-gray-500">No event data available.</p>;
 
   return (
-    <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6">
+    <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6 relative">
       <h1 className="text-3xl font-bold text-gray-900 mb-4">{event.title}</h1>
 
       {event.image && (
@@ -128,6 +166,47 @@ function EventOrganiser() {
         <p className="text-lg font-semibold">📍 Location: {event.eventLocation}</p>
         <p className="text-gray-600">📅 Start: {new Date(event.eventStartDate).toLocaleDateString()}</p>
         <p className="text-gray-600">📅 End: {new Date(event.eventEndDate).toLocaleDateString()}</p>
+      </div>
+
+      {/* Feedback Dropdown Button */}
+      <div className="absolute top-6 right-6">
+        <button
+          onClick={toggleFeedback}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded"
+        >
+          {feedbackVisible ? 'Hide Feedback' : 'View Feedback'}
+        </button>
+        {feedbackVisible && (
+          <div className="mt-2 w-80 bg-white border border-gray-200 rounded shadow-lg p-4">
+            {feedbackLoading ? (
+              <p className="text-gray-500">Loading feedback...</p>
+            ) : feedbackError ? (
+              <p className="text-red-500">Error: {feedbackError}</p>
+            ) : feedbacks.length > 0 ? (
+              <ul className="space-y-3">
+                {feedbacks.map((fb) => (
+                  <li key={fb._id} className="border-b pb-2">
+                    <p className="text-sm font-semibold">Rating: {fb.rating} / 10</p>
+                    <p className="text-sm">
+                      Enjoyed: {fb.enjoyed ? 'Yes' : 'No'}
+                    </p>
+                    {fb.comments && (
+                      <p className="text-sm text-gray-700">Comments: {fb.comments}</p>
+                    )}
+                    {fb.suggestions && (
+                      <p className="text-sm text-gray-700">Suggestions: {fb.suggestions}</p>
+                    )}
+                    <p className="text-xs text-gray-500">
+                      {new Date(fb.createdAt).toLocaleDateString()}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500">No feedback available for this event.</p>
+            )}
+          </div>
+        )}
       </div>
 
       {event.volunteeringPositions?.length > 0 && (
