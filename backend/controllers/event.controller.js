@@ -382,6 +382,23 @@ export const createFeedback = async (req, res) => {
     // Save feedback to the database
     await feedback.save();
 
+    const event = await Event.findById(eventId);
+    if (event) {
+      const msg = `A new anonymous feedback has been submitted for your event "${event.title}".`;
+      // Create a notification document for the event creator
+      await Notification.create({
+        userId: event.createdBy,
+        message: msg,
+        type: "feedback"
+      });
+      // Emit the notification in real time via Socket.IO
+      io.to(event.createdBy.toString()).emit("new-notification", {
+        message: msg,
+        type: "feedback",
+        isRead: false
+      });
+    }
+
     return res.status(201).json({
       message: 'Feedback submitted successfully',
       feedback,

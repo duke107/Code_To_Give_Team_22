@@ -22,6 +22,7 @@ function Event() {
   const [enjoyedFeedback, setEnjoyedFeedback] = useState("");
   const [notEnjoyedFeedback, setNotEnjoyedFeedback] = useState("");
   const [improvementSuggestions, setImprovementSuggestions] = useState("");
+  const [feedbacks, setFeedbacks] = useState([]);
 
   // Fetch event details including tasks (populated via backend)
   const fetchEventDetails = async () => {
@@ -165,6 +166,27 @@ function Event() {
     }
   };
 
+  //to fetch list of all feedbacks in this event:
+  useEffect(() => {
+    if (event) {
+      const fetchFeedbacks = async () => {
+        try {
+          const res = await fetch(`http://localhost:3000/api/v1/events/feedbacks?eventId=${event._id}`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          });
+          const data = await res.json();
+          setFeedbacks(data.data);
+        } catch (error) {
+          console.error("Error fetching feedbacks:", error);
+        }
+      };
+      fetchFeedbacks();
+    }
+  }, [event]);
+  
+
   if (loading) return <p className="text-center text-gray-500">Loading event details...</p>;
   if (error) return <p className="text-center text-red-500">Error: {error}</p>;
   if (!event) return <p className="text-center text-gray-500">No event data available.</p>;
@@ -257,6 +279,24 @@ function Event() {
         Give Feedback
       </button>
 
+      {/* show all feedbacks to the creator */}
+      {state.user && state.user._id === event.createdBy && (
+      <div className="mt-6">
+        <h2 className="text-xl font-semibold mb-2">Feedbacks</h2>
+        {feedbacks.length > 0 ? (
+          feedbacks.map((fb) => (
+            <div key={fb._id} className="border p-3 rounded mb-2">
+              <p className="text-gray-700 font-semibold">Rating: {fb.rating}</p>
+              <p className="text-gray-700">{fb.comment}</p>
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-600">No feedback yet.</p>
+        )}
+      </div>
+    )}
+
+
       {/* Registration Modal (if not registered) */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -308,7 +348,7 @@ function Event() {
               <input
                 type="range"
                 min="0"
-                max="10"
+                max="5"
                 value={rating}
                 onChange={(e) => setRating(e.target.value)}
                 className="w-full"

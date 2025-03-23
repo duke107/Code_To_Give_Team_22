@@ -16,7 +16,7 @@ const notificationSchema = new Schema({
     },
     type: {
         type: String,
-        enum: ['registration', 'reminder'],
+        enum: ['registration', 'reminder', 'feedback'],
         required: true
     }
 }, { timestamps: true });
