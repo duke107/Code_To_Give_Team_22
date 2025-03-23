@@ -30,6 +30,10 @@ function Event() {
   const [testimonialPosition, setTestimonialPosition] = useState(''); // volunteering position
   const [testimonialContent, setTestimonialContent] = useState('');
 
+  const hasEventEnded = () => {
+    return new Date(event.eventEndDate) < Date.now();
+  };
+
   // Fetch event details including tasks (populated via backend)
   const fetchEventDetails = async () => {
     try {
@@ -356,10 +360,7 @@ function Event() {
         )}
       </div>
       )} */}
-      
-
-      Give Feedback Button - Visible only if registered
-      {isRegistered && (
+      {isRegistered && hasEventEnded() && (
         <button
           onClick={openFeedbackModal}
           className="w-full mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition"
@@ -369,7 +370,7 @@ function Event() {
       )}
 
       {/* Testimonial Button - Visible only if registered */}
-      {isRegistered && (
+      {isRegistered && hasEventEnded() && (
         <button
           onClick={openTestimonialModal}
           className="w-full mt-6 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg transition"
