@@ -1,10 +1,58 @@
 import { Notification } from "../models/notification.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import {User} from "../models/user.model.js";
+import Event from "../models/event.model.js"
+
+export const sendRegistrationNotification = async (event, volunteerId) => {
+    try {
+        await Notification.create({
+            userId: event.createdBy,
+            message: `Volunteeer (Id: ${volunteerId}) has registered for ${event.title}`,
+            type: "registration"
+        })
+    } catch (error) {
+        console.error("Error sending register notification", error )
+    }
+}
+
+export const sendReminderNotifications = async () => {
+    try {
+        //if event is under 2 days
+      const twoDaysFromNow = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+      const events = await Event.find({
+        eventStartDate: { $lte: twoDaysFromNow },
+        "volunteeringPositions.slots": { $gt: 0 }
+      });
+      
+        //searching for same location volunteers
+      for (const event of events) {
+        const users = await User.find({
+          location: event.eventLocation,
+          _id: { $nin: event.registeredVolunteers }
+        });
+  
+        for (const user of users) {
+          await Notification.create({
+            userId: user._id,
+            message: `Reminder: The event "${event.title}" in your area`,
+            type: "reminder"
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error sending reminder notifications:", error);
+    }
+  };
 
 const sendNotification = async (req, res, next) => {
     try {
-        // TODO: Handle system-generated notifications based on new enrollment and upcoming events using MongoDB aggregate pipelines
+        const { userId, message, type } = req.body;
+    if (!userId || !message || !type) {
+      return next(new ApiError(400, "userId, message, and type are required"));
+    }
+    const notification = await Notification.create({ userId, message, type });
+    return res.status(201).json(new ApiResponse(201, notification, "Notification sent successfully"));
     } catch (error) {
         next(new ApiError(500, "Error sending notifications"));
     }

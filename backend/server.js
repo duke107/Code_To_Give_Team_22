@@ -1,5 +1,7 @@
 import cookieParser from "cookie-parser";
 import { app } from "./app.js";
+import cron from "node-cron";
+import { sendReminderNotifications } from "./controllers/notification.controller.js";
 
 app.listen(process.env.PORT || 3000,()=>{
     console.log(`Server is running on port ${process.env.PORT}`);
@@ -14,4 +16,9 @@ app.use((err, req, res, next) => {
         statusCode,
         message,
     });
+});
+
+cron.schedule("0 8 * * *", () => {
+    console.log("Running reminder notifications job");
+    sendReminderNotifications();
 });

@@ -24,6 +24,7 @@ import FullStory from './pages/FullStory'
 import EventOrganiser from './components/EventOrganiser'
 import EventsUser from './components/EventsUser'
 import ScreenReaderButton from './ScreenReaderButton'
+import Notification from './pages/Notification'
 function App() {
   const dispatch = useDispatch();
 
@@ -64,7 +65,7 @@ function App() {
             path="/event/:slug"
             element={user && user.role === "Event Organiser" ? <EventOrganiser /> : <Event />}
           />
-
+          <Route path="/notification" element={<Notification />}/>
         </Route>
 
         <Route path="/login" element={<Login />} />
