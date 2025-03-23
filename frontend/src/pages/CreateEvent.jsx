@@ -12,7 +12,7 @@ import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 import { HiPlus, HiTrash, HiMicrophone, HiStop, HiUpload, HiLocationMarker, HiCalendar } from "react-icons/hi"
 import { useSelector } from "react-redux"
-
+import LocationPicker from "../components/LocationPicker"
 
 const modules = {
   toolbar: [
@@ -218,8 +218,8 @@ export default function CreateEvent() {
     } else {
       console.log("triggered recording")
       //TODO: will do the language dropdown later on
-      // setShowDropdown(true)
-      startRecording(language)
+      setShowDropdown(true)
+      // startRecording(language)
     }
   }
 
@@ -245,7 +245,6 @@ export default function CreateEvent() {
     { code: "ml-IN", label: "Malayalam" },
     { code: "gu-IN", label: "Gujarati" },
     { code: "mr-IN", label: "Marathi" },
-    { code: "pa-IN", label: "Punjabi" },
   ];
 
   return (
@@ -274,22 +273,8 @@ export default function CreateEvent() {
             </div>
 
             {/* Event Location Field */}
-            <div>
-              <div className="mb-2 block">
-                <Label htmlFor="eventLocation" value="Event Location" className="text-lg font-medium" />
-              </div>
-              <TextInput
-                id="eventLocation"
-                type="text"
-                placeholder="Enter event location"
-                required
-                value={eventLocation}
-                onChange={(e) => setEventLocation(e.target.value)}
-                className="text-gray-800"
-                sizing="lg"
-                icon={HiLocationMarker}
-              />
-            </div>
+            <div><LocationPicker eventLocation={eventLocation} setEventLocation={setEventLocation} /></div>
+            
 
             {/* Date Pickers */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -406,8 +391,8 @@ export default function CreateEvent() {
                   </Button>
                   {/* {showDropdown && !isRecording && console.log("Dropdown visible?")} */}
                   {showDropdown && !isRecording && (
-                    <Card className="absolute bottom-12 right-0 w-48 p-0 z-50" onClick={(e) => e.stopPropagation()}>
-                      <ul className="divide-y divide-gray-200">
+                    <Card className=" bottom-12 right-0 w-48 p-0 z-50" onClick={(e) => e.stopPropagation()}>
+                      <ul className="divide-y divide-gray-200 max-h-32 overflow-y-auto">
                         {indianLanguages.map((lang) => (
                           <li key={lang.code}>
                             <button
