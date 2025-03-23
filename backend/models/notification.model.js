@@ -16,7 +16,7 @@ const notificationSchema = new Schema({
     },
     type: {
         type: String,
-        enum: ['registration', 'reminder', 'feedback'],
+        enum: ['registration', 'reminder', 'feedback', 'task-assigned', "task-complete"],
         required: true
     }
 }, { timestamps: true });

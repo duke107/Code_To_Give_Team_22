@@ -333,15 +333,15 @@ function Event() {
       )}
 
       {/* Give Feedback Button */}
-      <button
+      {/* <button
         onClick={openFeedbackModal}
         className="w-full mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition"
       >
         Give Feedback
-      </button>
+      </button> */}
 
       {/* show all feedbacks to the creator */}
-      {state.user && state.user._id === event.createdBy && (
+      {/* {state.user && state.user._id === event.createdBy && (
       <div className="mt-6">
         <h2 className="text-xl font-semibold mb-2">Feedbacks</h2>
         {feedbacks.length > 0 ? (
@@ -355,9 +355,10 @@ function Event() {
           <p className="text-gray-600">No feedback yet.</p>
         )}
       </div>
-    )}
+      )} */}
+      
 
-      {/* Give Feedback Button - Visible only if registered */}
+      Give Feedback Button - Visible only if registered
       {isRegistered && (
         <button
           onClick={openFeedbackModal}

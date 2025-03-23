@@ -14,6 +14,7 @@ const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
+  const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -80,22 +81,40 @@ const Header = () => {
         <Link to="/events" className="hover:text-black">Events</Link>
       </nav>
 
-      {/* Auth Buttons */}
-      <div className="flex items-center gap-2">
+      {/* Auth Buttons & Notifications */}
+      <div className="flex items-center gap-2 relative">
         {isAuthenticated ? (
           <>
-            <button
-              onClick={() => navigate('/change-details')}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700"
-            >
-              Change Details
-            </button>
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 text-white px-4 py-2 rounded-lg shadow hover:bg-red-600"
-            >
-              Logout
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setAccountDropdownOpen((prev) => !prev)}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700"
+              >
+                Account
+              </button>
+              {accountDropdownOpen && (
+                <div className="right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-50">
+                  <button
+                    onClick={() => {
+                      setAccountDropdownOpen(false);
+                      navigate("/change-details");
+                    }}
+                    className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                  >
+                    Change Details
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAccountDropdownOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
           </>
         ) : (
           <Link
