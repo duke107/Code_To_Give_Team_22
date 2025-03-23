@@ -37,5 +37,3 @@ app.use("/api/v1/donate", donationRouter)
 app.use("/api/v1/volunteer", volunteerRouter);
 app.use("/api/v1/organizer", organizerRouter);
 connectDB()
-app.listen(3000);
-
