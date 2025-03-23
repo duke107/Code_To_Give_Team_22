@@ -3,6 +3,7 @@ import Event from '../models/event.model.js'
 import { User } from '../models/user.model.js'; // adjust the path as needed
 import { Task } from '../models/task.model.js';
 import mongoose from 'mongoose';
+import { Feedback } from '../models/feedback.model.js';
 import { Notification } from '../models/notification.model.js';
 import { sendRegistrationNotification } from './notification.controller.js';
 import {io} from "../server.js"
@@ -354,5 +355,56 @@ export const updateTaskStatus = async (req, res) => {
   } catch (error) {
     console.error("Error updating task status:", error);
     return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const createFeedback = async (req, res) => {
+  try {
+    const { eventId, userId, rating, enjoyed, comments, suggestions } = req.body;
+
+    // Validate required fields
+    if (!eventId || !userId || rating === undefined || enjoyed === undefined) {
+      return res.status(400).json({
+        message: 'Missing required fields: eventId, userId, rating, and enjoyed are required.'
+      });
+    }
+
+    // Create new feedback instance
+    const feedback = new Feedback({
+      eventId,
+      userId,
+      rating,
+      enjoyed,
+      comments: comments || '',
+      suggestions: suggestions || '',
+    });
+
+    // Save feedback to the database
+    await feedback.save();
+
+    return res.status(201).json({
+      message: 'Feedback submitted successfully',
+      feedback,
+    });
+  } catch (error) {
+    console.error('Error creating feedback:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+export const getFeedbacksForEvent = async (req, res) => {
+  try {
+    const { eventId } = req.query;
+
+    if (!eventId) {
+      return res.status(400).json({ message: 'Event ID is required.' });
+    }
+
+    // Find feedback associated with the given event ID, sorted by creation date (most recent first)
+    const feedbacks = await Feedback.find({ eventId }).sort({ createdAt: -1 });
+
+    return res.status(200).json(feedbacks);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
   }
 };

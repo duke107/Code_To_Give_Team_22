@@ -1,25 +1,39 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose from "mongoose";
 
-const feedbackSchema = new Schema({
-    eventId: {
-        type: Schema.Types.ObjectId,
-        ref: "Event",
-        required: true
-    },
-    userId: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: true
-    },
-    comment: {
-        type: String,
-        required: true
-    },
-    rating: {
-        type: Number,
-        min: 1,
-        max: 5
-    }
-}, { timestamps: true });
+const FeedbackSchema = new mongoose.Schema({
+  eventId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Event',
+    required: true,
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  rating: {
+    type: Number,
+    required: true,
+    min: 0,
+    max: 10,
+  },
+  enjoyed: {
+    type: Boolean,
+    required: true,
+  },
+  comments: {
+    type: String,
+    default: '',
+  },
+  // Suggestions for improvements or changes. Always provided.
+  suggestions: {
+    type: String,
+    default: '',
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
-export const Feedback = mongoose.model("Feedback", feedbackSchema);
+export const Feedback = mongoose.model('Feedback', FeedbackSchema);
