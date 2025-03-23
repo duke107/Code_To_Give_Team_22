@@ -19,6 +19,7 @@ const Notifications = () => {
   useEffect(() => {
     fetchNotifications();
   }, []);
+  const unreadCount = notifications.filter((noti) => !noti.isRead).length;
 
   const markAsRead = async (notificationId) => {
     try {

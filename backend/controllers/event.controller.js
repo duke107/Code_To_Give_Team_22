@@ -3,8 +3,11 @@ import Event from '../models/event.model.js'
 import { User } from '../models/user.model.js'; // adjust the path as needed
 import { Task } from '../models/task.model.js';
 import mongoose from 'mongoose';
+import { Feedback } from '../models/feedback.model.js';
 import { Notification } from '../models/notification.model.js';
 import { sendRegistrationNotification } from './notification.controller.js';
+import {io} from "../server.js"
+import { Testimonial } from '../models/testimonial.model.js';
 
 // Create a new event
 export const createEvent = async (req, res) => {
@@ -54,11 +57,12 @@ export const createEvent = async (req, res) => {
 
     // For each user, create a notification about the new event
     for (const user of usersInArea) {
-      await Notification.create({
+      const notification = await Notification.create({
         userId: user._id,
         message: `New event "${event.title}" is listed in your area.`,
         type: "reminder"
       });
+      io.to(user._id.toString()).emit("new-notification", notification);
     }
 
     return res.status(201).json(event);
@@ -220,6 +224,13 @@ export const registerVolunteer = async (req, res) => {
     //sending a notification to the creator about new joinee
     await sendRegistrationNotification(event, req.body.id);
 
+    //socket io part:
+    console.log("emitting notification")
+    io.to(event.createdBy.toString()).emit("new-notification", {
+      message: `A new volunteer registered for your event "${event.title}".`,
+      type: "registration"
+    });
+
     // Now, update the user document to include this event in the user's events array
     const userDoc = await User.findById(id);
     if (userDoc) {
@@ -303,6 +314,23 @@ export const assignTask = async (req, res) => {
 
     await user.save();
 
+    const event = await Event.findById(eventId);
+    if (event) {
+      const notifMsg = `You have been assigned new tasks for event "${event.title}"`;
+      // Create a notification for the volunteer
+      await Notification.create({
+        userId: volunteerId,
+        message: notifMsg,
+        type: "task-assigned"
+      });
+      //emit notification from socketio 
+      io.to(volunteerId.toString()).emit("new-notification", {
+        message: notifMsg,
+        type: "task-assigned",
+        isRead: false
+      });
+    }
+
     return res.status(200).json({
       success: true,
       message: "Tasks assigned successfully",
@@ -330,20 +358,141 @@ export const updateTaskStatus = async (req, res) => {
       return res.status(400).json({ message: "Invalid status value. Must be 'pending' or 'completed'." });
     }
 
-    // Update the task with the new status
-    const updatedTask = await Task.findByIdAndUpdate(
-      taskId,
-      { status },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedTask) {
+    const task = await Task.findById(taskId);
+    if(!task)
       return res.status(404).json({ message: "Task not found." });
+    const previousStatus = task.status;
+
+    task.status = status; //update status here
+    const updatedTask = await task.save();
+
+    //now generate notification only if task has been completed
+    if (previousStatus === "pending" && status === "completed") {
+      const event = await Event.findById(task.event);
+      if (event) {
+        const msg = `Task "${task.description}" for event "${event.title}" has been marked completed by "${task.assignedTo}"`;
+        const notification = await Notification.create({
+          userId: event.createdBy,
+          message: msg,
+          type: "task-complete"
+        })
+
+        io.to(event.createdBy.toString(), notification);
+      }
     }
 
     return res.status(200).json({ message: "Task status updated successfully", task: updatedTask });
   } catch (error) {
     console.error("Error updating task status:", error);
     return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const createFeedback = async (req, res) => {
+  try {
+    const { eventId, userId, rating, enjoyed, comments, suggestions } = req.body;
+
+    // Validate required fields
+    if (!eventId || !userId || rating === undefined || enjoyed === undefined) {
+      return res.status(400).json({
+        message: 'Missing required fields: eventId, userId, rating, and enjoyed are required.'
+      });
+    }
+
+    // Create new feedback instance
+    const feedback = new Feedback({
+      eventId,
+      userId,
+      rating,
+      enjoyed,
+      comments: comments || '',
+      suggestions: suggestions || '',
+    });
+
+    // Save feedback to the database
+    await feedback.save();
+
+    const event = await Event.findById(eventId);
+    if (event) {
+      const msg = `A new anonymous feedback has been submitted for your event "${event.title}".`;
+      // Create a notification document for the event creator
+      await Notification.create({
+        userId: event.createdBy,
+        message: msg,
+        type: "feedback"
+      });
+      // Emit the notification in real time via Socket.IO
+      io.to(event.createdBy.toString()).emit("new-notification", {
+        message: msg,
+        type: "feedback",
+        isRead: false
+      });
+    }
+
+    return res.status(201).json({
+      message: 'Feedback submitted successfully',
+      feedback,
+    });
+  } catch (error) {
+    console.error('Error creating feedback:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+export const getFeedbacksForEvent = async (req, res) => {
+  try {
+    const { eventId } = req.query;
+
+    if (!eventId) {
+      return res.status(400).json({ message: 'Event ID is required.' });
+    }
+
+    // Find feedback associated with the given event ID, sorted by creation date (most recent first)
+    const feedbacks = await Feedback.find({ eventId }).sort({ createdAt: -1 });
+
+    return res.status(200).json(feedbacks);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+
+export const submitTestimonial = async (req, res) => {
+  try {
+    const { name, eventId, eventTitle, volunteeringPosition, testimonial, userId } = req.body;
+
+    // Validate required fields
+    if (!name || !eventId || !volunteeringPosition || !testimonial || !userId) {
+      return res.status(400).json({ message: 'Missing required fields.' });
+    }
+
+    // Create a new testimonial document
+    const newTestimonial = new Testimonial({
+      name,
+      eventId,
+      eventTitle,
+      volunteeringPosition,
+      testimonial,
+      userId,
+    });
+
+    await newTestimonial.save();
+
+    return res.status(201).json({ message: 'Testimonial submitted successfully.' });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const getRecentTestimonials = async (req, res) => {
+  try {
+    // Find the latest 10 testimonials
+    const testimonials = await Testimonial.find()
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    return res.status(200).json(testimonials);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 };

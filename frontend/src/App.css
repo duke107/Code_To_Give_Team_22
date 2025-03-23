@@ -1,7 +1,10 @@
-.hidden {
-    display: none;
+:global(.high-contrast) {
+    background-color: black !important;
+    color: yellow !important;
 }
 
-button:hover {
-    background-color: #0056b3;
+:global(.high-contrast button) {
+    background-color: yellow !important;
+    color: black !important;
+    border: 2px solid white;
 }
