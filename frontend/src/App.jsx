@@ -25,6 +25,9 @@ import EventOrganiser from './components/EventOrganiser'
 import EventsUser from './components/EventsUser'
 import ScreenReaderButton from './ScreenReaderButton'
 import Notification from './pages/Notification'
+import { AccessibilityProvider } from "./components/Accessibility/AccessibilityContext.Provider";
+import AccessibilityToolbar from "./components/AccessibilityToolbar";
+
 function App() {
   const dispatch = useDispatch();
 
@@ -42,6 +45,8 @@ function App() {
     <Router>
       <ScreenReaderButton />
       <TranslateButton />
+      <AccessibilityProvider >
+      <AccessibilityToolbar />
       <Routes>
         {/* Routes that require Header & Footer */}
         <Route element={<MainLayout />}>
@@ -78,6 +83,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
       <ToastContainer theme="dark" />
+      </ AccessibilityProvider>
     </Router>
   );
 }
