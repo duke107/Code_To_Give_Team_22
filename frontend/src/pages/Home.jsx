@@ -4,6 +4,8 @@ import Slider from 'react-slick'; // Import react-slick
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 
+import AccessibilityMenu from "../components/AccessibilityMenu";
+import TranslateButton from '../TranslateButton';
 function Home() {
   const [testimonials, setTestimonials] = useState([]);
 
@@ -41,7 +43,9 @@ function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 ">
+       
+      
       {/* Hero Section */}
       <div className="h-[70vh] relative flex flex-col items-center justify-center bg-blue-600 text-white text-center">
         <h1 className="text-4xl font-bold mb-4">Welcome to Samarthanam</h1>
@@ -107,6 +111,9 @@ function Home() {
           <p className="text-center text-gray-500">No testimonials available yet.</p>
         )}
       </div>
+       {/* Accessibility Menu */}
+       <AccessibilityMenu />
+       <TranslateButton />
     </div>
   );
 }

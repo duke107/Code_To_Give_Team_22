@@ -1,9 +1,9 @@
-.high-contrast {
+:global(.high-contrast) {
     background-color: black !important;
     color: yellow !important;
 }
 
-.high-contrast * {
+:global(.high-contrast button) {
     background-color: yellow !important;
     color: black !important;
     border: 2px solid white;

@@ -5,6 +5,7 @@ import { sendReminderNotifications } from "./controllers/notification.controller
 import { Server } from "socket.io";
 import http from "http"
 
+
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
@@ -29,18 +30,15 @@ io.on("connection", (socket) => {
   });
 export {io}
 
-server.listen(process.env.PORT || 3000,()=>{
-    console.log(`Server is running on port ${process.env.PORT}`);
-})
-
 //middleware for error handling
+
 app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    const message = err.message || "Internal Server Error"; 
     res.status(statusCode).json({
         success: false,
         statusCode,
-        message,
+        message, 
     });
 });
 
