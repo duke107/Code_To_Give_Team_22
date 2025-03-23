@@ -49,8 +49,8 @@ function App() {
     <Router>
       <ScreenReaderButton />
       <TranslateButton />
-      <AccessibilityProvider >
-      <AccessibilityToolbar />
+      {/* <AccessibilityProvider >
+      <AccessibilityToolbar /> */}
       <Routes>
         {/* Routes that require Header & Footer */}
         <Route element={<MainLayout />}>
@@ -93,7 +93,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
       <ToastContainer theme="dark" />
-      </ AccessibilityProvider>
+      {/* </ AccessibilityProvider> */}
     </Router>
   );
 }
