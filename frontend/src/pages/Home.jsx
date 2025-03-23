@@ -1,9 +1,12 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-
+import AccessibilityMenu from "../components/AccessibilityMenu";
+import TranslateButton from '../TranslateButton';
 function Home() {
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 ">
+       
+      
       {/* Hero Section */}
       <div className="h-[70vh] relative flex flex-col items-center justify-center bg-blue-600 text-white text-center">
         <h1 className="text-4xl font-bold mb-4">Welcome to Samarthanam</h1>
@@ -25,7 +28,12 @@ function Home() {
           We strive to empower the disabled and create a more inclusive world through education, rehabilitation, and innovation.
         </p>
       </div>
+       {/* Accessibility Menu */}
+       <AccessibilityMenu />
+       <TranslateButton />
     </div>
+    
+    
   )
 }
 

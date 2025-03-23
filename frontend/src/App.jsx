@@ -41,7 +41,6 @@ function App() {
   return (
     <Router>
       <ScreenReaderButton />
-      <TranslateButton />
       <Routes>
         {/* Routes that require Header & Footer */}
         <Route element={<MainLayout />}>

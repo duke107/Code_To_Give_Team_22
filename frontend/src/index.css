@@ -2,10 +2,128 @@
 @tailwind components;
 @tailwind utilities;
 
-*{
+* {
   font-family: "Montserrat", serif;
   font-optical-sizing: auto;
   font-style: normal;
   overflow-x: hidden;
   box-sizing: border-box;
+}
+
+/* High Contrast Mode */
+.high-contrast {
+  background-color: black !important;
+  color: yellow !important;
+}
+
+.high-contrast * {
+  background-color: black !important;
+  color: yellow !important;
+}
+
+.high-contrast a, 
+.high-contrast h1, 
+.high-contrast h2, 
+.high-contrast h3, 
+.high-contrast p, 
+.high-contrast span {
+  color: yellow !important;
+}
+
+.high-contrast button {
+  background-color: yellow !important;
+  color: black !important;
+  border: 2px solid yellow !important;
+}
+
+/* Grayscale Mode */
+.grayscale {
+  filter: grayscale(100%);
+}
+
+/* Dark Mode */
+.dark-mode {
+  background-color: #121212 !important;
+  color: white !important;
+}
+
+.dark-mode * {
+  background-color: #121212 !important;
+  color: white !important;
+}
+
+.dark-mode a,
+.dark-mode h1,
+.dark-mode h2,
+.dark-mode h3,
+.dark-mode p,
+.dark-mode span {
+  color: white !important;
+}
+
+.dark-mode button {
+  background-color: #333 !important;
+  color: white !important;
+  border: 1px solid #555 !important;
+}
+
+.dark-mode input, 
+.dark-mode textarea {
+  background-color: #222 !important;
+  color: white !important;
+  border: 1px solid #555 !important;
+}
+
+/* Dark Mode */
+.dark-mode {
+  background-color: #121212 !important;
+  color: white !important;
+}
+
+.dark-mode * {
+  background-color: #121212 !important;
+  color: white !important;
+}
+
+/* Proper Borders for Buttons */
+.dark-mode button {
+  background-color: #333 !important;
+  color: white !important;
+  border: 2px solid white !important;  /* White border for visibility */
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Hover Effect for Buttons */
+.dark-mode button:hover {
+  background-color: #555 !important;
+  border-color: #ffcc00 !important;  /* Yellow border on hover */
+  color: #ffcc00 !important;
+}
+
+/* Inputs and Text Areas */
+.dark-mode input, 
+.dark-mode textarea {
+  background-color: #222 !important;
+  color: white !important;
+  border: 2px solid #bbb !important;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.dark-mode input:focus, 
+.dark-mode textarea:focus {
+  border-color: #ffcc00 !important;  /* Highlight border on focus */
+  outline: none;
+}
+
+/* Links */
+.dark-mode a {
+  color: #ffcc00 !important;
+  text-decoration: underline;
+}
+
+.dark-mode a:hover {
+  color: #ff9900 !important;
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const ScreenReader = () => {
-  const [isEnabled, setIsEnabled] = useState(true); // Screen reader enabled by default
+  const [isEnabled, setIsEnabled] = useState(false); // Screen reader enabled by default
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [isKeyboardNavigation, setIsKeyboardNavigation] = useState(false);
   const enableButtonRef = useRef(null);
