@@ -10,12 +10,12 @@ const userSchema= new mongoose.Schema({
         type: String,
         required: true,
       },
-      password: {
+    password: {
         type: String,
         required: true,
         select: false,
       },
-      role: {
+    role: {
         type: String,
         enum: ["Admin", "User","Event Organiser"],
         default: "User",
@@ -77,7 +77,6 @@ userSchema.methods.generateVerificationCode = function () {
     this.verificationCodeExpire = Date.now() + 15 * 60 * 1000;
     return verificationCode;
   };
-
 
   userSchema.methods.getResetPasswordToken= function(){
       const resetToken = crypto.randomBytes(20).toString('hex');

@@ -27,6 +27,10 @@ import ScreenReaderButton from './ScreenReaderButton'
 import Notification from './pages/Notification'
 import { AccessibilityProvider } from "./components/Accessibility/AccessibilityContext.Provider";
 import AccessibilityToolbar from "./components/AccessibilityToolbar";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminRoute from "./components/AdminRoute";
+import AdminLogin from "./pages/AdminLogin";
+
 
 function App() {
   const dispatch = useDispatch();
@@ -45,8 +49,8 @@ function App() {
     <Router>
       <ScreenReaderButton />
       <TranslateButton />
-      <AccessibilityProvider >
-      <AccessibilityToolbar />
+      {/* <AccessibilityProvider >
+      <AccessibilityToolbar /> */}
       <Routes>
         {/* Routes that require Header & Footer */}
         <Route element={<MainLayout />}>
@@ -79,11 +83,17 @@ function App() {
         <Route path="/otp-verification/:email" element={<OTP />} />
         <Route path="/password/reset/:token" element={<ResetPassword />} />
 
+        <Route path="/admin/login" element={<AdminLogin /> }/>
+
+        <Route element={<AdminRoute />}>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        </Route>
+
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
       <ToastContainer theme="dark" />
-      </ AccessibilityProvider>
+      {/* </ AccessibilityProvider> */}
     </Router>
   );
 }

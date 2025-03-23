@@ -22,6 +22,7 @@ const EventSchema = new mongoose.Schema(
     registeredVolunteers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     // Field to store the user who created the event
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    isApproved: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
