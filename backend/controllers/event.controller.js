@@ -4,6 +4,8 @@ import { User } from '../models/user.model.js'; // adjust the path as needed
 import { Task } from '../models/task.model.js';
 import mongoose from 'mongoose';
 import { Feedback } from '../models/feedback.model.js';
+import { Notification } from '../models/notification.model.js';
+import { sendRegistrationNotification } from './notification.controller.js';
 
 // Create a new event
 export const createEvent = async (req, res) => {
@@ -44,6 +46,21 @@ export const createEvent = async (req, res) => {
       volunteeringPositions: processedVolunteeringPositions,
       createdBy: user_id, // storing the id of the user who created the event
     });
+
+    // After creating the event, notify users in the same area
+    const usersInArea = await User.find({
+      location: eventLocation,
+      _id: { $ne: user_id }
+    });
+
+    // For each user, create a notification about the new event
+    for (const user of usersInArea) {
+      await Notification.create({
+        userId: user._id,
+        message: `New event "${event.title}" is listed in your area.`,
+        type: "reminder"
+      });
+    }
 
     return res.status(201).json(event);
   } catch (error) {
@@ -200,6 +217,9 @@ export const registerVolunteer = async (req, res) => {
     }
 
     await event.save();
+
+    //sending a notification to the creator about new joinee
+    await sendRegistrationNotification(event, req.body.id);
 
     // Now, update the user document to include this event in the user's events array
     const userDoc = await User.findById(id);

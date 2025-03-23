@@ -13,6 +13,11 @@ const notificationSchema = new Schema({
     isRead: {
         type: Boolean,
         default: false
+    },
+    type: {
+        type: String,
+        enum: ['registration', 'reminder'],
+        required: true
     }
 }, { timestamps: true });
 

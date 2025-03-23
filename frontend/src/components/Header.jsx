@@ -2,6 +2,7 @@ import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { logout } from '../redux/slices/authSlice'
+import { FaBell } from "react-icons/fa";
 
 const Header = () => {
   const { isAuthenticated } = useSelector((state) => state.auth)
@@ -34,7 +35,7 @@ const Header = () => {
       </nav>
 
       {/* Auth Buttons */}
-      <div>
+      <div className='flex items-center gap-2'>
         {isAuthenticated ? (
           <button
             onClick={handleLogout}
@@ -50,7 +51,12 @@ const Header = () => {
             Sign In
           </Link>
         )}
+        <Link to="/notification">
+      <FaBell />
+      </Link>
       </div>
+      {/* <div> */}
+      {/* </div> */}
     </header>
   )
 }
