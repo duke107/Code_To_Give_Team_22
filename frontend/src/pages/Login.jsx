@@ -138,6 +138,7 @@ function Login() {
                         >
                             SIGN UP
                         </Link>
+                        
                     </div>
                 </motion.div>
             </div>

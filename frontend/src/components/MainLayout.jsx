@@ -2,6 +2,7 @@ import React from 'react'
 import { Outlet } from 'react-router-dom'
 import Header from './Header'
 import Footer from './Footer'
+import TranslateButton from '../TranslateButton'
 
 const MainLayout = () => {
   return (
@@ -9,6 +10,7 @@ const MainLayout = () => {
       <Header />
       <div className="min-h-screen">
         <Outlet />
+      <TranslateButton/>
       </div>
       <Footer />
     </>
