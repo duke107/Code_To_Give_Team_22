@@ -1,25 +1,24 @@
-import React from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useSelector, useDispatch } from 'react-redux'
-import { logout } from '../redux/slices/authSlice'
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { logout } from '../redux/slices/authSlice';
 import { FaBell } from "react-icons/fa";
-import { useEffect, useState } from 'react'
-import io from "socket.io-client"
+import io from "socket.io-client";
 
 const socket = io("http://localhost:3000", {
   withCredentials: true,
-})
+});
 
 const Header = () => {
-  const { isAuthenticated, user } = useSelector((state) => state.auth)
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
 
   const handleLogout = () => {
-    dispatch(logout())
-    navigate('/login')
-  }
+    dispatch(logout());
+    navigate('/login');
+  };
 
   socket.on("connect", () => {
     console.log("WebSocket connected:", socket.id);
@@ -32,7 +31,7 @@ const Header = () => {
       })
         .then((res) => res.json())
         .then((data) => {
-          // assuming your ApiResponse returns notifications in data.data
+          // assuming your API returns notifications in data.data
           setNotifications(data.data || []);
         })
         .catch((err) =>
@@ -82,14 +81,22 @@ const Header = () => {
       </nav>
 
       {/* Auth Buttons */}
-      <div className='flex items-center gap-2'>
+      <div className="flex items-center gap-2">
         {isAuthenticated ? (
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded-lg shadow hover:bg-red-600"
-          >
-            Logout
-          </button>
+          <>
+            <button
+              onClick={() => navigate('/change-details')}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700"
+            >
+              Change Details
+            </button>
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 text-white px-4 py-2 rounded-lg shadow hover:bg-red-600"
+            >
+              Logout
+            </button>
+          </>
         ) : (
           <Link
             to="/login"
@@ -107,10 +114,8 @@ const Header = () => {
           )}
         </Link>
       </div>
-      {/* <div> */}
-      {/* </div> */}
     </header>
-  )
-}
+  );
+};
 
-export default Header
+export default Header;
