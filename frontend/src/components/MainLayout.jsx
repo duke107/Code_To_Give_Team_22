@@ -4,10 +4,10 @@ import Header from './Header'
 import Footer from './Footer'
 import TranslateButton from '../TranslateButton'
 
-const MainLayout = () => {
+const MainLayout = ({notifications}) => {
   return (
     <>
-      <Header />
+      <Header notifications={notifications}/>
       <div className="min-h-screen">
         <Outlet />
       <TranslateButton/>
