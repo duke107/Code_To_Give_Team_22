@@ -55,7 +55,7 @@ cron.schedule("0 8 * * *", async () => {
 });
 
 //cron job to check for completed evernts
-cron.schedule("* * * * *", async () => {  // Runs every 10 minutes
-  // console.log("Checking for completed events...");
+cron.schedule("* * * * *", async () => {  // Runs every minute
+  console.log("Checking for completed events...");
   await sendEventCompletionNotifications();
 });

@@ -338,9 +338,10 @@ export const assignTask = async (req, res) => {
       await Notification.create({
         userId: volunteerId,
         message: notifMsg,
-        type: "task-assigned"
+        type: "task-assigned",
+        eventSlug: event.slug
       });
-      console.log(notifMsg);
+      console.log(event.slug);
 
       //emit notification from socketio 
       io.to(volunteerId.toString()).emit("new-notification", {
@@ -724,25 +725,26 @@ export const markCompletedEvents = async () => {
   try {
     const now = new Date();
 
-    // Find events that have ended but are not marked as completed
-    const eventsToUpdate = await Event.find({
+    const eventsToMark = await Event.find({
       eventEndDate: { $lt: now },
       isCompleted: false,
     });
 
-    if (eventsToUpdate.length === 0) {
-      console.log("No events to mark as completed.");
-      return;
-    }
+    if (eventsToMark.length === 0) return []; // No events to update
 
-    // Update all found events to mark them as completed
-    await Event.updateMany(
-      { _id: { $in: eventsToUpdate.map(event => event._id) } },
-      { isCompleted: true }
+    const updatedEvents = await Event.updateMany(
+      { _id: { $in: eventsToMark.map(e => e._id) } },
+      { $set: { isCompleted: true } }
     );
 
+    console.log(`Marked ${updatedEvents.modifiedCount} events as completed.`);
+    return eventsToMark; // Return the newly completed events
 
   } catch (error) {
     console.error("Error marking completed events:", error);
+    return [];
   }
 };
+
+
+

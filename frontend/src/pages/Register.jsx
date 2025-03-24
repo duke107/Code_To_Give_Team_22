@@ -4,6 +4,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { register, resetAuthSlice } from '../redux/slices/authSlice';
 import { toast } from 'react-toastify';
 import { motion } from "framer-motion";
+import LocationPicker from "../components/LocationPicker"
 
 function Register() {
     const [name, setName] = useState('');
@@ -129,15 +130,10 @@ function Register() {
                                 />
                             </div>
                             {/* New location field */}
-                            <div className="mb-2">
-                                <input
-                                    type="text"
-                                    value={location}
-                                    onChange={(e) => setLocation(e.target.value)}
-                                    placeholder="Location"
-                                    className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
-                                />
-                            </div>
+                            {/* Location Picker Field */}
+      <div className="mb-2">
+        <LocationPicker eventLocation={location} setEventLocation={setLocation} />
+      </div>
                             <div className="block md:hidden font-semibold mt-5">
                                 <p>Already have Account?</p>
                                 <Link to="/login" className="text-sm text-gray-500 hover:underline">

@@ -22,7 +22,8 @@ export const sendRegistrationNotification = async (event, volunteerId) => {
     await Notification.create({
       userId: event.createdBy,
       message: msg,
-      type: "registration"
+      type: "registration",
+      eventSlug: event.slug
     });
 
     // Fetch the event creator's email
@@ -69,7 +70,8 @@ export const sendReminderNotifications = async () => {
           await Notification.create({
             userId: user._id,
             message: `Reminder: The event "${event.title}" in your area`,
-            type: "reminder"
+            type: "reminder",
+            eventSlug: event.slug
           });
         }
       }
@@ -82,7 +84,7 @@ export const sendReminderNotifications = async () => {
 export const sendEventCompletionNotifications = async () => {
   try {
     const completedEvents = await markCompletedEvents();
-
+ 
     if (completedEvents.length === 0) return; // No new completed events, skip notifications
 
     for (const event of completedEvents) {
@@ -95,7 +97,10 @@ export const sendEventCompletionNotifications = async () => {
           userId: volunteer._id,
           message,
           type: "event-end",
+          eventSlug: event.slug
         });
+
+        console.log(event._id)
 
         io.to(volunteer._id.toString()).emit("new-notification", {
           message,
