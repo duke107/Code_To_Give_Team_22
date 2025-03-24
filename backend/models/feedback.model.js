@@ -34,6 +34,25 @@ const FeedbackSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+    // Added for volunteer feedback
+    task: {
+      type: String,  // Name of the task
+      required: true,
+    },
+    location: {
+      type: String, // Location of the event
+      required: true,
+    },
+    volunteersNeeded: {
+      type: Number, // How many volunteers were initially assigned?
+      required: true,
+    },
+    volunteerSatisfaction: {
+      type: String, // "satisfactory", "not satisfactory", "average"
+      enum: ["satisfactory", "not satisfactory", "average"],
+      required: true,
+    },
+    
 });
 
 export const Feedback = mongoose.model('Feedback', FeedbackSchema);

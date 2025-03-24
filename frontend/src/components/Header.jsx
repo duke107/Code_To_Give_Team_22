@@ -1,31 +1,46 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../redux/slices/authSlice";
 import { FaBell } from "react-icons/fa";
 import io from "socket.io-client";
 
-
+// Initialize socket connection
 const socket = io("http://localhost:3000", {
   withCredentials: true,
 });
 
-const Header = ({notifications}) => {
+const Header = ({ notifications }) => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
-  
+
+  // Ref for dropdown menu to detect clicks outside
+  const dropdownRef = useRef(null);
+
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
   };
 
   const unreadCount = notifications?.filter((n) => !n.isRead).length || 0;
-  console.log(unreadCount)
+
+  // Handle clicks outside the dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setAccountDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
-    <header className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
+    <header className="  bg-white shadow-md py-4 px-6 flex justify-between items-center">
       {/* Logo */}
       <Link to="/" tabIndex="0">
         <img
@@ -36,7 +51,7 @@ const Header = ({notifications}) => {
       </Link>
 
       {/* Navigation Links */}
-      <nav className="space-x-6 hidden md:flex text-gray-700 font-medium">
+      <nav className="space-x-8 hidden md:flex text-gray-700 font-medium">
         <Link to="/about" className="hover:text-black" tabIndex="0">
           About Us
         </Link>
@@ -55,43 +70,38 @@ const Header = ({notifications}) => {
       </nav>
 
       {/* Auth Buttons & Notifications */}
-      <div className="flex items-center gap-2 relative">
+      <div className="flex items-center gap-4 relative">
         {isAuthenticated ? (
-          <>
-            <div className="relative">
-              <button
-                onClick={() => setAccountDropdownOpen((prev) => !prev)}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700"
-                tabIndex="0"
-              >
-                Account
-              </button>
-              {accountDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-50">
-                  <button
-                    onClick={() => {
-                      setAccountDropdownOpen(false);
-                      navigate("/change-details");
-                    }}
-                    className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                    tabIndex="0"
-                  >
-                    Change Details
-                  </button>
-                  <button
-                    onClick={() => {
-                      setAccountDropdownOpen(false);
-                      handleLogout();
-                    }}
-                    className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                    tabIndex="0"
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          </>
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setAccountDropdownOpen((prev) => !prev)}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700"
+            >
+              Account
+            </button>
+            {accountDropdownOpen && (
+              <div className="absolute right-0 top-full mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-50">
+                <button
+                  onClick={() => {
+                    setAccountDropdownOpen(false);
+                    navigate("/change-details");
+                  }}
+                  className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                >
+                  Change Details
+                </button>
+                <button
+                  onClick={() => {
+                    setAccountDropdownOpen(false);
+                    handleLogout();
+                  }}
+                  className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
           <Link
             to="/login"
@@ -101,6 +111,8 @@ const Header = ({notifications}) => {
             Sign In
           </Link>
         )}
+
+        {/* Notifications */}
         <Link to="/notification" className="relative" tabIndex="0">
           <FaBell size={20} className="text-gray-700" />
           {unreadCount > 0 && (
