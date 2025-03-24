@@ -43,61 +43,71 @@ function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="h-[70vh] relative flex flex-col items-center justify-center bg-blue-700 text-white text-center px-6">
-        <h1 className="text-5xl font-extrabold mb-4 tracking-tight">Welcome to Samarthanam</h1>
-        <p className="text-lg max-w-2xl mx-auto opacity-90 leading-relaxed">
-          Empowering lives and creating opportunities.
-        </p>
-        <Link
-          to="/donate"
-          className="mt-6 px-6 py-3 bg-white text-blue-700 font-semibold rounded-lg shadow-md hover:bg-gray-200 transition duration-300"
-        >
-          Donate Now
-        </Link>
+    <div className="min-h-screen bg-gray-100 ">
+       
+      
+            {/* Hero Section */}
+      <div
+        className="h-screen relative flex flex-col items-center justify-center text-white text-center bg-cover bg-center"
+        style={{
+          backgroundImage: "url('https://sontx.org/wp-content/uploads/2024/06/How-to-Help-a-Charity-Without-Donating-Money.jpeg')",
+        }}
+      >
+        <div className="bg-black bg-opacity-50 p-6 rounded-lg">
+          <h1 className="text-4xl font-bold mb-4">Welcome to Samarthanam</h1>
+          <p className="text-lg max-w-2xl mx-auto">
+            Empowering lives and creating opportunities.
+          </p>
+          <Link
+            to="/donate"
+            className="mt-6 px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg shadow-md hover:bg-gray-200 transition duration-300"
+          >
+            Donate Now
+          </Link>
+        </div>
       </div>
-  
+
+
       {/* Mission Section */}
-      <div className="p-12 text-center">
-        <h2 className="text-4xl font-semibold text-gray-900 mb-6">Our Mission</h2>
-        <p className="max-w-3xl mx-auto text-gray-700 text-lg leading-relaxed">
+      <div className="p-8 text-center">
+        <h2 className="text-3xl font-semibold mb-6">Our Mission</h2>
+        <p className="max-w-3xl mx-auto text-gray-700">
           We strive to empower the disabled and create a more inclusive world through education,
           rehabilitation, and innovation.
         </p>
       </div>
-  
+
       {/* Carousel for Recent Testimonials */}
-      <div className="max-w-5xl mx-auto mb-16 px-6">
-        <h2 className="text-3xl font-semibold text-center mb-6 text-gray-900">What Our Volunteers Say</h2>
+      <div className="max-w-5xl mx-auto mb-16">
+        <h2 className="text-2xl font-semibold text-center mb-4">What Our Volunteers Say</h2>
         {testimonials.length > 0 ? (
           <Slider {...settings}>
             {testimonials.map((testimonial) => (
               <div key={testimonial._id} className="px-4 py-6">
-                <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col md:flex-row items-center justify-between gap-6 transition duration-300 hover:shadow-xl">
+                <div className="bg-white rounded-lg shadow-md p-6 flex flex-col md:flex-row items-center justify-between gap-4">
                   {/* Left side: Testimonial content */}
                   <div className="flex-1">
-                    <p className="text-gray-800 text-lg italic mb-4 leading-relaxed">
+                    <p className="text-gray-800 text-base md:text-lg italic mb-4">
                       "{testimonial.testimonial}"
                     </p>
                     <div className="text-sm text-gray-600">
-                      <p className="font-semibold text-gray-900">{testimonial.name}</p>
-                      <p className="text-gray-500">
+                      <p className="font-semibold">{testimonial.name}</p>
+                      <p>
                         {testimonial.eventTitle} - {testimonial.volunteeringPosition}
                       </p>
                     </div>
                   </div>
                   {/* Right side: User picture (if available) */}
-                  <div className="w-24 h-24 flex-shrink-0">
+                  <div>
                     {testimonial.userPicture ? (
                       <img
                         src={testimonial.userPicture}
                         alt={testimonial.name}
-                        className="w-24 h-24 object-cover rounded-full border-2 border-blue-500 shadow-sm"
+                        className="w-24 h-24 object-cover rounded-full"
                       />
                     ) : (
-                      <div className="w-24 h-24 flex items-center justify-center rounded-full bg-gray-300 text-gray-700">
-                        No Photo
+                      <div className="w-24 h-24 flex items-center justify-center rounded-full bg-gray-300">
+                        <span className="text-gray-700">No Photo</span>
                       </div>
                     )}
                   </div>
@@ -109,15 +119,11 @@ function Home() {
           <p className="text-center text-gray-500">No testimonials available yet.</p>
         )}
       </div>
-  
-      {/* Accessibility & Translation */}
-      <div className="fixed bottom-6 right-6 flex gap-4">
-        <AccessibilityMenu />
-        <TranslateButton />
-      </div>
+       {/* Accessibility Menu */}
+       <AccessibilityMenu />
+       <TranslateButton />
     </div>
   );
-  
 }
 
 export default Home;

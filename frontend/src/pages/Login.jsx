@@ -11,10 +11,10 @@ function Login() {
     const [password, setPassword] = useState("");
     const dispatch = useDispatch();
 
-    const {
+   
+ const {
         loading, error, message, user, isAuthenticated
     } = useSelector(state => state.auth);
-
     const handleLogin = (e) => {
         e.preventDefault();
         const data = new FormData();

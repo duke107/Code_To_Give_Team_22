@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "cloudinary": "^2.6.0"
+  }
+}

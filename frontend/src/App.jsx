@@ -82,7 +82,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/donate" element={<Donate />} />
-          <Route path="/dashboard" element={user?.role === "Event Organizer" ? <Dashboard /> : <UserDashboard />} />
+          <Route path="/dashboard" element={user?.role === "Event Organiser" ? <Dashboard /> : <UserDashboard />} />
           <Route
             path="/events"
             element={user && user.role === "Event Organiser" ? <Events /> : <EventsUser />}

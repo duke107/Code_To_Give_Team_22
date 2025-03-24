@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { Bar, Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -10,8 +11,12 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+// Import Firebase Storage functions
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { app } from '../firebase';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
 
@@ -21,10 +26,17 @@ function EventOrganiser() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Get the logged-in user from redux state
+  const { user } = useSelector(state => state.auth);
+
+  // Loader states for file and images upload
+  const [fileUploadLoading, setFileUploadLoading] = useState(false);
+  const [imagesUploadLoading, setImagesUploadLoading] = useState(false);
+
   // State for task assignment modal
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [selectedVolunteer, setSelectedVolunteer] = useState(null);
-  const [taskInputs, setTaskInputs] = useState(['']); // Array of task description strings
+  const [taskInputs, setTaskInputs] = useState(['']);
 
   // State for feedback dropdown
   const [feedbackVisible, setFeedbackVisible] = useState(false);
@@ -32,10 +44,28 @@ function EventOrganiser() {
   const [feedbackError, setFeedbackError] = useState(null);
   const [feedbacks, setFeedbacks] = useState([]);
 
-  // New state for visual display summary
+  // State for visual display summary
   const [showVisualDisplay, setShowVisualDisplay] = useState(false);
 
-  // Ref for PDF content
+  // State for event summary form modal
+  const [showSummaryForm, setShowSummaryForm] = useState(false);
+  const [summaryData, setSummaryData] = useState({
+    eventName: '',
+    location: '',
+    startDate: '',
+    endDate: '',
+    positionsAllocated: 0,
+    totalPositions: 0,
+    volunteersRegistered: 0,
+    organizerFeel: '',
+    organizerEnjoyment: '',
+    fileUrl: '', // for a single file (if needed)
+    eventImages: [], // to hold multiple image URLs
+  });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedImages, setSelectedImages] = useState([]); // for multiple images
+
+  // Ref for visual summary content
   const pdfRef = useRef();
 
   // Fetch event details including volunteer tasks from the backend
@@ -47,20 +77,45 @@ function EventOrganiser() {
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
         });
-
         if (!res.ok) {
           throw new Error(`Error ${res.status}: ${res.statusText}`);
         }
-
         const data = await res.json();
         setEvent(data);
+        // Pre-fill summary form data
+        setSummaryData({
+          eventName: data.title || '',
+          location: data.eventLocation || '',
+          startDate: data.eventStartDate
+            ? new Date(data.eventStartDate).toISOString().split('T')[0]
+            : '',
+          endDate: data.eventEndDate
+            ? new Date(data.eventEndDate).toISOString().split('T')[0]
+            : '',
+          positionsAllocated:
+            data.volunteeringPositions?.reduce(
+              (acc, pos) => acc + (pos.registeredUsers?.length || 0),
+              0
+            ) ?? 0,
+          totalPositions:
+            data.volunteeringPositions?.reduce(
+              (acc, pos) => acc + (pos.slots || 0),
+              0
+            ) ?? 0,
+          volunteersRegistered:
+            data.volunteeringPositions?.flatMap((pos) => pos.registeredUsers)
+              .length ?? 0,
+          organizerFeel: '',
+          organizerEnjoyment: '',
+          fileUrl: '',
+          eventImages: [],
+        });
       } catch (err) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-
     fetchEventDetails();
   }, [slug]);
 
@@ -69,11 +124,14 @@ function EventOrganiser() {
     setFeedbackLoading(true);
     setFeedbackError(null);
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/events/feedbacks?eventId=${event._id}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-      });
+      const res = await fetch(
+        `http://localhost:3000/api/v1/events/feedbacks?eventId=${event._id}`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        }
+      );
       if (!res.ok) {
         throw new Error(`Error ${res.status}: ${res.statusText}`);
       }
@@ -86,7 +144,7 @@ function EventOrganiser() {
     }
   };
 
-  // Toggle the feedback dropdown panel
+  // Toggle feedback dropdown
   const toggleFeedback = () => {
     if (!feedbackVisible) {
       fetchFeedbacks();
@@ -97,45 +155,34 @@ function EventOrganiser() {
     setFeedbackVisible(!feedbackVisible);
   };
 
-  // Handler to toggle the visual display of feedback summary
+  // Toggle visual summary display
   const toggleVisualDisplay = () => {
     setShowVisualDisplay(!showVisualDisplay);
   };
 
-  // Function to download the feedback summary as a PDF, splitting into multiple pages if needed.
-  const handleDownloadPDF = async () => {
+  // New function: Download visual summary as an image (PNG)
+  const handleDownloadVisual = async () => {
+    console.log('====================================');
+    console.log(pdfRef);
+    console.log('====================================');
     if (pdfRef.current) {
-      const canvas = await html2canvas(pdfRef.current, { scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-
-      // Calculate the scaled image height in the PDF
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      // Add the first page
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
-
-      // While there is still content left to display, add a new page and draw the remaining portion
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
+      try {
+        const canvas = await html2canvas(pdfRef.current, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = imgData;
+        link.download = 'visual-summary.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (error) {
+        console.error('Error downloading image:', error);
+        toast.error(`Error downloading image: ${error.message}`);
       }
-
-      pdf.save('feedback-summary.pdf');
     }
   };
 
-  // Compute summary details based on feedbacks
+  // Compute feedback summary details
   const getFeedbackSummary = () => {
     if (!feedbacks || feedbacks.length === 0) return null;
     const total = feedbacks.length;
@@ -147,7 +194,6 @@ function EventOrganiser() {
     return { total, averageRating, positiveCount, negativeCount };
   };
 
-  // Prepare data for Bar Chart (Positive vs Negative Reviews)
   const summary = getFeedbackSummary();
   const barData = {
     labels: ['Positive', 'Negative'],
@@ -160,7 +206,6 @@ function EventOrganiser() {
     ],
   };
 
-  // Prepare data for Pie Chart (Rating Distribution)
   const ratingCounts = {};
   feedbacks.forEach((fb) => {
     ratingCounts[fb.rating] = (ratingCounts[fb.rating] || 0) + 1;
@@ -187,10 +232,10 @@ function EventOrganiser() {
     ],
   };
 
-  // Opens the task assignment modal for a specific volunteer
+  // Task assignment modal functions
   const openTaskModal = (volunteer) => {
     setSelectedVolunteer(volunteer);
-    setTaskInputs(['']); // Start with one empty task field
+    setTaskInputs(['']);
     setShowTaskModal(true);
   };
 
@@ -199,30 +244,25 @@ function EventOrganiser() {
     setSelectedVolunteer(null);
   };
 
-  // Handler to update a task input field
   const handleTaskInputChange = (index, value) => {
     const newTasks = [...taskInputs];
     newTasks[index] = value;
     setTaskInputs(newTasks);
   };
 
-  // Adds a new empty task input field
   const addTaskField = () => {
     setTaskInputs([...taskInputs, '']);
   };
 
-  // When "Assign Tasks" is clicked - call the backend assignTask endpoint
   const handleAssignTasks = async () => {
     if (!selectedVolunteer) return;
     const tasksToAssign = taskInputs
       .map((desc) => ({ description: desc.trim(), status: 'pending' }))
       .filter((task) => task.description !== '');
-
     if (tasksToAssign.length === 0) {
       alert('Please enter at least one task.');
       return;
     }
-
     try {
       const res = await fetch('http://localhost:3000/api/v1/events/assign', {
         method: 'POST',
@@ -234,13 +274,11 @@ function EventOrganiser() {
           tasks: tasksToAssign,
         }),
       });
-
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.message || `Error ${res.status}`);
       }
-      
-      // Re-fetch event details to get updated tasks from the backend
+      // Re-fetch event details
       const updatedRes = await fetch(`http://localhost:3000/api/v1/events/${slug}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
@@ -250,10 +288,117 @@ function EventOrganiser() {
         const updatedData = await updatedRes.json();
         setEvent(updatedData);
       }
-
       closeTaskModal();
     } catch (err) {
       alert(`Error assigning tasks: ${err.message}`);
+    }
+  };
+
+  const handleSummaryChange = (e) => {
+    const { name, value } = e.target;
+    setSummaryData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e) => {
+    setSelectedFile(e.target.files[0]);
+  };
+
+  // File upload function with loader and toast
+  const handleUploadFile = async () => {
+    if (!selectedFile) {
+      toast.error('Please select a file');
+      return;
+    }
+    setFileUploadLoading(true);
+    try {
+      const storage = getStorage(app, 'gs://mern-blog-b327f.appspot.com');
+      const sanitizedFileName =
+        new Date().getTime() + '-' + selectedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const storageRef = ref(storage, sanitizedFileName);
+      let metadata = { contentType: selectedFile.type };
+      if (!metadata.contentType && /\.pdf$/i.test(selectedFile.name)) {
+        metadata.contentType = 'application/pdf';
+      }
+      const snapshot = await uploadBytes(storageRef, selectedFile, metadata);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      setSummaryData((prev) => ({ ...prev, fileUrl: downloadURL }));
+      toast.success('File uploaded successfully!');
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast.error(`Error uploading file: ${error.message}`);
+    } finally {
+      setFileUploadLoading(false);
+    }
+  };
+
+  // Multiple images upload function with loader and toast
+  const handleImagesChange = (e) => {
+    setSelectedImages(Array.from(e.target.files));
+  };
+
+  const handleUploadImages = async () => {
+    if (selectedImages.length === 0) {
+      toast.error('Please select one or more images');
+      return;
+    }
+    setImagesUploadLoading(true);
+    try {
+      const storage = getStorage(app, 'gs://mern-blog-b327f.appspot.com');
+      const uploadedImageURLs = [];
+      for (const image of selectedImages) {
+        const sanitizedFileName =
+          new Date().getTime() + '-' + image.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const storageRef = ref(storage, sanitizedFileName);
+        let metadata = { contentType: image.type };
+        const snapshot = await uploadBytes(storageRef, image, metadata);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        uploadedImageURLs.push(downloadURL);
+      }
+      setSummaryData((prev) => ({ ...prev, eventImages: uploadedImageURLs }));
+      toast.success('Images uploaded successfully!');
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      toast.error(`Error uploading images: ${error.message}`);
+    } finally {
+      setImagesUploadLoading(false);
+    }
+  };
+
+  const handleSubmitSummary = async (e) => {
+    e.preventDefault();
+    // Use the logged-in user's ID as organiserId
+    const organiserId = user._id;
+    const payload = {
+      eventName: summaryData.eventName,
+      location: summaryData.location,
+      startDate: summaryData.startDate,
+      endDate: summaryData.endDate,
+      positionsAllocated: summaryData.positionsAllocated,
+      totalPositions: summaryData.totalPositions,
+      volunteersRegistered: summaryData.volunteersRegistered,
+      organizerFeel: summaryData.organizerFeel,
+      organizerEnjoyment: summaryData.organizerEnjoyment,
+      fileUrl: summaryData.fileUrl,
+      eventImages: summaryData.eventImages,
+      eventId: event._id,
+      organiserId, // Send organiser's ID
+    };
+    
+    try {
+      const res = await fetch('http://localhost:3000/api/v1/events/summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || `Error ${res.status}`);
+      }
+      toast.success('Event summary submitted successfully!');
+      setShowSummaryForm(false);
+    } catch (err) {
+      toast.error(`Error submitting summary: ${err.message}`);
     }
   };
 
@@ -273,12 +418,19 @@ function EventOrganiser() {
         />
       )}
   
-      <div className="text-gray-700 mb-5 leading-relaxed" dangerouslySetInnerHTML={{ __html: event.content }} />
+      <div
+        className="text-gray-700 mb-5 leading-relaxed"
+        dangerouslySetInnerHTML={{ __html: event.content }}
+      />
   
       <div className="bg-gray-100 p-5 rounded-xl mb-5 shadow-sm">
         <p className="text-lg font-semibold">📍 Location: {event.eventLocation}</p>
-        <p className="text-gray-600">📅 Start: {new Date(event.eventStartDate).toLocaleDateString()}</p>
-        <p className="text-gray-600">📅 End: {new Date(event.eventEndDate).toLocaleDateString()}</p>
+        <p className="text-gray-600">
+          📅 Start: {new Date(event.eventStartDate).toLocaleDateString()}
+        </p>
+        <p className="text-gray-600">
+          📅 End: {new Date(event.eventEndDate).toLocaleDateString()}
+        </p>
       </div>
   
       {/* Buttons for Feedback & Visual Summary */}
@@ -308,7 +460,6 @@ function EventOrganiser() {
               ✖
             </button>
             <h3 className="text-xl font-bold mb-4">💬 Event Feedback</h3>
-  
             <div className="max-h-64 overflow-y-auto space-y-4">
               {feedbackLoading ? (
                 <p className="text-gray-500">Loading feedback...</p>
@@ -319,9 +470,15 @@ function EventOrganiser() {
                   <div key={fb._id} className="p-4 border rounded bg-gray-50 shadow-sm">
                     <p className="font-semibold">⭐ Rating: {fb.rating} / 10</p>
                     <p>🎉 Enjoyed: {fb.enjoyed ? 'Yes' : 'No'}</p>
-                    {fb.comments && <p className="text-sm text-gray-700">💬 {fb.comments}</p>}
-                    {fb.suggestions && <p className="text-sm text-gray-700">💡 {fb.suggestions}</p>}
-                    <p className="text-xs text-gray-500 mt-1">{new Date(fb.createdAt).toLocaleDateString()}</p>
+                    {fb.comments && (
+                      <p className="text-sm text-gray-700">💬 {fb.comments}</p>
+                    )}
+                    {fb.suggestions && (
+                      <p className="text-sm text-gray-700">💡 {fb.suggestions}</p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      {new Date(fb.createdAt).toLocaleDateString()}
+                    </p>
                   </div>
                 ))
               ) : (
@@ -334,7 +491,8 @@ function EventOrganiser() {
   
       {/* Visual Summary Modal */}
       {showVisualDisplay && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+
+        <div ref={pdfRef} className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-lg w-full relative">
             <button
               onClick={toggleVisualDisplay}
@@ -345,16 +503,22 @@ function EventOrganiser() {
             <h3 className="text-xl font-bold mb-4">📊 Feedback Summary</h3>
             {summary ? (
               <div className="mb-5">
-                <p>Total Reviews: <span className="font-semibold">{summary.total}</span></p>
-                <p>Average Rating: <span className="font-semibold">{summary.averageRating} / 10</span></p>
-                <p>Positive Reviews: <span className="font-semibold">{summary.positiveCount}</span></p>
-                <p>Negative Reviews: <span className="font-semibold">{summary.negativeCount}</span></p>
+                <p>
+                  Total Reviews: <span className="font-semibold">{summary.total}</span>
+                </p>
+                <p>
+                  Average Rating: <span className="font-semibold">{summary.averageRating} / 10</span>
+                </p>
+                <p>
+                  Positive Reviews: <span className="font-semibold">{summary.positiveCount}</span>
+                </p>
+                <p>
+                  Negative Reviews: <span className="font-semibold">{summary.negativeCount}</span>
+                </p>
               </div>
             ) : (
               <p>No summary available.</p>
             )}
-  
-            {/* Charts */}
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <h4 className="font-semibold mb-2">Review Breakdown</h4>
@@ -369,18 +533,17 @@ function EventOrganiser() {
                 </div>
               </div>
             </div>
-  
-            {/* Download Button */}
             <button
-              onClick={handleDownloadPDF}
+              onClick={handleDownloadVisual}
               className="mt-5 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition duration-200"
             >
-              ⬇️ Download as PDF
+              ⬇️ Download Visual Summary as Image
             </button>
           </div>
         </div>
+     
       )}
-
+  
       {event.volunteeringPositions?.length > 0 && (
         <div className="mt-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">🙌 Volunteering Positions</h2>
@@ -388,6 +551,9 @@ function EventOrganiser() {
             <div key={position._id} className="mb-4 p-4 border rounded">
               <p className="font-semibold">{position.title}</p>
               <p className="text-sm text-gray-600 mb-2">Slots available: {position.slots}</p>
+              <p className="text-sm text-gray-700 mb-2">
+                Positions Allocated: {position.registeredUsers?.length || 0}
+              </p>
               {position.registeredUsers && position.registeredUsers.length > 0 ? (
                 <div>
                   <p className="font-medium">Registered Users:</p>
@@ -428,12 +594,20 @@ function EventOrganiser() {
           ))}
         </div>
       )}
-
+  
       <p className="text-gray-500 mt-4 text-sm">
         Created by: {event.createdBy?.name || "Unknown"}
       </p>
-
-      {/* Task Assignment Modal */}
+  
+      <div className="mt-6">
+        <button
+          onClick={() => setShowSummaryForm(true)}
+          className="bg-yellow-600 hover:bg-yellow-700 text-white py-2 px-4 rounded"
+        >
+          Submit Event Summary
+        </button>
+      </div>
+  
       {showTaskModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-md">
@@ -473,6 +647,239 @@ function EventOrganiser() {
           </div>
         </div>
       )}
+  
+      {showSummaryForm && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 overflow-auto">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-lg">
+            <h2 className="text-xl font-bold mb-4">Submit Event Summary</h2>
+            {event.volunteeringPositions && event.volunteeringPositions.length > 0 && (
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold mb-2">Volunteering Positions</h3>
+                <ul className="list-disc pl-5 text-sm text-gray-700">
+                  {event.volunteeringPositions.map((pos) => (
+                    <li key={pos._id}>
+                      {pos.title}: {pos.registeredUsers?.length || 0} allocated out of {pos.slots} slots
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <form onSubmit={handleSubmitSummary} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Event Name</label>
+                <input
+                  type="text"
+                  name="eventName"
+                  value={summaryData.eventName}
+                  onChange={handleSummaryChange}
+                  className="mt-1 block w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Location</label>
+                <input
+                  type="text"
+                  name="location"
+                  value={summaryData.location}
+                  onChange={handleSummaryChange}
+                  className="mt-1 block w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700">Start Date</label>
+                  <input
+                    type="date"
+                    name="startDate"
+                    value={summaryData.startDate}
+                    onChange={handleSummaryChange}
+                    className="mt-1 block w-full p-2 border rounded"
+                    required
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700">End Date</label>
+                  <input
+                    type="date"
+                    name="endDate"
+                    value={summaryData.endDate}
+                    onChange={handleSummaryChange}
+                    className="mt-1 block w-full p-2 border rounded"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700">Positions Allocated</label>
+                  <input
+                    type="number"
+                    name="positionsAllocated"
+                    value={summaryData.positionsAllocated}
+                    onChange={handleSummaryChange}
+                    className="mt-1 block w-full p-2 border rounded"
+                    required
+                    readOnly
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700">Total Positions</label>
+                  <input
+                    type="number"
+                    name="totalPositions"
+                    value={summaryData.totalPositions}
+                    onChange={handleSummaryChange}
+                    className="mt-1 block w-full p-2 border rounded"
+                    required
+                    readOnly
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Volunteers Registered</label>
+                <input
+                  type="number"
+                  name="volunteersRegistered"
+                  value={summaryData.volunteersRegistered}
+                  onChange={handleSummaryChange}
+                  className="mt-1 block w-full p-2 border rounded"
+                  required
+                  readOnly
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Upload File (Optional)</label>
+                <div className="flex items-center gap-2 mt-1">
+                  <input type="file" onChange={handleFileChange} className="block w-full" />
+                  <button
+                    type="button"
+                    onClick={handleUploadFile}
+                    className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
+                    disabled={fileUploadLoading}
+                  >
+                    {fileUploadLoading ? 'Uploading...' : 'Add File'}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Upload Event Images (Optional)</label>
+                <div className="flex items-center gap-2 mt-1">
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleImagesChange}
+                    className="block w-full"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleUploadImages}
+                    className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
+                    disabled={imagesUploadLoading}
+                  >
+                    {imagesUploadLoading ? 'Uploading...' : 'Add Images'}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">How was the feel of the event?</label>
+                <textarea
+                  name="organizerFeel"
+                  value={summaryData.organizerFeel}
+                  onChange={handleSummaryChange}
+                  className="mt-1 block w-full p-2 border rounded"
+                  rows="3"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Did you enjoy organising the event?</label>
+                <textarea
+                  name="organizerEnjoyment"
+                  value={summaryData.organizerEnjoyment}
+                  onChange={handleSummaryChange}
+                  className="mt-1 block w-full p-2 border rounded"
+                  rows="3"
+                  required
+                />
+              </div>
+              <div className="flex gap-4">
+                <button
+                  type="submit"
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
+                >
+                  Submit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowSummaryForm(false)}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+  
+      <ToastContainer />
+      
+      <style jsx global>{`
+        .goog-te-combo {
+          padding: 0.5rem 1rem;
+          background-color: #007bff;
+          color: #ffffff;
+          border: none;
+          border-radius: 0.375rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+          width: 100%;
+          max-width: 150px;
+          cursor: pointer;
+          transition: background-color 0.2s ease-in-out;
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          appearance: none;
+        }
+        .goog-te-combo:hover {
+          background-color: #0056b3;
+        }
+        .goog-te-combo:focus {
+          outline: none;
+          box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #007bff;
+        }
+        .goog-logo-link {
+          display: none !important;
+        }
+        .goog-te-gadget {
+          color: transparent !important;
+          font-size: 0 !important;
+        }
+        @media (prefers-color-scheme: dark) {
+          .goog-te-combo {
+            background-color: #0056b3;
+            color: #ffffff;
+          }
+          .goog-te-combo:hover {
+            background-color: #003d82;
+          }
+          .goog-te-combo:focus {
+            box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #0056b3;
+          }
+        }
+        @media (forced-colors: active) {
+          .goog-te-combo {
+            border: 2px solid currentColor;
+          }
+        }
+        @media (max-width: 768px) {
+          .goog-te-combo {
+            max-width: none;
+          }
+        }
+      `}</style>
     </div>
   );
 }

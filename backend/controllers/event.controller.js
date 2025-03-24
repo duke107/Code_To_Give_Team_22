@@ -8,6 +8,8 @@ import { Notification } from '../models/notification.model.js';
 import { sendRegistrationNotification } from './notification.controller.js';
 import {io} from "../server.js"
 import { Testimonial } from '../models/testimonial.model.js';
+import EventSummary from '../models/eventSummary.model.js';
+
 
 // Create a new event
 export const createEvent = async (req, res) => {
@@ -499,5 +501,104 @@ export const getRecentTestimonials = async (req, res) => {
     return res.status(200).json(testimonials);
   } catch (error) {
     return res.status(500).json({ message: error.message });
+  }
+};
+export const createEventSummary = async (req, res) => {
+  try {
+    const {
+      eventId,
+      eventName,
+      location,
+      startDate,
+      endDate,
+      positionsAllocated,
+      totalPositions,
+      volunteersRegistered,
+      organizerFeel,
+      organizerEnjoyment,
+      fileUrl,      // Optional: single file URL
+      eventImages,  // Array of image URLs
+      organiserId,  // Event organiser's user ID
+    } = req.body;
+
+    // Check if an event summary already exists for this event
+    const existingSummary = await EventSummary.findOne({ eventId });
+    if (existingSummary) {
+      return res.status(400).json({
+        success: false,
+        message: "Event summary already provided for this event",
+      });
+    }
+
+    // Create new EventSummary document including organiserId
+    const eventSummary = new EventSummary({
+      eventId,
+      eventName,
+      location,
+      startDate,
+      endDate,
+      positionsAllocated,
+      totalPositions,
+      volunteersRegistered,
+      organizerFeel,
+      organizerEnjoyment,
+      fileUrl,
+      eventImages,
+      organiserId,
+    });
+
+    const savedSummary = await eventSummary.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Event summary created successfully',
+      data: savedSummary,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+
+export const getTasksUser = async (req, res) => {
+  try {
+    // Filter tasks by the logged-in user's ID
+    const tasks = await Task.find({ assignedTo: req.user._id })
+      .populate("event", "title eventStartDate eventEndDate")
+      .populate("assignedTo", "name email");
+      
+    res.status(200).json({
+      success: true,
+      data: tasks,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+export const getEventsUser = async (req, res) => {
+  try {
+    // Populate the createdBy field and the registered users in each volunteering position
+    const events = await Event.find()
+      .populate("createdBy", "name email")
+      .populate("volunteeringPositions.registeredUsers", "name email");
+      
+    res.status(200).json({
+      success: true,
+      data: events,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
