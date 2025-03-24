@@ -79,15 +79,13 @@ export const createEvent = async (req, res) => {
     return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
-
 export const getEventBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
     const event = await Event.findOne({ slug })
-      .populate('createdBy', 'name email')
-      .populate('registeredVolunteers', 'name email')
-      .populate('volunteeringPositions.registeredUsers', 'name email');
+      .populate("createdBy", "name email")
+      .populate("registeredVolunteers", "name email")
+      .populate("volunteeringPositions.registeredUsers", "name email");
 
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
@@ -103,18 +101,24 @@ export const getEventBySlug = async (req, res) => {
           position.registeredUsers.map(async (volunteer) => {
             const volunteerIdStr = volunteer._id.toString();
             const eventIdStr = eventObj._id.toString();
-            console.log('Fetching tasks for volunteer:', volunteerIdStr, 'and event:', eventIdStr);
+            console.log(
+              "Fetching tasks for volunteer:",
+              volunteerIdStr,
+              "and event:",
+              eventIdStr
+            );
             const eventObjectId = new mongoose.Types.ObjectId(eventIdStr);
             const volunteerObjectId = new mongoose.Types.ObjectId(volunteerIdStr);
 
+            // Ensure to include the proof fields by specifying them in the projection
             const tasks = await Task.find(
               {
                 event: eventObjectId,
                 assignedTo: volunteerObjectId
               },
-              "description status"
-            );
-            console.log('Found tasks:', tasks);
+              "description status proofSubmitted proofMessage proofImages"
+            ).exec();
+            console.log("Found tasks:", tasks);
             return { ...volunteer, tasks };
           })
         );
@@ -125,7 +129,10 @@ export const getEventBySlug = async (req, res) => {
     return res.status(200).json(eventObj);
   } catch (error) {
     console.error("Error fetching event:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 
@@ -613,27 +620,127 @@ export const getEventsUser = async (req, res) => {
   }
 };
 
+export const submitTaskProof = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { message, proofImages } = req.body;
+
+    // Update the task with the submitted proof data
+    const updatedTask = await Task.findByIdAndUpdate(
+      taskId,
+      {
+        proofMessage: message,
+        proofImages,
+        proofSubmitted: true,
+      },
+      { new: true }
+    );
+
+    if (!updatedTask) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Task proof submitted successfully. Waiting for approval.",
+      data: updatedTask,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+export const approveTaskProof = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+
+    // Find the task by ID
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // Approve the proof: mark task as completed
+    task.status = 'completed';
+    // Optionally, you could leave the proof fields intact or clear them
+    // For example: task.proofSubmitted = true; (it should already be true)
+    await task.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Proof approved. Task marked as completed.",
+      data: task,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const rejectTaskProof = async (req, res) => {
+  try {
+    console.log("here");
+    
+    const { taskId } = req.params;
+
+    // Find the task by ID
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // Reject the proof: reset proofSubmitted to false,
+    // clear the proofImages and proofMessage,
+    // and keep the task status as 'pending'
+    task.proofSubmitted = false;
+    task.proofImages = [];
+    task.proofMessage = "";
+    task.status = 'pending'; // Ensuring the task remains pending
+    await task.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Proof rejected. Task remains pending. Proof has been cleared.",
+      data: task,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 export const markCompletedEvents = async () => {
   try {
     const now = new Date();
 
     // Find events that have ended but are not marked as completed
-    const eventsToMark = await Event.find({
+    const eventsToUpdate = await Event.find({
       eventEndDate: { $lt: now },
       isCompleted: false,
     });
 
-    if (eventsToMark.length === 0) return []; // No events to update
+    if (eventsToUpdate.length === 0) {
+      console.log("No events to mark as completed.");
+      return;
+    }
 
-    // Mark these events as completed
-    const updatedEvents = await Event.updateMany(
-      { _id: { $in: eventsToMark.map(e => e._id) } },
-      { $set: { isCompleted: true } }
+    // Update all found events to mark them as completed
+    await Event.updateMany(
+      { _id: { $in: eventsToUpdate.map(event => event._id) } },
+      { isCompleted: true }
     );
 
-    console.log(`Marked ${updatedEvents.modifiedCount} events as completed.`);
-    return eventsToMark;
 
   } catch (error) {
     console.error("Error marking completed events:", error);

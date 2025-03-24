@@ -1,7 +1,7 @@
 import express from "express";
 
 import { isAuthenticated } from "../middlewares/auth.middleware.js";
-import { createEvent, deleteEvent, getEventBySlug, getEvents, updateEvent, registerVolunteer, assignTask, updateTaskStatus, createFeedback, getFeedbacksForEvent, submitTestimonial, getRecentTestimonials, createEventSummary, getTasksUser, getEventsUser } from "../controllers/event.controller.js";
+import { createEvent, deleteEvent, getEventBySlug, getEvents, updateEvent, registerVolunteer, assignTask, updateTaskStatus, createFeedback, getFeedbacksForEvent, submitTestimonial, getRecentTestimonials, createEventSummary, getTasksUser, getEventsUser, submitTaskProof, approveTaskProof, rejectTaskProof } from "../controllers/event.controller.js";
 
 
 const router = express.Router();
@@ -11,6 +11,8 @@ router.post("/create",isAuthenticated, createEvent);
 router.post("/assign",isAuthenticated, assignTask);
 router.post("/submitFeedback",isAuthenticated,createFeedback)
 router.post("/submitTestimonial",isAuthenticated,submitTestimonial)
+router.post("/proof/:taskId",isAuthenticated, submitTaskProof);
+
 router.get("/getEvents",isAuthenticated, getEvents);
 router.get("/getEventsUser",isAuthenticated, getEventsUser);
 router.get("/getTasksUser",isAuthenticated, getTasksUser);
@@ -24,7 +26,8 @@ router.post("/:slug", isAuthenticated, registerVolunteer);
 // Update event by ID
 router.put("/:eventId",isAuthenticated, updateEvent);
 router.patch("/updateTask/:taskId",isAuthenticated,updateTaskStatus)
-
+router.patch("/proof/approve/:taskId",isAuthenticated,approveTaskProof)
+router.patch("/proof/reject/:taskId",isAuthenticated,rejectTaskProof)
 
 // Delete event by ID
 router.delete("/:eventId",isAuthenticated, deleteEvent);

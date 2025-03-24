@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
 import { Bar, Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -11,12 +10,13 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-// Import Firebase Storage functions
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { app } from '../firebase';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useSelector } from 'react-redux';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
 
@@ -59,14 +59,18 @@ function EventOrganiser() {
     volunteersRegistered: 0,
     organizerFeel: '',
     organizerEnjoyment: '',
-    fileUrl: '', // for a single file (if needed)
-    eventImages: [], // to hold multiple image URLs
+    fileUrl: '',
+    eventImages: [],
   });
   const [selectedFile, setSelectedFile] = useState(null);
-  const [selectedImages, setSelectedImages] = useState([]); // for multiple images
+  const [selectedImages, setSelectedImages] = useState([]);
 
   // Ref for visual summary content
   const pdfRef = useRef();
+
+  // NEW: State for review proof modal (for organiser to approve/reject proof)
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewTask, setReviewTask] = useState(null);
 
   // Fetch event details including volunteer tasks from the backend
   useEffect(() => {
@@ -81,6 +85,8 @@ function EventOrganiser() {
           throw new Error(`Error ${res.status}: ${res.statusText}`);
         }
         const data = await res.json();
+        console.log(data);
+
         setEvent(data);
         // Pre-fill summary form data
         setSummaryData({
@@ -116,6 +122,7 @@ function EventOrganiser() {
         setLoading(false);
       }
     };
+
     fetchEventDetails();
   }, [slug]);
 
@@ -124,14 +131,11 @@ function EventOrganiser() {
     setFeedbackLoading(true);
     setFeedbackError(null);
     try {
-      const res = await fetch(
-        `http://localhost:3000/api/v1/events/feedbacks?eventId=${event._id}`,
-        {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-        }
-      );
+      const res = await fetch(`http://localhost:3000/api/v1/events/feedbacks?eventId=${event._id}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
       if (!res.ok) {
         throw new Error(`Error ${res.status}: ${res.statusText}`);
       }
@@ -144,7 +148,7 @@ function EventOrganiser() {
     }
   };
 
-  // Toggle feedback dropdown
+  // Toggle the feedback dropdown panel
   const toggleFeedback = () => {
     if (!feedbackVisible) {
       fetchFeedbacks();
@@ -155,16 +159,13 @@ function EventOrganiser() {
     setFeedbackVisible(!feedbackVisible);
   };
 
-  // Toggle visual summary display
+  // Toggle visual display of feedback summary
   const toggleVisualDisplay = () => {
     setShowVisualDisplay(!showVisualDisplay);
   };
 
   // New function: Download visual summary as an image (PNG)
   const handleDownloadVisual = async () => {
-    console.log('====================================');
-    console.log(pdfRef);
-    console.log('====================================');
     if (pdfRef.current) {
       try {
         const canvas = await html2canvas(pdfRef.current, { scale: 2 });
@@ -232,7 +233,7 @@ function EventOrganiser() {
     ],
   };
 
-  // Task assignment modal functions
+  // Task assignment modal functions (for assigning new tasks)
   const openTaskModal = (volunteer) => {
     setSelectedVolunteer(volunteer);
     setTaskInputs(['']);
@@ -313,8 +314,7 @@ function EventOrganiser() {
     setFileUploadLoading(true);
     try {
       const storage = getStorage(app, 'gs://mern-blog-b327f.appspot.com');
-      const sanitizedFileName =
-        new Date().getTime() + '-' + selectedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const sanitizedFileName = new Date().getTime() + '-' + selectedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const storageRef = ref(storage, sanitizedFileName);
       let metadata = { contentType: selectedFile.type };
       if (!metadata.contentType && /\.pdf$/i.test(selectedFile.name)) {
@@ -347,8 +347,7 @@ function EventOrganiser() {
       const storage = getStorage(app, 'gs://mern-blog-b327f.appspot.com');
       const uploadedImageURLs = [];
       for (const image of selectedImages) {
-        const sanitizedFileName =
-          new Date().getTime() + '-' + image.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const sanitizedFileName = new Date().getTime() + '-' + image.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const storageRef = ref(storage, sanitizedFileName);
         let metadata = { contentType: image.type };
         const snapshot = await uploadBytes(storageRef, image, metadata);
@@ -384,7 +383,7 @@ function EventOrganiser() {
       eventId: event._id,
       organiserId, // Send organiser's ID
     };
-    
+
     try {
       const res = await fetch('http://localhost:3000/api/v1/events/summary', {
         method: 'POST',
@@ -403,14 +402,77 @@ function EventOrganiser() {
     }
   };
 
+  // NEW: Approve / Reject Proof functions for event organiser
+  const handleApproveProof = async () => {
+    if (!reviewTask) return;
+    try {
+      const res = await fetch(`http://localhost:3000/api/v1/events/proof/approve/${reviewTask._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || `Error ${res.status}`);
+      }
+      toast.success("Proof approved! Task marked as completed.");
+      setShowReviewModal(false);
+      fetchEventDetails();
+    } catch (err) {
+      toast.error(`Error approving proof: ${err.message}`);
+    }
+  };
+
+  const handleRejectProof = async () => {
+    if (!reviewTask) return;
+    try {
+      const res = await fetch(`http://localhost:3000/api/v1/events/proof/reject/${reviewTask._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || `Error ${res.status}`);
+      }
+      toast.success("Proof rejected. Please ask the volunteer to resubmit.");
+      setShowReviewModal(false);
+    } catch (err) {
+      toast.error(`Error rejecting proof: ${err.message}`);
+    }
+  };
+
+  // NEW: Open review modal to show submitted proof details for approval/rejection
+  const openReviewModal = (task) => {
+    setReviewTask(task);
+    setShowReviewModal(true);
+  };
+
   if (loading) return <p className="text-center text-gray-500">Loading event details...</p>;
   if (error) return <p className="text-center text-red-500">Error: {error}</p>;
   if (!event) return <p className="text-center text-gray-500">No event data available.</p>;
 
+  // Extract tasks assigned to the current user from event.volunteeringPositions
+  let userTasks = [];
+  event.volunteeringPositions?.forEach((position) => {
+    position.registeredUsers?.forEach((volunteer) => {
+      if (
+        volunteer._id.toString() === user?._id?.toString() &&
+        volunteer.tasks
+      ) {
+        // Merge tasks from all positions
+        userTasks = userTasks.concat(volunteer.tasks);
+      }
+    });
+  });
+  console.log(event);
+
+
+
   return (
-    <div className="max-w-3xl mt-5 mx-auto bg-white rounded-2xl shadow-lg p-6 relative">
+    <div className="max-w-3xl mx-auto bg-white rounded-2xl mt-5 shadow-lg p-8 relative border border-gray-200">
       <h1 className="text-3xl font-bold text-gray-900 mb-5">{event.title}</h1>
-  
+
       {event.image && (
         <img
           src={event.image}
@@ -418,29 +480,25 @@ function EventOrganiser() {
           className="w-full h-64 object-cover rounded-xl mb-5 shadow"
         />
       )}
-  
+
       <div
         className="text-gray-700 mb-5 leading-relaxed"
         dangerouslySetInnerHTML={{ __html: event.content }}
       />
-  
+
       <div className="bg-gray-100 p-5 rounded-xl mb-5 shadow-sm">
         <p className="text-lg font-semibold">📍 Location: {event.eventLocation}</p>
-        <p className="text-gray-600">
-          📅 Start: {new Date(event.eventStartDate).toLocaleDateString()}
-        </p>
-        <p className="text-gray-600">
-          📅 End: {new Date(event.eventEndDate).toLocaleDateString()}
-        </p>
+        <p className="text-gray-600">📅 Start: {new Date(event.eventStartDate).toLocaleDateString()}</p>
+        <p className="text-gray-600">📅 End: {new Date(event.eventEndDate).toLocaleDateString()}</p>
       </div>
-  
+
       {/* Buttons for Feedback & Visual Summary */}
       <div className="absolute top-6 right-6 flex space-x-2">
         <button
           onClick={toggleFeedback}
           className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition duration-200 shadow-md"
         >
-          View Feedback
+          {feedbackVisible ? 'Hide Feedback' : 'View Feedback'}
         </button>
         <button
           onClick={toggleVisualDisplay}
@@ -449,7 +507,7 @@ function EventOrganiser() {
           View Visual Summary
         </button>
       </div>
-  
+
       {/* Feedback Modal */}
       {feedbackVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
@@ -471,15 +529,9 @@ function EventOrganiser() {
                   <div key={fb._id} className="p-4 border rounded bg-gray-50 shadow-sm">
                     <p className="font-semibold">⭐ Rating: {fb.rating} / 10</p>
                     <p>🎉 Enjoyed: {fb.enjoyed ? 'Yes' : 'No'}</p>
-                    {fb.comments && (
-                      <p className="text-sm text-gray-700">💬 {fb.comments}</p>
-                    )}
-                    {fb.suggestions && (
-                      <p className="text-sm text-gray-700">💡 {fb.suggestions}</p>
-                    )}
-                    <p className="text-xs text-gray-500 mt-1">
-                      {new Date(fb.createdAt).toLocaleDateString()}
-                    </p>
+                    {fb.comments && <p className="text-sm text-gray-700">💬 {fb.comments}</p>}
+                    {fb.suggestions && <p className="text-sm text-gray-700">💡 {fb.suggestions}</p>}
+                    <p className="text-xs text-gray-500 mt-1">{new Date(fb.createdAt).toLocaleDateString()}</p>
                   </div>
                 ))
               ) : (
@@ -489,10 +541,9 @@ function EventOrganiser() {
           </div>
         </div>
       )}
-  
+
       {/* Visual Summary Modal */}
       {showVisualDisplay && (
-
         <div ref={pdfRef} className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-lg w-full relative">
             <button
@@ -504,18 +555,10 @@ function EventOrganiser() {
             <h3 className="text-xl font-bold mb-4">📊 Feedback Summary</h3>
             {summary ? (
               <div className="mb-5">
-                <p>
-                  Total Reviews: <span className="font-semibold">{summary.total}</span>
-                </p>
-                <p>
-                  Average Rating: <span className="font-semibold">{summary.averageRating} / 10</span>
-                </p>
-                <p>
-                  Positive Reviews: <span className="font-semibold">{summary.positiveCount}</span>
-                </p>
-                <p>
-                  Negative Reviews: <span className="font-semibold">{summary.negativeCount}</span>
-                </p>
+                <p>Total Reviews: <span className="font-semibold">{summary.total}</span></p>
+                <p>Average Rating: <span className="font-semibold">{summary.averageRating} / 10</span></p>
+                <p>Positive Reviews: <span className="font-semibold">{summary.positiveCount}</span></p>
+                <p>Negative Reviews: <span className="font-semibold">{summary.negativeCount}</span></p>
               </div>
             ) : (
               <p>No summary available.</p>
@@ -542,9 +585,8 @@ function EventOrganiser() {
             </button>
           </div>
         </div>
-     
       )}
-  
+
       {event.volunteeringPositions?.length > 0 && (
         <div className="mt-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">🙌 Volunteering Positions</h2>
@@ -570,7 +612,24 @@ function EventOrganiser() {
                               {volunteer.tasks.map((task, taskIdx) => (
                                 <li key={taskIdx}>
                                   <span className="font-semibold">Task:</span> {task.description} –{' '}
-                                  <span className="italic">{task.status}</span>
+                                  <span className="italic">
+                                    {task.status === "completed"
+                                      ? "Task Completed"
+                                      : task.proofSubmitted
+                                        ? "Proof Submitted"
+                                        : "Pending"}
+                                  </span>
+                                  {task.proofSubmitted && (
+                                    <>
+                                      <button
+                                        onClick={() => openReviewModal(task)}
+                                        className="ml-2 bg-blue-600 hover:bg-blue-700 text-white py-1 px-2 rounded text-xs"
+                                      >
+                                        {task.status === "completed" ? "View Task Proof" : "Review Task Proof"}
+                                      </button>
+                                     
+                                    </>
+                                  )}
                                 </li>
                               ))}
                             </ul>
@@ -595,11 +654,11 @@ function EventOrganiser() {
           ))}
         </div>
       )}
-  
+
       <p className="text-gray-500 mt-4 text-sm">
         Created by: {event.createdBy?.name || "Unknown"}
       </p>
-  
+
       <div className="mt-6">
         <button
           onClick={() => setShowSummaryForm(true)}
@@ -608,7 +667,7 @@ function EventOrganiser() {
           Submit Event Summary
         </button>
       </div>
-  
+
       {showTaskModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-md">
@@ -648,7 +707,7 @@ function EventOrganiser() {
           </div>
         </div>
       )}
-  
+
       {showSummaryForm && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 overflow-auto">
           <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-lg">
@@ -750,6 +809,7 @@ function EventOrganiser() {
                   readOnly
                 />
               </div>
+              {/* File Upload Section with Add File Button */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">Upload File (Optional)</label>
                 <div className="flex items-center gap-2 mt-1">
@@ -767,12 +827,7 @@ function EventOrganiser() {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Upload Event Images (Optional)</label>
                 <div className="flex items-center gap-2 mt-1">
-                  <input
-                    type="file"
-                    multiple
-                    onChange={handleImagesChange}
-                    className="block w-full"
-                  />
+                  <input type="file" multiple onChange={handleImagesChange} className="block w-full" />
                   <button
                     type="button"
                     onClick={handleUploadImages}
@@ -806,17 +861,10 @@ function EventOrganiser() {
                 />
               </div>
               <div className="flex gap-4">
-                <button
-                  type="submit"
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
-                >
+                <button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded">
                   Submit
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowSummaryForm(false)}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded"
-                >
+                <button type="button" onClick={() => setShowSummaryForm(false)} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded">
                   Cancel
                 </button>
               </div>
@@ -824,9 +872,69 @@ function EventOrganiser() {
           </div>
         </div>
       )}
-  
+
+      {/* Review Proof Modal for Approve/Reject */}
+      {showReviewModal && reviewTask && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-11/12 max-w-md">
+            <h2 className="text-xl font-bold mb-4">
+              {reviewTask.status === "completed" ? "View Task Proof" : "Review Task Proof"}
+            </h2>
+            <p className="mb-2">
+              <span className="font-semibold">Task:</span> {reviewTask.description}
+            </p>
+            {reviewTask.proofMessage && (
+              <div className="mb-4">
+                <p className="font-semibold">Proof Message:</p>
+                <p className="border p-2 rounded">{reviewTask.proofMessage}</p>
+              </div>
+            )}
+            {reviewTask.proofImages && reviewTask.proofImages.length > 0 && (
+              <div className="mb-4">
+                <p className="font-semibold mb-2">Proof Images:</p>
+                <div className="flex flex-wrap gap-2">
+                  {reviewTask.proofImages.map((img, idx) => (
+                    <img
+                      key={idx}
+                      src={img}
+                      alt={`Proof ${idx + 1}`}
+                      className="w-20 h-20 object-cover rounded"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="flex gap-4">
+              {reviewTask.status !== "completed" ? (
+                <>
+                  <button
+                    onClick={handleApproveProof}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={handleRejectProof}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg"
+                  >
+                    Reject
+                  </button>
+                </>
+              ) : null}
+              <button
+                onClick={() => setShowReviewModal(false)}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
       <ToastContainer />
-      
+
       <style jsx global>{`
         .goog-te-combo {
           padding: 0.5rem 1rem;
