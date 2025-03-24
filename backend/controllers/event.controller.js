@@ -557,3 +557,44 @@ export const createEventSummary = async (req, res) => {
     });
   }
 };
+
+
+
+export const getTasksUser = async (req, res) => {
+  try {
+    // Filter tasks by the logged-in user's ID
+    const tasks = await Task.find({ assignedTo: req.user._id })
+      .populate("event", "title eventStartDate eventEndDate")
+      .populate("assignedTo", "name email");
+      
+    res.status(200).json({
+      success: true,
+      data: tasks,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+export const getEventsUser = async (req, res) => {
+  try {
+    // Populate the createdBy field and the registered users in each volunteering position
+    const events = await Event.find()
+      .populate("createdBy", "name email")
+      .populate("volunteeringPositions.registeredUsers", "name email");
+      
+    res.status(200).json({
+      success: true,
+      data: events,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

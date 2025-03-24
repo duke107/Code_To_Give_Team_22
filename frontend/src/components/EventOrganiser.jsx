@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { Bar, Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -10,14 +11,12 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 // Import Firebase Storage functions
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { app } from '../firebase';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useSelector } from 'react-redux';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
 
@@ -27,9 +26,8 @@ function EventOrganiser() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-   const {
-          user
-      } = useSelector(state => state.auth);
+  // Get the logged-in user from redux state
+  const { user } = useSelector(state => state.auth);
 
   // Loader states for file and images upload
   const [fileUploadLoading, setFileUploadLoading] = useState(false);
@@ -67,7 +65,7 @@ function EventOrganiser() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]); // for multiple images
 
-  // Ref for PDF content
+  // Ref for visual summary content
   const pdfRef = useRef();
 
   // Fetch event details including volunteer tasks from the backend
@@ -79,19 +77,21 @@ function EventOrganiser() {
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
         });
-
         if (!res.ok) {
           throw new Error(`Error ${res.status}: ${res.statusText}`);
         }
-
         const data = await res.json();
         setEvent(data);
         // Pre-fill summary form data
         setSummaryData({
           eventName: data.title || '',
           location: data.eventLocation || '',
-          startDate: data.eventStartDate ? new Date(data.eventStartDate).toISOString().split('T')[0] : '',
-          endDate: data.eventEndDate ? new Date(data.eventEndDate).toISOString().split('T')[0] : '',
+          startDate: data.eventStartDate
+            ? new Date(data.eventStartDate).toISOString().split('T')[0]
+            : '',
+          endDate: data.eventEndDate
+            ? new Date(data.eventEndDate).toISOString().split('T')[0]
+            : '',
           positionsAllocated:
             data.volunteeringPositions?.reduce(
               (acc, pos) => acc + (pos.registeredUsers?.length || 0),
@@ -103,7 +103,8 @@ function EventOrganiser() {
               0
             ) ?? 0,
           volunteersRegistered:
-            data.volunteeringPositions?.flatMap((pos) => pos.registeredUsers).length ?? 0,
+            data.volunteeringPositions?.flatMap((pos) => pos.registeredUsers)
+              .length ?? 0,
           organizerFeel: '',
           organizerEnjoyment: '',
           fileUrl: '',
@@ -115,7 +116,6 @@ function EventOrganiser() {
         setLoading(false);
       }
     };
-
     fetchEventDetails();
   }, [slug]);
 
@@ -124,11 +124,14 @@ function EventOrganiser() {
     setFeedbackLoading(true);
     setFeedbackError(null);
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/events/feedbacks?eventId=${event._id}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-      });
+      const res = await fetch(
+        `http://localhost:3000/api/v1/events/feedbacks?eventId=${event._id}`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        }
+      );
       if (!res.ok) {
         throw new Error(`Error ${res.status}: ${res.statusText}`);
       }
@@ -157,27 +160,25 @@ function EventOrganiser() {
     setShowVisualDisplay(!showVisualDisplay);
   };
 
-  // Function to download feedback summary as PDF
-  const handleDownloadPDF = async () => {
+  // New function: Download visual summary as an image (PNG)
+  const handleDownloadVisual = async () => {
+    console.log('====================================');
+    console.log(pdfRef);
+    console.log('====================================');
     if (pdfRef.current) {
-      const canvas = await html2canvas(pdfRef.current, { scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
+      try {
+        const canvas = await html2canvas(pdfRef.current, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = imgData;
+        link.download = 'visual-summary.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (error) {
+        console.error('Error downloading image:', error);
+        toast.error(`Error downloading image: ${error.message}`);
       }
-      pdf.save('feedback-summary.pdf');
     }
   };
 
@@ -305,14 +306,14 @@ function EventOrganiser() {
   // File upload function with loader and toast
   const handleUploadFile = async () => {
     if (!selectedFile) {
-      toast.error("Please select a file");
+      toast.error('Please select a file');
       return;
     }
     setFileUploadLoading(true);
     try {
-      const storage = getStorage(app, "gs://mern-blog-b327f.appspot.com");
+      const storage = getStorage(app, 'gs://mern-blog-b327f.appspot.com');
       const sanitizedFileName =
-        new Date().getTime() + "-" + selectedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        new Date().getTime() + '-' + selectedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const storageRef = ref(storage, sanitizedFileName);
       let metadata = { contentType: selectedFile.type };
       if (!metadata.contentType && /\.pdf$/i.test(selectedFile.name)) {
@@ -321,9 +322,9 @@ function EventOrganiser() {
       const snapshot = await uploadBytes(storageRef, selectedFile, metadata);
       const downloadURL = await getDownloadURL(snapshot.ref);
       setSummaryData((prev) => ({ ...prev, fileUrl: downloadURL }));
-      toast.success("File uploaded successfully!");
+      toast.success('File uploaded successfully!');
     } catch (error) {
-      console.error("Error uploading file:", error);
+      console.error('Error uploading file:', error);
       toast.error(`Error uploading file: ${error.message}`);
     } finally {
       setFileUploadLoading(false);
@@ -337,16 +338,16 @@ function EventOrganiser() {
 
   const handleUploadImages = async () => {
     if (selectedImages.length === 0) {
-      toast.error("Please select one or more images");
+      toast.error('Please select one or more images');
       return;
     }
     setImagesUploadLoading(true);
     try {
-      const storage = getStorage(app, "gs://mern-blog-b327f.appspot.com");
+      const storage = getStorage(app, 'gs://mern-blog-b327f.appspot.com');
       const uploadedImageURLs = [];
       for (const image of selectedImages) {
         const sanitizedFileName =
-          new Date().getTime() + "-" + image.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+          new Date().getTime() + '-' + image.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const storageRef = ref(storage, sanitizedFileName);
         let metadata = { contentType: image.type };
         const snapshot = await uploadBytes(storageRef, image, metadata);
@@ -354,9 +355,9 @@ function EventOrganiser() {
         uploadedImageURLs.push(downloadURL);
       }
       setSummaryData((prev) => ({ ...prev, eventImages: uploadedImageURLs }));
-      toast.success("Images uploaded successfully!");
+      toast.success('Images uploaded successfully!');
     } catch (error) {
-      console.error("Error uploading images:", error);
+      console.error('Error uploading images:', error);
       toast.error(`Error uploading images: ${error.message}`);
     } finally {
       setImagesUploadLoading(false);
@@ -365,7 +366,7 @@ function EventOrganiser() {
 
   const handleSubmitSummary = async (e) => {
     e.preventDefault();
-    // Assume organiserId is stored in local storage (adjust based on your auth flow)
+    // Use the logged-in user's ID as organiserId
     const organiserId = user._id;
     const payload = {
       eventName: summaryData.eventName,
@@ -380,7 +381,7 @@ function EventOrganiser() {
       fileUrl: summaryData.fileUrl,
       eventImages: summaryData.eventImages,
       eventId: event._id,
-      organiserId, // Send the organiser's ID along with the summary
+      organiserId, // Send organiser's ID
     };
     
     try {
@@ -417,12 +418,19 @@ function EventOrganiser() {
         />
       )}
   
-      <div className="text-gray-700 mb-5 leading-relaxed" dangerouslySetInnerHTML={{ __html: event.content }} />
+      <div
+        className="text-gray-700 mb-5 leading-relaxed"
+        dangerouslySetInnerHTML={{ __html: event.content }}
+      />
   
       <div className="bg-gray-100 p-5 rounded-xl mb-5 shadow-sm">
         <p className="text-lg font-semibold">📍 Location: {event.eventLocation}</p>
-        <p className="text-gray-600">📅 Start: {new Date(event.eventStartDate).toLocaleDateString()}</p>
-        <p className="text-gray-600">📅 End: {new Date(event.eventEndDate).toLocaleDateString()}</p>
+        <p className="text-gray-600">
+          📅 Start: {new Date(event.eventStartDate).toLocaleDateString()}
+        </p>
+        <p className="text-gray-600">
+          📅 End: {new Date(event.eventEndDate).toLocaleDateString()}
+        </p>
       </div>
   
       {/* Buttons for Feedback & Visual Summary */}
@@ -452,7 +460,6 @@ function EventOrganiser() {
               ✖
             </button>
             <h3 className="text-xl font-bold mb-4">💬 Event Feedback</h3>
-  
             <div className="max-h-64 overflow-y-auto space-y-4">
               {feedbackLoading ? (
                 <p className="text-gray-500">Loading feedback...</p>
@@ -463,9 +470,15 @@ function EventOrganiser() {
                   <div key={fb._id} className="p-4 border rounded bg-gray-50 shadow-sm">
                     <p className="font-semibold">⭐ Rating: {fb.rating} / 10</p>
                     <p>🎉 Enjoyed: {fb.enjoyed ? 'Yes' : 'No'}</p>
-                    {fb.comments && <p className="text-sm text-gray-700">💬 {fb.comments}</p>}
-                    {fb.suggestions && <p className="text-sm text-gray-700">💡 {fb.suggestions}</p>}
-                    <p className="text-xs text-gray-500 mt-1">{new Date(fb.createdAt).toLocaleDateString()}</p>
+                    {fb.comments && (
+                      <p className="text-sm text-gray-700">💬 {fb.comments}</p>
+                    )}
+                    {fb.suggestions && (
+                      <p className="text-sm text-gray-700">💡 {fb.suggestions}</p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      {new Date(fb.createdAt).toLocaleDateString()}
+                    </p>
                   </div>
                 ))
               ) : (
@@ -478,7 +491,8 @@ function EventOrganiser() {
   
       {/* Visual Summary Modal */}
       {showVisualDisplay && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+
+        <div ref={pdfRef} className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-lg w-full relative">
             <button
               onClick={toggleVisualDisplay}
@@ -489,16 +503,22 @@ function EventOrganiser() {
             <h3 className="text-xl font-bold mb-4">📊 Feedback Summary</h3>
             {summary ? (
               <div className="mb-5">
-                <p>Total Reviews: <span className="font-semibold">{summary.total}</span></p>
-                <p>Average Rating: <span className="font-semibold">{summary.averageRating} / 10</span></p>
-                <p>Positive Reviews: <span className="font-semibold">{summary.positiveCount}</span></p>
-                <p>Negative Reviews: <span className="font-semibold">{summary.negativeCount}</span></p>
+                <p>
+                  Total Reviews: <span className="font-semibold">{summary.total}</span>
+                </p>
+                <p>
+                  Average Rating: <span className="font-semibold">{summary.averageRating} / 10</span>
+                </p>
+                <p>
+                  Positive Reviews: <span className="font-semibold">{summary.positiveCount}</span>
+                </p>
+                <p>
+                  Negative Reviews: <span className="font-semibold">{summary.negativeCount}</span>
+                </p>
               </div>
             ) : (
               <p>No summary available.</p>
             )}
-  
-            {/* Charts */}
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <h4 className="font-semibold mb-2">Review Breakdown</h4>
@@ -513,18 +533,17 @@ function EventOrganiser() {
                 </div>
               </div>
             </div>
-  
-            {/* Download Button */}
             <button
-              onClick={handleDownloadPDF}
+              onClick={handleDownloadVisual}
               className="mt-5 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition duration-200"
             >
-              ⬇️ Download as PDF
+              ⬇️ Download Visual Summary as Image
             </button>
           </div>
         </div>
+     
       )}
-
+  
       {event.volunteeringPositions?.length > 0 && (
         <div className="mt-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">🙌 Volunteering Positions</h2>
@@ -575,11 +594,11 @@ function EventOrganiser() {
           ))}
         </div>
       )}
-
+  
       <p className="text-gray-500 mt-4 text-sm">
         Created by: {event.createdBy?.name || "Unknown"}
       </p>
-
+  
       <div className="mt-6">
         <button
           onClick={() => setShowSummaryForm(true)}
@@ -588,7 +607,7 @@ function EventOrganiser() {
           Submit Event Summary
         </button>
       </div>
-
+  
       {showTaskModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-md">
@@ -628,7 +647,7 @@ function EventOrganiser() {
           </div>
         </div>
       )}
-
+  
       {showSummaryForm && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 overflow-auto">
           <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-lg">
@@ -804,7 +823,7 @@ function EventOrganiser() {
           </div>
         </div>
       )}
-
+  
       <ToastContainer />
       
       <style jsx global>{`
