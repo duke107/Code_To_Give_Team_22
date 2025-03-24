@@ -14,6 +14,8 @@ function Event() {
   const [selectedPositionId, setSelectedPositionId] = useState(null); // For registration
   const [isRegistered, setIsRegistered] = useState(false);
   const state = useSelector((state) => state.auth);
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  
 
   // Feedback states
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -510,10 +512,9 @@ function Event() {
               </label>
               <input
                 type="text"
-                value={testimonialName}
-                onChange={(e) => setTestimonialName(e.target.value)}
-                className="w-full border rounded p-2"
-                placeholder="Enter your name"
+                value={user.name}
+                className="w-full border rounded p-2 bg-gray-100"
+                disabled
               />
             </div>
             <div className="mb-4">
@@ -531,18 +532,12 @@ function Event() {
               <label className="block text-gray-700 font-semibold mb-1">
                 Volunteering Position
               </label>
-              <select
-                value={testimonialPosition}
-                onChange={(e) => setTestimonialPosition(e.target.value)}
-                className="w-full border rounded p-2"
-              >
-                <option value="">Select a position</option>
-                {registeredPositions.map((position) => (
-                  <option key={position._id} value={position.title}>
-                    {position.title}
-                  </option>
-                ))}
-              </select>
+              <input
+                type="text"
+                value={registeredPositions[0].title}
+                className="w-full border rounded p-2 bg-gray-100"
+                disabled
+              />
             </div>
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-1">

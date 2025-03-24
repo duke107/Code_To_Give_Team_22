@@ -9,6 +9,8 @@ import { sendRegistrationNotification } from './notification.controller.js';
 import {io} from "../server.js"
 import { Testimonial } from '../models/testimonial.model.js';
 import EventSummary from '../models/eventSummary.model.js';
+import { sendEmail } from '../utils/sendEmail.js';
+import {generateTaskAssignmentEmailTemplate} from '../utils/emailTemplates.js';
 
 
 // Create a new event
@@ -262,6 +264,7 @@ export const registerVolunteer = async (req, res) => {
 export const assignTask = async (req, res) => {
   try {
     const { volunteerId, eventId, tasks } = req.body;
+    console.log("assign task hit")
 
     // Validate required fields
     if (!volunteerId || !eventId || !tasks || !Array.isArray(tasks)) {
@@ -326,12 +329,19 @@ export const assignTask = async (req, res) => {
         message: notifMsg,
         type: "task-assigned"
       });
+      console.log(notifMsg);
+
       //emit notification from socketio 
       io.to(volunteerId.toString()).emit("new-notification", {
         message: notifMsg,
         type: "task-assigned",
         isRead: false
       });
+
+      const subject = "New Task Assignment";
+      const email = user.email;
+      const message = generateTaskAssignmentEmailTemplate(event.title, validTasks);
+      await sendEmail({ email, subject, message });
     }
 
     return res.status(200).json({
@@ -555,5 +565,32 @@ export const createEventSummary = async (req, res) => {
       success: false,
       message: error.message,
     });
+  }
+};
+
+
+export const markCompletedEvents = async () => {
+  try {
+    const now = new Date();
+
+    const eventsToUpdate = await Event.find({
+      endDate: { $lt: now },
+      isCompleted: false, 
+    });
+
+    if (eventsToUpdate.length === 0) {
+      console.log("No events to mark as completed.");
+      return;
+    }
+
+    // Update all matching events
+    await Event.updateMany(
+      { _id: { $in: eventsToUpdate.map((event) => event._id) } },
+      { $set: { isCompleted: true } }
+    );
+
+    console.log(`Marked ${eventsToUpdate.length} events as completed.`);
+  } catch (error) {
+    console.error("Error marking events as completed:", error);
   }
 };

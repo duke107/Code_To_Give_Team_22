@@ -277,6 +277,7 @@ function EventOrganiser() {
       if (!res.ok) {
         throw new Error(data.message || `Error ${res.status}`);
       }
+      console.log("task given")
       // Re-fetch event details
       const updatedRes = await fetch(`http://localhost:3000/api/v1/events/${slug}`, {
         method: 'GET',
