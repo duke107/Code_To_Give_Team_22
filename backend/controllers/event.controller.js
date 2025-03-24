@@ -24,6 +24,7 @@ export const createEvent = async (req, res) => {
     } = req.body;
 
     // Basic validation for required fields
+    // console.log(user_id);
     if (!title || !eventLocation || !eventStartDate || !eventEndDate || !user_id) {
       return res.status(400).json({ message: "Missing required fields" });
     }

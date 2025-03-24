@@ -30,6 +30,8 @@ import AccessibilityToolbar from "./components/AccessibilityToolbar";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminRoute from "./components/AdminRoute";
 import AdminLogin from "./pages/AdminLogin";
+import PendingApprovals from './components/PendingApprovals'
+import PastEvents from './components/PastEvents'
 
 
 function App() {
@@ -85,9 +87,13 @@ function App() {
 
         <Route path="/admin/login" element={<AdminLogin /> }/>
 
-        <Route element={<AdminRoute />}>
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        </Route>
+        <Route path="/admin" element={<AdminRoute />}>
+        {/* Admin Dashboard */}
+        <Route path="dashboard" element={<AdminDashboard />} />
+        {/* Pending Approvals directly under /admin */}
+        <Route path="pending-approvals" element={<PendingApprovals />} />
+        <Route path="past-events" element={<PastEvents />} />
+      </Route>
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
