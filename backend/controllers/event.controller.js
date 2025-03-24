@@ -39,11 +39,14 @@ export const createEvent = async (req, res) => {
       }));
     }
 
+    const capitalizeFirstLetter = (str) => 
+      str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+    
     const event = await Event.create({
-      title,
+      title: capitalizeFirstLetter(title),
       content,
       image,
-      eventLocation,
+      eventLocation: capitalizeFirstLetter(eventLocation),
       eventStartDate,
       eventEndDate,
       volunteeringPositions: processedVolunteeringPositions,
@@ -51,20 +54,20 @@ export const createEvent = async (req, res) => {
     });
 
     // After creating the event, notify users in the same area
-    const usersInArea = await User.find({
-      location: eventLocation,
-      _id: { $ne: user_id }
-    });
+    // const usersInArea = await User.find({
+    //   location: eventLocation,
+    //   _id: { $ne: user_id }
+    // });
 
-    // For each user, create a notification about the new event
-    for (const user of usersInArea) {
-      const notification = await Notification.create({
-        userId: user._id,
-        message: `New event "${event.title}" is listed in your area.`,
-        type: "reminder"
-      });
-      io.to(user._id.toString()).emit("new-notification", notification);
-    }
+    // // For each user, create a notification about the new event
+    // for (const user of usersInArea) {
+    //   const notification = await Notification.create({
+    //     userId: user._id,
+    //     message: `New event "${event.title}" is listed in your area.`,
+    //     type: "reminder"
+    //   });
+    //   io.to(user._id.toString()).emit("new-notification", notification);
+    // }
 
     return res.status(201).json(event);
   } catch (error) {
@@ -164,13 +167,14 @@ export const deleteEvent = async (req, res) => {
 export const getEvents = async (req, res) => {
   try {
     // Build a query object based on query parameters
-    const query = {};
+    const query = { isApproved: { $eq: true } };
     if (req.query.createdBy) {
       query.createdBy = req.query.createdBy;
     }
     if (req.query.location) {
       query.eventLocation = req.query.location;
     }
+    
 
     // Fetch events from the database based on the query, sorted by creation date
     const events = await Event.find(query).sort({ createdAt: -1 });

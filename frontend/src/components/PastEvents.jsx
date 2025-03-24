@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const PastEvents = () => {
   const [pastEvents, setPastEvents] = useState([]);
-  const [expandedEvents, setExpandedEvents] = useState(new Set());
+  const [expandedEvent, setExpandedEvent] = useState(null);
   const token = useSelector((state) => state.admin.token);
 
   const formatDate = (dateString) => {
@@ -34,19 +34,11 @@ const PastEvents = () => {
   }, [token]);
 
   const toggleDetails = (eventId) => {
-    setExpandedEvents((prevExpanded) => {
-      const newExpanded = new Set(prevExpanded);
-      if (newExpanded.has(eventId)) {
-        newExpanded.delete(eventId);
-      } else {
-        newExpanded.add(eventId);
-      }
-      return newExpanded;
-    });
+    setExpandedEvent(expandedEvent === eventId ? null : eventId);
   };
 
   return (
-    <div className="p-8 bg-gray-50 shadow-lg rounded-lg mx-auto max-w-4xl mt-8">
+    <div className="p-8 bg-gray-50 shadow-lg rounded-lg mx-auto max-w-6xl mt-8">
       <h2 className="text-3xl font-bold text-gray-800 border-b pb-3 tracking-wide">
         Past Events
       </h2>
@@ -56,38 +48,43 @@ const PastEvents = () => {
           No past events found.
         </p>
       ) : (
-        <ul className="space-y-4 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
           {pastEvents.map((event) => (
-            <li
+            <motion.div
               key={event._id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
               className="bg-white p-6 rounded-lg shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg"
             >
-              {/* Event Title, Status, and Button */}
-              <div className="flex justify-between items-center">
-                <div>
-                  <span className="text-2xl font-semibold text-gray-900 leading-snug">
-                    {event.title}
-                  </span>
-                  <span
-                    className={`ml-3 px-3 py-1 text-sm font-medium rounded-full ${
-                      event.isApproved ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
-                    }`}
-                  >
-                    {event.isApproved ? "Approved ✅" : "Rejected ❌"}
-                  </span>
-                </div>
-
-                <button
-                  className="bg-blue-500 text-white px-4 py-1 rounded-md transition-all duration-200 hover:bg-blue-600 hover:shadow-md"
-                  onClick={() => toggleDetails(event._id)}
+              <img
+                src={event.image || "/default-event.jpg"} // Placeholder image if no event image
+                alt={event.title}
+                className="w-full h-40 object-cover rounded-md"
+              />
+              <div className="mt-4">
+                <h3 className="text-xl font-semibold text-gray-900">{event.title}</h3>
+                <span
+                  className={`inline-block mt-2 px-3 py-1 text-sm font-medium rounded-full ${
+                    event.isApproved
+                      ? "bg-green-100 text-green-600"
+                      : "bg-red-100 text-red-600"
+                  }`}
                 >
-                  {expandedEvents.has(event._id) ? "Hide Details" : "View Details"}
-                </button>
+                  {event.isApproved ? "Approved ✅" : "Rejected ❌"}
+                </span>
               </div>
 
-              {/* Event Details (Smooth Expand/Collapse Animation) */}
+              <button
+                className="mt-3 bg-blue-500 text-white px-4 py-1 rounded-md transition-all duration-200 hover:bg-blue-600 hover:shadow-md"
+                onClick={() => toggleDetails(event._id)}
+              >
+                {expandedEvent === event._id ? "Hide Details" : "View Details"}
+              </button>
+
               <AnimatePresence>
-                {expandedEvents.has(event._id) && (
+                {expandedEvent === event._id && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
@@ -107,9 +104,9 @@ const PastEvents = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </li>
+            </motion.div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
