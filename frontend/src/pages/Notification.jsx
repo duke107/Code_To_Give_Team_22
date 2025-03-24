@@ -1,39 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { FaCheck, FaTrash } from "react-icons/fa";
+import React from 'react';
+import { FaCheck, FaTrashAlt } from 'react-icons/fa';
 
-const Notifications = () => {
-  const [notifications, setNotifications] = useState([]);
-
-  const fetchNotifications = async () => {
-    try {
-      const res = await fetch("http://localhost:3000/api/v1/notification", {
-        credentials: "include",
-      });
-      const data = await res.json();
-      setNotifications(data.data);
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
-  const unreadCount = notifications.filter((noti) => !noti.isRead).length;
-
+const Notification = ({ notifications, fetchNotifications }) => {
   const markAsRead = async (notificationId) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/notification/${notificationId}/read`, {
+      await fetch(`http://localhost:3000/api/v1/notification/${notificationId}/read`, {
         method: "PATCH",
         credentials: "include",
       });
-      if (res.ok) {
-        setNotifications((prev) =>
-          prev.map((notif) =>
-            notif._id === notificationId ? { ...notif, isRead: true } : notif
-          )
-        );
-      }
+      fetchNotifications();
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
@@ -41,13 +16,11 @@ const Notifications = () => {
 
   const deleteNotification = async (notificationId) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/notification/${notificationId}`, {
+      await fetch(`http://localhost:3000/api/v1/notification/${notificationId}`, {
         method: "DELETE",
         credentials: "include",
       });
-      if (res.ok) {
-        setNotifications((prev) => prev.filter((notif) => notif._id !== notificationId));
-      }
+      fetchNotifications();
     } catch (error) {
       console.error("Error deleting notification:", error);
     }
@@ -77,7 +50,7 @@ const Notifications = () => {
               title="Delete Notification"
               className="text-red-600 hover:text-red-800"
             >
-              <FaTrash size={18} />
+              <FaTrashAlt size={18} />
             </button>
           </div>
         </div>
@@ -86,4 +59,4 @@ const Notifications = () => {
   );
 };
 
-export default Notifications;
+export default Notification;

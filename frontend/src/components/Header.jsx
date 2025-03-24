@@ -10,56 +10,19 @@ const socket = io("http://localhost:3000", {
   withCredentials: true,
 });
 
-const Header = () => {
-
+const Header = ({notifications}) => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState([]);
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
-
+  
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
   };
 
-  socket.on("connect", () => {
-    console.log("WebSocket connected:", socket.id);
-  });
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetch("http://localhost:3000/api/v1/notification", {
-        credentials: "include",
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          setNotifications(data.data || []);
-        })
-        .catch((err) =>
-          console.error("Error fetching initial notifications:", err)
-        );
-    }
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      console.log("Socket connecting for user:", user._id);
-      socket.emit("join", user._id);
-
-      socket.on("new-notification", (notification) => {
-        console.log("Received new notification:", notification);
-        setNotifications((prev) => [notification, ...prev]);
-      });
-    }
-
-    return () => {
-      console.log("Cleaning up socket listeners");
-      socket.off("new-notification");
-    };
-  }, []);
-
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const unreadCount = notifications?.filter((n) => !n.isRead).length || 0;
+  console.log(unreadCount)
 
   return (
     <header className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
