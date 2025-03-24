@@ -9,6 +9,8 @@ import { sendRegistrationNotification } from './notification.controller.js';
 import {io} from "../server.js"
 import { Testimonial } from '../models/testimonial.model.js';
 import EventSummary from '../models/eventSummary.model.js';
+import { sendEmail } from '../utils/sendEmail.js';
+import {generateTaskAssignmentEmailTemplate} from '../utils/emailTemplates.js';
 
 
 // Create a new event
@@ -41,11 +43,14 @@ export const createEvent = async (req, res) => {
       }));
     }
 
+    const capitalizeFirstLetter = (str) => 
+      str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+    
     const event = await Event.create({
-      title,
+      title: capitalizeFirstLetter(title),
       content,
       image,
-      eventLocation,
+      eventLocation: capitalizeFirstLetter(eventLocation),
       eventStartDate,
       eventEndDate,
       volunteeringPositions: processedVolunteeringPositions,
@@ -53,20 +58,20 @@ export const createEvent = async (req, res) => {
     });
 
     // After creating the event, notify users in the same area
-    const usersInArea = await User.find({
-      location: eventLocation,
-      _id: { $ne: user_id }
-    });
+    // const usersInArea = await User.find({
+    //   location: eventLocation,
+    //   _id: { $ne: user_id }
+    // });
 
-    // For each user, create a notification about the new event
-    for (const user of usersInArea) {
-      const notification = await Notification.create({
-        userId: user._id,
-        message: `New event "${event.title}" is listed in your area.`,
-        type: "reminder"
-      });
-      io.to(user._id.toString()).emit("new-notification", notification);
-    }
+    // // For each user, create a notification about the new event
+    // for (const user of usersInArea) {
+    //   const notification = await Notification.create({
+    //     userId: user._id,
+    //     message: `New event "${event.title}" is listed in your area.`,
+    //     type: "reminder"
+    //   });
+    //   io.to(user._id.toString()).emit("new-notification", notification);
+    // }
 
     return res.status(201).json(event);
   } catch (error) {
@@ -173,13 +178,14 @@ export const deleteEvent = async (req, res) => {
 export const getEvents = async (req, res) => {
   try {
     // Build a query object based on query parameters
-    const query = {};
+    const query = { isApproved: { $eq: true } };
     if (req.query.createdBy) {
       query.createdBy = req.query.createdBy;
     }
     if (req.query.location) {
       query.eventLocation = req.query.location;
     }
+    
 
     // Fetch events from the database based on the query, sorted by creation date
     const events = await Event.find(query).sort({ createdAt: -1 });
@@ -269,6 +275,7 @@ export const registerVolunteer = async (req, res) => {
 export const assignTask = async (req, res) => {
   try {
     const { volunteerId, eventId, tasks } = req.body;
+    console.log("assign task hit")
 
     // Validate required fields
     if (!volunteerId || !eventId || !tasks || !Array.isArray(tasks)) {
@@ -333,12 +340,19 @@ export const assignTask = async (req, res) => {
         message: notifMsg,
         type: "task-assigned"
       });
+      console.log(notifMsg);
+
       //emit notification from socketio 
       io.to(volunteerId.toString()).emit("new-notification", {
         message: notifMsg,
         type: "task-assigned",
         isRead: false
       });
+
+      const subject = "New Task Assignment";
+      const email = user.email;
+      const message = generateTaskAssignmentEmailTemplate(event.title, validTasks);
+      await sendEmail({ email, subject, message });
     }
 
     return res.status(200).json({

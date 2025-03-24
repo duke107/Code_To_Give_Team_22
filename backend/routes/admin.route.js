@@ -3,7 +3,7 @@ import { isAuthenticated } from "../middlewares/auth.middleware.js";
 import {login, logout, 
     approveEvent, rejectEvent,
      getPendingEvents, getPastEvents, getUsersByCity
-    , getCityDetails} from "../controllers/admin.controller.js";
+    , getCityDetails, getStats} from "../controllers/admin.controller.js";
 const router = express.Router();
 
 
@@ -15,5 +15,6 @@ router.get("/pending-events", getPendingEvents);
 router.get("/past-events", getPastEvents);
 router.get("/city-volunteers", getUsersByCity);
 router.get("/city-details/:city", getCityDetails);
+router.get("/stats", getStats);
 
 export default router;
