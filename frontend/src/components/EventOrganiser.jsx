@@ -1,5 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
+import { Bar, Pie } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
 
 function EventOrganiser() {
   const { slug } = useParams();
@@ -18,6 +32,12 @@ function EventOrganiser() {
   const [feedbackError, setFeedbackError] = useState(null);
   const [feedbacks, setFeedbacks] = useState([]);
 
+  // New state for visual display summary
+  const [showVisualDisplay, setShowVisualDisplay] = useState(false);
+
+  // Ref for PDF content
+  const pdfRef = useRef();
+
   // Fetch event details including volunteer tasks from the backend
   useEffect(() => {
     const fetchEventDetails = async () => {
@@ -25,7 +45,7 @@ function EventOrganiser() {
         const res = await fetch(`http://localhost:3000/api/v1/events/${slug}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
+          credentials: 'include',
         });
 
         if (!res.ok) {
@@ -49,11 +69,10 @@ function EventOrganiser() {
     setFeedbackLoading(true);
     setFeedbackError(null);
     try {
-      // Adjust the endpoint to match your API route for fetching feedback by event ID
       const res = await fetch(`http://localhost:3000/api/v1/events/feedbacks?eventId=${event._id}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
+        credentials: 'include',
       });
       if (!res.ok) {
         throw new Error(`Error ${res.status}: ${res.statusText}`);
@@ -69,11 +88,103 @@ function EventOrganiser() {
 
   // Toggle the feedback dropdown panel
   const toggleFeedback = () => {
-    // When opening, fetch the feedbacks
     if (!feedbackVisible) {
       fetchFeedbacks();
     }
+    if (feedbackVisible) {
+      setShowVisualDisplay(false);
+    }
     setFeedbackVisible(!feedbackVisible);
+  };
+
+  // Handler to toggle the visual display of feedback summary
+  const toggleVisualDisplay = () => {
+    setShowVisualDisplay(!showVisualDisplay);
+  };
+
+  // Function to download the feedback summary as a PDF, splitting into multiple pages if needed.
+  const handleDownloadPDF = async () => {
+    if (pdfRef.current) {
+      const canvas = await html2canvas(pdfRef.current, { scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+
+      // Calculate the scaled image height in the PDF
+      const imgWidth = pdfWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // Add the first page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      // While there is still content left to display, add a new page and draw the remaining portion
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+
+      pdf.save('feedback-summary.pdf');
+    }
+  };
+
+  // Compute summary details based on feedbacks
+  const getFeedbackSummary = () => {
+    if (!feedbacks || feedbacks.length === 0) return null;
+    const total = feedbacks.length;
+    const averageRating = (
+      feedbacks.reduce((acc, cur) => acc + Number(cur.rating), 0) / total
+    ).toFixed(1);
+    const positiveCount = feedbacks.filter((fb) => fb.enjoyed).length;
+    const negativeCount = total - positiveCount;
+    return { total, averageRating, positiveCount, negativeCount };
+  };
+
+  // Prepare data for Bar Chart (Positive vs Negative Reviews)
+  const summary = getFeedbackSummary();
+  const barData = {
+    labels: ['Positive', 'Negative'],
+    datasets: [
+      {
+        label: 'Review Count',
+        data: summary ? [summary.positiveCount, summary.negativeCount] : [0, 0],
+        backgroundColor: ['#36d399', '#f87272'],
+      },
+    ],
+  };
+
+  // Prepare data for Pie Chart (Rating Distribution)
+  const ratingCounts = {};
+  feedbacks.forEach((fb) => {
+    ratingCounts[fb.rating] = (ratingCounts[fb.rating] || 0) + 1;
+  });
+  const ratingLabels = Object.keys(ratingCounts).sort((a, b) => a - b);
+  const pieData = {
+    labels: ratingLabels,
+    datasets: [
+      {
+        data: ratingLabels.map((r) => ratingCounts[r]),
+        backgroundColor: [
+          '#FF6384',
+          '#36A2EB',
+          '#FFCE56',
+          '#4BC0C0',
+          '#9966FF',
+          '#FF9F40',
+          '#E7E9ED',
+          '#7CB342',
+          '#D81B60',
+          '#8E24AA',
+        ],
+      },
+    ],
   };
 
   // Opens the task assignment modal for a specific volunteer
@@ -103,8 +214,6 @@ function EventOrganiser() {
   // When "Assign Tasks" is clicked - call the backend assignTask endpoint
   const handleAssignTasks = async () => {
     if (!selectedVolunteer) return;
-
-    // Filter out any empty tasks and map to objects with description and a default status "pending"
     const tasksToAssign = taskInputs
       .map((desc) => ({ description: desc.trim(), status: 'pending' }))
       .filter((task) => task.description !== '');
@@ -135,7 +244,7 @@ function EventOrganiser() {
       const updatedRes = await fetch(`http://localhost:3000/api/v1/events/${slug}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
+        credentials: 'include',
       });
       if (updatedRes.ok) {
         const updatedData = await updatedRes.json();
@@ -153,61 +262,124 @@ function EventOrganiser() {
   if (!event) return <p className="text-center text-gray-500">No event data available.</p>;
 
   return (
-    <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6 relative">
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">{event.title}</h1>
-
+    <div className="max-w-3xl mt-5 mx-auto bg-white rounded-2xl shadow-lg p-6 relative">
+      <h1 className="text-3xl font-bold text-gray-900 mb-5">{event.title}</h1>
+  
       {event.image && (
-        <img src={event.image} alt={event.title} className="w-full h-60 object-cover mb-4 rounded-lg" />
+        <img
+          src={event.image}
+          alt={event.title}
+          className="w-full h-64 object-cover rounded-xl mb-5 shadow"
+        />
       )}
-
-      <div className="text-gray-700 mb-4" dangerouslySetInnerHTML={{ __html: event.content }} />
-
-      <div className="bg-gray-100 p-4 rounded-lg mb-4">
+  
+      <div className="text-gray-700 mb-5 leading-relaxed" dangerouslySetInnerHTML={{ __html: event.content }} />
+  
+      <div className="bg-gray-100 p-5 rounded-xl mb-5 shadow-sm">
         <p className="text-lg font-semibold">📍 Location: {event.eventLocation}</p>
         <p className="text-gray-600">📅 Start: {new Date(event.eventStartDate).toLocaleDateString()}</p>
         <p className="text-gray-600">📅 End: {new Date(event.eventEndDate).toLocaleDateString()}</p>
       </div>
-
-      {/* Feedback Dropdown Button */}
-      <div className="absolute top-6 right-6">
+  
+      {/* Buttons for Feedback & Visual Summary */}
+      <div className="absolute top-6 right-6 flex space-x-2">
         <button
           onClick={toggleFeedback}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition duration-200 shadow-md"
         >
-          {feedbackVisible ? 'Hide Feedback' : 'View Feedback'}
+          View Feedback
         </button>
-        {feedbackVisible && (
-          <div className="mt-2 w-80 bg-white border border-gray-200 rounded shadow-lg p-4">
-            {feedbackLoading ? (
-              <p className="text-gray-500">Loading feedback...</p>
-            ) : feedbackError ? (
-              <p className="text-red-500">Error: {feedbackError}</p>
-            ) : feedbacks.length > 0 ? (
-              <ul className="space-y-3">
-                {feedbacks.map((fb) => (
-                  <li key={fb._id} className="border-b pb-2">
-                    <p className="text-sm font-semibold">Rating: {fb.rating} / 10</p>
-                    <p className="text-sm">
-                      Enjoyed: {fb.enjoyed ? 'Yes' : 'No'}
-                    </p>
-                    {fb.comments && (
-                      <p className="text-sm text-gray-700">Comments: {fb.comments}</p>
-                    )}
-                    {fb.suggestions && (
-                      <p className="text-sm text-gray-700">Suggestions: {fb.suggestions}</p>
-                    )}
-                    <p className="text-xs text-gray-500">
-                      {new Date(fb.createdAt).toLocaleDateString()}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500">No feedback available for this event.</p>
-            )}
-          </div>
-        )}
+        <button
+          onClick={toggleVisualDisplay}
+          className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition duration-200 shadow-md"
+        >
+          View Visual Summary
+        </button>
       </div>
+  
+      {/* Feedback Modal */}
+      {feedbackVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-lg w-full relative">
+            <button
+              onClick={toggleFeedback}
+              className="absolute top-4 right-4 bg-gray-300 hover:bg-gray-400 rounded-full p-2"
+            >
+              ✖
+            </button>
+            <h3 className="text-xl font-bold mb-4">💬 Event Feedback</h3>
+  
+            <div className="max-h-64 overflow-y-auto space-y-4">
+              {feedbackLoading ? (
+                <p className="text-gray-500">Loading feedback...</p>
+              ) : feedbackError ? (
+                <p className="text-red-500">Error: {feedbackError}</p>
+              ) : feedbacks.length > 0 ? (
+                feedbacks.slice(0, 5).map((fb) => (
+                  <div key={fb._id} className="p-4 border rounded bg-gray-50 shadow-sm">
+                    <p className="font-semibold">⭐ Rating: {fb.rating} / 10</p>
+                    <p>🎉 Enjoyed: {fb.enjoyed ? 'Yes' : 'No'}</p>
+                    {fb.comments && <p className="text-sm text-gray-700">💬 {fb.comments}</p>}
+                    {fb.suggestions && <p className="text-sm text-gray-700">💡 {fb.suggestions}</p>}
+                    <p className="text-xs text-gray-500 mt-1">{new Date(fb.createdAt).toLocaleDateString()}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500">No feedback available for this event.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+  
+      {/* Visual Summary Modal */}
+      {showVisualDisplay && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-lg w-full relative">
+            <button
+              onClick={toggleVisualDisplay}
+              className="absolute top-4 right-4 bg-gray-300 hover:bg-gray-400 rounded-full p-2"
+            >
+              ✖
+            </button>
+            <h3 className="text-xl font-bold mb-4">📊 Feedback Summary</h3>
+            {summary ? (
+              <div className="mb-5">
+                <p>Total Reviews: <span className="font-semibold">{summary.total}</span></p>
+                <p>Average Rating: <span className="font-semibold">{summary.averageRating} / 10</span></p>
+                <p>Positive Reviews: <span className="font-semibold">{summary.positiveCount}</span></p>
+                <p>Negative Reviews: <span className="font-semibold">{summary.negativeCount}</span></p>
+              </div>
+            ) : (
+              <p>No summary available.</p>
+            )}
+  
+            {/* Charts */}
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-semibold mb-2">Review Breakdown</h4>
+                <div className="h-40">
+                  <Bar data={barData} options={{ responsive: true, maintainAspectRatio: false }} />
+                </div>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Rating Distribution</h4>
+                <div className="h-40">
+                  <Pie data={pieData} options={{ responsive: true, maintainAspectRatio: false }} />
+                </div>
+              </div>
+            </div>
+  
+            {/* Download Button */}
+            <button
+              onClick={handleDownloadPDF}
+              className="mt-5 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition duration-200"
+            >
+              ⬇️ Download as PDF
+            </button>
+          </div>
+        </div>
+      )}
 
       {event.volunteeringPositions?.length > 0 && (
         <div className="mt-6">
@@ -221,12 +393,11 @@ function EventOrganiser() {
                   <p className="font-medium">Registered Users:</p>
                   <ul className="list-disc list-inside text-gray-700">
                     {position.registeredUsers.map((volunteer, idx) => (
-                      <li key={idx} className="mb-2">
+                      <ul key={idx} className="mb-2">
                         <div className="flex flex-col gap-1">
                           <span>
                             {volunteer.name} ({volunteer.email})
                           </span>
-                          {/* Display tasks that come from the backend */}
                           {volunteer.tasks && volunteer.tasks.length > 0 ? (
                             <ul className="mt-1 ml-4 text-sm text-gray-800">
                               {volunteer.tasks.map((task, taskIdx) => (
@@ -239,7 +410,6 @@ function EventOrganiser() {
                           ) : (
                             <p className="text-gray-500 text-sm">No tasks assigned.</p>
                           )}
-                          {/* Assign Task Button */}
                           <button
                             className="self-start bg-purple-600 hover:bg-purple-700 text-white py-1 px-2 rounded text-xs"
                             onClick={() => openTaskModal(volunteer)}
@@ -247,7 +417,7 @@ function EventOrganiser() {
                             Assign Task
                           </button>
                         </div>
-                      </li>
+                      </ul>
                     ))}
                   </ul>
                 </div>

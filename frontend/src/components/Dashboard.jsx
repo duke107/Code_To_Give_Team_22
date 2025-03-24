@@ -159,53 +159,49 @@ function Dashboard() {
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-3xl font-bold mb-4 text-gray-800">User Dashboard</h2>
-
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <h2 className="text-3xl font-bold mb-6 text-gray-800">User Dashboard</h2>
+  
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-6">
-        {/* Total Events Card */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-gray-500 text-sm uppercase">Events Organized</h3>
-          <p className="text-2xl font-semibold text-gray-800">{totalEvents}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+        {/* Events Organized */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-sm font-medium text-gray-500 uppercase">Events Organized</h3>
+          <p className="mt-2 text-3xl font-semibold text-gray-800">{totalEvents}</p>
         </div>
-
-        {/* Total Volunteers Card */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-gray-500 text-sm uppercase">Volunteers</h3>
-          <p className="text-2xl font-semibold text-gray-800">{totalVolunteers}</p>
+  
+        {/* Volunteers */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-sm font-medium text-gray-500 uppercase">Volunteers</h3>
+          <p className="mt-2 text-3xl font-semibold text-gray-800">{totalVolunteers}</p>
         </div>
-
-        {/* Donations Received Card */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-gray-500 text-sm uppercase">Donations Received</h3>
-          <p className="text-2xl font-semibold text-gray-800">${totalDonations}</p>
+  
+        {/* Donations Received */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-sm font-medium text-gray-500 uppercase">Donations Received</h3>
+          <p className="mt-2 text-3xl font-semibold text-gray-800">${totalDonations}</p>
         </div>
-
-        {/* Trees Planted Card */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-gray-500 text-sm uppercase">Trees Planted</h3>
-          <p className="text-2xl font-semibold text-gray-800">{treesPlanted}</p>
+  
+        {/* Trees Planted */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-sm font-medium text-gray-500 uppercase">Trees Planted</h3>
+          <p className="mt-2 text-3xl font-semibold text-gray-800">{treesPlanted}</p>
         </div>
       </div>
-
+  
       {/* Charts Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Bar Chart */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">
-            Volunteers per Event
-          </h3>
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">Volunteers per Event</h3>
           <div className="h-64">
             <Bar data={barData} options={barOptions} />
           </div>
         </div>
-
+  
         {/* Pie Chart */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">
-            Donation Distribution
-          </h3>
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">Donation Distribution</h3>
           <div className="h-64">
             <Pie data={pieData} options={pieOptions} />
           </div>
@@ -213,6 +209,7 @@ function Dashboard() {
       </div>
     </div>
   );
+  
 }
 
 export default Dashboard;

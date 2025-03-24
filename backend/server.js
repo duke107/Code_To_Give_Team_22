@@ -30,6 +30,12 @@ io.on("connection", (socket) => {
   });
 export {io}
 
+
+server.listen(process.env.PORT || 3000,()=>{
+  console.log(`Server is running on port ${process.env.PORT}`);
+})
+
+
 //middleware for error handling
 
 app.use((err, req, res, next) => {
