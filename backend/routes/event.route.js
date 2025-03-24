@@ -1,7 +1,7 @@
 import express from "express";
 
 import { isAuthenticated } from "../middlewares/auth.middleware.js";
-import { createEvent, deleteEvent, getEventBySlug, getEvents, updateEvent, registerVolunteer, assignTask, updateTaskStatus, createFeedback, getFeedbacksForEvent, submitTestimonial, getRecentTestimonials, createEventSummary, getTasksUser, getEventsUser, submitTaskProof, approveTaskProof, rejectTaskProof } from "../controllers/event.controller.js";
+import { createEvent, deleteEvent, getEventBySlug, getEvents, updateEvent, registerVolunteer, assignTask, updateTaskStatus, createFeedback, getFeedbacksForEvent, submitTestimonial, getRecentTestimonials, createEventSummary, getTasksUser, getEventsUser, submitTaskProof, approveTaskProof, rejectTaskProof, getAllDonations } from "../controllers/event.controller.js";
 
 
 const router = express.Router();
@@ -12,7 +12,7 @@ router.post("/assign",isAuthenticated, assignTask);
 router.post("/submitFeedback",isAuthenticated,createFeedback)
 router.post("/submitTestimonial",isAuthenticated,submitTestimonial)
 router.post("/proof/:taskId",isAuthenticated, submitTaskProof);
-
+router.get("/getAllDonations",isAuthenticated,getAllDonations)
 router.get("/getEvents",isAuthenticated, getEvents);
 router.get("/getEventsUser",isAuthenticated, getEventsUser);
 router.get("/getTasksUser",isAuthenticated, getTasksUser);
