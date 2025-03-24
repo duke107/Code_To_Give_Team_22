@@ -6,6 +6,7 @@ import Event from "../models/event.model.js"
 import { sendEmail } from "../utils/sendEmail.js";
 import {generateEventCompletionEmailTemplate, generateUserRegistrationEmailTemplate} from "../utils/emailTemplates.js"
 import { markCompletedEvents } from "../controllers/event.controller.js";
+import {io} from "../server.js"
 
 export const sendRegistrationNotification = async (event, volunteerId) => {
   try {
@@ -21,7 +22,8 @@ export const sendRegistrationNotification = async (event, volunteerId) => {
     await Notification.create({
       userId: event.createdBy,
       message: msg,
-      type: "registration"
+      type: "registration",
+      eventSlug: event.slug
     });
 
     // Fetch the event creator's email
@@ -68,7 +70,8 @@ export const sendReminderNotifications = async () => {
           await Notification.create({
             userId: user._id,
             message: `Reminder: The event "${event.title}" in your area`,
-            type: "reminder"
+            type: "reminder",
+            eventSlug: event.slug
           });
         }
       }
@@ -80,22 +83,46 @@ export const sendReminderNotifications = async () => {
 
 export const sendEventCompletionNotifications = async () => {
   try {
-    // Ensure all ended events are marked as completed first
-    await markCompletedEvents();
+    const completedEvents = await markCompletedEvents();
+ 
+    if (completedEvents.length === 0) return; // No new completed events, skip notifications
 
-    const events = await Event.find({
-      endDate: { $lt: new Date() },
-      isCompleted: true,
-    });
+    for (const event of completedEvents) {
+      const volunteers = await User.find({ _id: { $in: event.registeredVolunteers } }, "email name");
 
-    for (const event of events) {
-      // Notify volunteers (same logic as before)
+      for (const volunteer of volunteers) {
+        const message = `The event "${event.title}" has concluded. We invite you to submit your honest feedback`;
+
+        await Notification.create({
+          userId: volunteer._id,
+          message,
+          type: "event-end",
+          eventSlug: event.slug
+        });
+
+        console.log(event._id)
+
+        io.to(volunteer._id.toString()).emit("new-notification", {
+          message,
+          type: "event-end",
+          isRead: false,
+        });
+
+        const emailContent = generateEventCompletionEmailTemplate(event.title);
+        await sendEmail({
+          email: volunteer.email,
+          subject: `Event Completed: ${event.title}`,
+          message: emailContent,
+        });
+      }
     }
 
+    console.log(`Sent event completion notifications for ${completedEvents.length} events.`);
   } catch (error) {
     console.error("Error in event completion notifications:", error);
   }
 };
+
 
 
 const sendNotification = async (req, res, next) => {

@@ -29,18 +29,17 @@ const LocationPicker = ({ eventLocation, setEventLocation }) => {
   return (
     <div className="static">
       <div className="mb-2">
-        <label htmlFor="eventLocation" className="text-lg font-medium">
-          Event Location
+        <label htmlFor="Location" className="text-lg font-medium">
         </label>
       </div>
       <div className="flex items-center">
         <HiLocationMarker className="mr-2 text-gray-600" />
         <input
-          id="eventLocation"
+          id="Location"
           type="text"
-          placeholder="Enter event location"
+          placeholder="Enter location"
           required
-          value={eventLocation}
+          value={Location}
           onChange={handleChange}
           className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
         />
