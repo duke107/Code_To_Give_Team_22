@@ -23,7 +23,7 @@ const AdminNavbar = () => {
           Pending Approvals
         </Link>
         <Link to="/admin/past-events" className="px-6 py-3 bg-blue-500 rounded-lg hover:bg-blue-700 transition font-semibold text-white shadow-md whitespace-nowrap">
-          Past Events
+          Approved Events
         </Link>
       </div>
       <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition text-sm shadow-md">

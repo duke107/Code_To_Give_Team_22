@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
-import CityDataModal from "../components/CityDataModal"; // Ensure this exists
+import CityDataModal from "../components/CityDataModal";
+import DashboardStats from "../components/DashboardStats";  // Import the new component
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -11,14 +12,14 @@ const AdminDashboard = () => {
   const [selectedCity, setSelectedCity] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-      const openModal = (city) => {
-        setSelectedCity(city);
-        setIsModalOpen(true);
-      };
+  const openModal = (city) => {
+    setSelectedCity(city);
+    setIsModalOpen(true);
+  };
 
-          const closeModal = () => {
-              setIsModalOpen(false);
-          };
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
 
   useEffect(() => {
     const fetchCityData = async () => {
@@ -37,7 +38,6 @@ const AdminDashboard = () => {
     fetchCityData();
   }, []);
 
-  // Extract city names and volunteer counts for the chart
   const chartData = {
     labels: cityData.map((item) => item.city),
     datasets: [
@@ -58,40 +58,34 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+    <div className="grid grid-cols-[70%_30%] gap-6 p-6">
       {/* Left Section: Graph */}
       <div className="bg-white shadow-lg rounded-lg p-6">
         <h2 className="text-xl font-bold mb-4">Volunteers Per City</h2>
-        <div className="w-full h-96">
+        <div className="w-full h-96 overflow-hidden">
           <Bar data={chartData} options={chartOptions} />
         </div>
       </div>
-  
+
       {/* Right Section: City List */}
       <div className="bg-white shadow-lg rounded-lg p-6">
-  <h2 className="text-xl font-bold mb-4 text-center">Cities</h2> 
-  <div className="columns-3 sm:columns-2 md:columns-3 lg:columns-4 space-y-2">
-    {cityData.map((item) => (
-      <span
-        key={item.city}
-        className="cursor-pointer text-blue-600 transition-transform duration-200 hover:scale-105 block w-fit"
-        onClick={() => openModal(item.city)}
-      >
-        {item.city}
-      </span>
-    ))}
-  </div>
-</div>
+        <h2 className="text-xl font-bold mb-4 text-center">City List</h2>
+        <div className="flex flex-wrap gap-x-8">
+          {cityData.map((item) => (
+            <span key={item.city} className="cursor-pointer text-blue-600 hover:scale-105" onClick={() => openModal(item.city)}>
+              {item.city}
+            </span>
+          ))}
+        </div>
+      </div>
 
+      {/* Dashboard Stats */}
+      <DashboardStats />
 
-
-
-
-  
       {/* City Data Modal */}
       {isModalOpen && <CityDataModal city={selectedCity} closeModal={closeModal} />}
     </div>
-  );  
+  );
 };
 
 export default AdminDashboard;

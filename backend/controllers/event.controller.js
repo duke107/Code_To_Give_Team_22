@@ -43,11 +43,14 @@ export const createEvent = async (req, res) => {
       }));
     }
 
+    const capitalizeFirstLetter = (str) => 
+      str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+    
     const event = await Event.create({
-      title,
+      title: capitalizeFirstLetter(title),
       content,
       image,
-      eventLocation,
+      eventLocation: capitalizeFirstLetter(eventLocation),
       eventStartDate,
       eventEndDate,
       volunteeringPositions: processedVolunteeringPositions,
@@ -55,20 +58,20 @@ export const createEvent = async (req, res) => {
     });
 
     // After creating the event, notify users in the same area
-    const usersInArea = await User.find({
-      location: eventLocation,
-      _id: { $ne: user_id }
-    });
+    // const usersInArea = await User.find({
+    //   location: eventLocation,
+    //   _id: { $ne: user_id }
+    // });
 
-    // For each user, create a notification about the new event
-    for (const user of usersInArea) {
-      const notification = await Notification.create({
-        userId: user._id,
-        message: `New event "${event.title}" is listed in your area.`,
-        type: "reminder"
-      });
-      io.to(user._id.toString()).emit("new-notification", notification);
-    }
+    // // For each user, create a notification about the new event
+    // for (const user of usersInArea) {
+    //   const notification = await Notification.create({
+    //     userId: user._id,
+    //     message: `New event "${event.title}" is listed in your area.`,
+    //     type: "reminder"
+    //   });
+    //   io.to(user._id.toString()).emit("new-notification", notification);
+    // }
 
     return res.status(201).json(event);
   } catch (error) {
@@ -168,13 +171,14 @@ export const deleteEvent = async (req, res) => {
 export const getEvents = async (req, res) => {
   try {
     // Build a query object based on query parameters
-    const query = {};
+    const query = { isApproved: { $eq: true } };
     if (req.query.createdBy) {
       query.createdBy = req.query.createdBy;
     }
     if (req.query.location) {
       query.eventLocation = req.query.location;
     }
+    
 
     // Fetch events from the database based on the query, sorted by creation date
     const events = await Event.find(query).sort({ createdAt: -1 });
@@ -569,28 +573,42 @@ export const createEventSummary = async (req, res) => {
 };
 
 
-export const markCompletedEvents = async () => {
+
+export const getTasksUser = async (req, res) => {
   try {
-    const now = new Date();
-
-    const eventsToUpdate = await Event.find({
-      endDate: { $lt: now },
-      isCompleted: false, 
+    // Filter tasks by the logged-in user's ID
+    const tasks = await Task.find({ assignedTo: req.user._id })
+      .populate("event", "title eventStartDate eventEndDate")
+      .populate("assignedTo", "name email");
+      
+    res.status(200).json({
+      success: true,
+      data: tasks,
     });
-
-    if (eventsToUpdate.length === 0) {
-      console.log("No events to mark as completed.");
-      return;
-    }
-
-    // Update all matching events
-    await Event.updateMany(
-      { _id: { $in: eventsToUpdate.map((event) => event._id) } },
-      { $set: { isCompleted: true } }
-    );
-
-    console.log(`Marked ${eventsToUpdate.length} events as completed.`);
   } catch (error) {
-    console.error("Error marking events as completed:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+export const getEventsUser = async (req, res) => {
+  try {
+    // Populate the createdBy field and the registered users in each volunteering position
+    const events = await Event.find()
+      .populate("createdBy", "name email")
+      .populate("volunteeringPositions.registeredUsers", "name email");
+      
+    res.status(200).json({
+      success: true,
+      data: events,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
