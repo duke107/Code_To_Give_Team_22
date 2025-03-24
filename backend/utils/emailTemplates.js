@@ -132,7 +132,7 @@ export function generateEventCompletionEmailTemplate(eventTitle) {
   
       <p style="font-size: 16px; color: #ccc;">The event <strong>${eventTitle}</strong> has successfully concluded, and we sincerely appreciate your contribution.</p>
   
-      <p style="font-size: 16px; color: #ccc;">Your efforts helped make a real impact, and we look forward to seeing you in future events!</p>
+      <p style="font-size: 16px; color: #ccc;">We hereby invite you to fill the event feedback form with your honest thoughts. Thank you!</p>
   
       <footer style="margin-top: 20px; text-align: center; font-size: 14px; color: #666;">
           <p>Thank you,<br>Samarthanam Team</p>

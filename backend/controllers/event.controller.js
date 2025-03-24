@@ -612,3 +612,30 @@ export const getEventsUser = async (req, res) => {
     });
   }
 };
+
+
+export const markCompletedEvents = async () => {
+  try {
+    const now = new Date();
+
+    // Find events that have ended but are not marked as completed
+    const eventsToMark = await Event.find({
+      eventEndDate: { $lt: now },
+      isCompleted: false,
+    });
+
+    if (eventsToMark.length === 0) return []; // No events to update
+
+    // Mark these events as completed
+    const updatedEvents = await Event.updateMany(
+      { _id: { $in: eventsToMark.map(e => e._id) } },
+      { $set: { isCompleted: true } }
+    );
+
+    console.log(`Marked ${updatedEvents.modifiedCount} events as completed.`);
+    return eventsToMark;
+
+  } catch (error) {
+    console.error("Error marking completed events:", error);
+  }
+};
