@@ -11,6 +11,7 @@ import OTP from './pages/OTP'
 import ResetPassword from './pages/ResetPassword'
 import CreateEvent from './pages/CreateEvent'
 import Dashboard from './components/Dashboard'
+import UserDashboard from './pages/UserDashboard';
 import Events from './components/Events'
 import ChangeDetails from './components/ChangeDetails'
 import Translate from "./TranslateButton";
@@ -30,7 +31,11 @@ import AccessibilityToolbar from "./components/AccessibilityToolbar";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminRoute from "./components/AdminRoute";
 import AdminLogin from "./pages/AdminLogin";
+import PendingApprovals from './components/PendingApprovals'
+import PastEvents from './components/PastEvents'
 
+import { useState } from 'react'
+import AccessibilityMenu from './components/AccessibilityMenu'
 
 function App() {
   const dispatch = useDispatch();
@@ -39,32 +44,48 @@ function App() {
     dispatch(getUser());
   }, [dispatch]);
 
-  const { user } = useSelector((state) => state.auth);
-  console.log('====================================');
-  console.log(user);
-  console.log('====================================');
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  console.log('User:', user);
 
+  const [notifications, setNotifications] = useState([]);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch("http://localhost:3000/api/v1/notification", {
+        credentials: "include",
+      });
+      const data = await res.json();
+      setNotifications(data.data || []);
+    } catch (err) {
+      console.error("Error fetching notifications:", err);
+    }
+  };
+
+  // Fetch notifications on mount and poll every 30 seconds
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchNotifications();
+      const interval = setInterval(fetchNotifications, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated]);
 
   return (
     <Router>
       <ScreenReaderButton />
+      <AccessibilityMenu />
       <TranslateButton />
-      {/* <AccessibilityProvider >
-      <AccessibilityToolbar /> */}
       <Routes>
         {/* Routes that require Header & Footer */}
-        <Route element={<MainLayout />}>
+        <Route element={<MainLayout notifications={notifications} />}>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/donate" element={<Donate />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          {/* Conditionally render events based on user role */}
+          <Route path="/dashboard" element={user?.role === "Event Organizer" ? <Dashboard /> : <UserDashboard />} />
           <Route
             path="/events"
-            element={
-              user && user.role === "Event Organiser" ? <Events /> : <EventsUser />
-            }
+            element={user && user.role === "Event Organiser" ? <Events /> : <EventsUser />}
           />
           <Route path="/change-details" element={<ChangeDetails />} />
           <Route path="/create" element={<CreateEvent />} />
@@ -74,7 +95,10 @@ function App() {
             path="/event/:slug"
             element={user && user.role === "Event Organiser" ? <EventOrganiser /> : <Event />}
           />
-          <Route path="/notification" element={<Notification />}/>
+          <Route
+            path="/notification"
+            element={<Notification notifications={notifications} fetchNotifications={fetchNotifications} />}
+          />
         </Route>
 
         <Route path="/login" element={<Login />} />
@@ -85,15 +109,23 @@ function App() {
 
         <Route path="/admin/login" element={<AdminLogin /> }/>
 
+        <Route path="/admin" element={<AdminRoute />}>
+        {/* Admin Dashboard */}
+        <Route path="dashboard" element={<AdminDashboard />} />
+        {/* Pending Approvals directly under /admin */}
+        <Route path="pending-approvals" element={<PendingApprovals />} />
+        <Route path="past-events" element={<PastEvents />} />
+      </Route>
+        <Route path="/admin/login" element={<AdminLogin />} />
         <Route element={<AdminRoute />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
         </Route>
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
+        
       </Routes>
-      <ToastContainer theme="dark" />
-      {/* </ AccessibilityProvider> */}
+      <ToastContainer theme='dark' />
     </Router>
   );
 }

@@ -46,7 +46,7 @@ const AdminLogin = () => {
             </label>
             <input
               type="email"
-              className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-0 focus:ring-blue-500 focus:border-blue-500 transition"
               placeholder="Enter admin email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -59,7 +59,7 @@ const AdminLogin = () => {
             </label>
             <input
               type="password"
-              className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-0 focus:ring-blue-500 focus:border-blue-500 transition"
               placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

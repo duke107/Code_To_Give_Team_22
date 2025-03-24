@@ -8,7 +8,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-        console.log(email, password);
+        // console.log(email, password);
         if(!email || !password){
             return res.status(400).json({ msg: "Please fill in all fields" });
         }
@@ -88,3 +88,76 @@ export const rejectEvent = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error", error: error.message });
     }
 };
+
+export const getPendingEvents = async (req, res) => {
+    // console.log("Reached for checking");
+    try {
+        const events = await Event.find({ isApproved: false });
+        res.status(200).json({ success: true, events });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Server error", error: error.message });
+    }
+}
+
+export const getPastEvents = async (req, res) => {
+    try {
+        const events = await Event.find({ isApproved: true });
+        res.status(200).json({ success: true, events });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Server error", error: error.message });
+    }
+}
+
+export const getUsersByCity = async (req, res) => {
+    try {
+      // Aggregate users by location (city) and count the number of users in each city
+      const cityData = await User.aggregate([
+        { 
+          $match: { location: { $ne: null, $ne: "" } } // Exclude users without a location
+        },
+        { 
+          $group: { _id: "$location", users: { $sum: 1 } } 
+        },
+        { 
+          $project: { city: "$_id", users: 1, _id: 0 } 
+        },
+        { 
+          $sort: { users: -1 } // Sort by user count (descending)
+        }
+      ]);
+  
+      res.status(200).json(cityData);
+    } catch (error) {
+      console.error("Error fetching users by city:", error);
+      res.status(500).json({ message: "Error fetching city data", error });
+    }
+  };
+
+  const getAllUsers = async (req, res) => {
+    User.find()
+      .then((users) => {
+        res.json(users);
+      })
+      .catch((err) => res.status(400).json("Error: " + err));
+  }
+
+    export const getCityDetails = async (req, res) => {
+        try {
+            const { city } = req.params;
+            const today = new Date();
+        
+            // Fetch users in the city
+            const users = await User.find({ location: city }).select("name email role avatar");
+        
+            // Fetch past events
+            const pastEvents = await Event.find({ location: city, endDate: { $lt: today } });
+        
+            // Fetch upcoming events
+            const upcomingEvents = await Event.find({ location: city, startDate: { $gte: today } });
+        
+            res.status(200).json({ users, pastEvents, upcomingEvents });
+          } catch (error) {
+            console.error("Error fetching city data:", error);
+            res.status(500).json({ message: "Internal Server Error" });
+          }
+    };

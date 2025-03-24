@@ -267,63 +267,68 @@ function Event() {
   });
 
   return (
-    <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6 relative">
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">{event.title}</h1>
+    <div className="max-w-3xl mx-auto bg-white rounded-2xl mt-5 shadow-lg p-8 relative border border-gray-200">
+      <h1 className="text-4xl text-center font-extrabold text-gray-900 mb-6">{event.title}</h1>
       {event.image && (
-        <img src={event.image} alt={event.title} className="w-full h-60 object-cover mb-4 rounded-lg" />
+        <img 
+          src={event.image} 
+          alt={event.title} 
+          className="w-full h-72 object-cover rounded-xl mb-6 shadow-md" 
+        />
       )}
-      <div className="text-gray-700 mb-4" dangerouslySetInnerHTML={{ __html: event.content }} />
-      <div className="bg-gray-100 p-4 rounded-lg mb-4">
-        <p className="text-lg font-semibold">📍 Location: {event.eventLocation}</p>
-        <p className="text-gray-600">📅 Start: {new Date(event.eventStartDate).toLocaleDateString()}</p>
-        <p className="text-gray-600">📅 End: {new Date(event.eventEndDate).toLocaleDateString()}</p>
+      <div className="text-gray-700 mb-6 leading-relaxed" dangerouslySetInnerHTML={{ __html: event.content }} />
+  
+      <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 mb-6">
+        <p className="text-lg font-semibold text-gray-800">📍 {event.eventLocation}</p>
+        <p className="text-gray-600">📅 <strong>Start:</strong> {new Date(event.eventStartDate).toLocaleDateString()}</p>
+        <p className="text-gray-600">📅 <strong>End:</strong> {new Date(event.eventEndDate).toLocaleDateString()}</p>
       </div>
+  
       {event.volunteeringPositions?.length > 0 && (
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Volunteering Positions</h2>
-          <ul className="list-disc list-inside text-gray-700">
+        <div className="mt-8">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-3">Volunteering Positions</h2>
+          <ul className="space-y-3 text-gray-700">
             {event.volunteeringPositions.map((position) => (
-              <li key={position._id}>
+              <li key={position._id} className="p-3 bg-gray-100 rounded-lg">
                 <span className="font-semibold">{position.title}</span> - {position.slots} slots available
               </li>
             ))}
           </ul>
         </div>
       )}
-      <p className="text-gray-500 mt-4 text-sm">
-        Created by: {event.createdBy?.name || "Unknown"}
+  
+      <p className="text-gray-500 mt-6 text-sm">
+        Created by: <span className="font-medium">{event.createdBy?.name || "Unknown"}</span>
       </p>
-      
-      {/* Registration Button / Message */}
+  
       {isRegistered ? (
         <p className="text-center text-green-600 mt-6 font-bold">
-          You have successfully registered for this event as a volunteer.
+          ✅ You are registered for this event as a volunteer.
         </p>
       ) : (
         <button
-          className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:bg-gray-400"
+          className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-md hover:shadow-lg disabled:bg-gray-400"
           onClick={openModal}
           disabled={registering}
         >
           {registering ? "Processing..." : "Register for Event"}
         </button>
       )}
-
-      {/* Display User's Assigned Tasks if Registered */}
+  
       {isRegistered && (
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Your Assigned Tasks</h2>
+        <div className="mt-8">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-3">Your Assigned Tasks</h2>
           {userTasks.length > 0 ? (
-            <ul className="list-disc list-inside text-gray-700">
+            <ul className="space-y-3 text-gray-700">
               {userTasks.map((task, idx) => (
-                <li key={idx} className="mb-2 flex items-center gap-2">
+                <li key={idx} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border">
                   <span>
                     <span className="font-semibold">Task:</span> {task.description} –{' '}
                     <span className="italic">{task.status}</span>
                   </span>
                   <button
                     onClick={() => handleUpdateTaskStatus(task._id, task.status)}
-                    className="bg-orange-600 hover:bg-orange-700 text-white py-1 px-2 rounded text-xs"
+                    className="bg-orange-600 hover:bg-orange-700 text-white py-1 px-3 rounded-lg text-xs"
                   >
                     {task.status === 'pending' ? 'Mark Completed' : 'Mark Pending'}
                   </button>
@@ -335,61 +340,35 @@ function Event() {
           )}
         </div>
       )}
-
-      {/* Give Feedback Button */}
-      {/* <button
-        onClick={openFeedbackModal}
-        className="w-full mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition"
-      >
-        Give Feedback
-      </button> */}
-
-      {/* show all feedbacks to the creator */}
-      {/* {state.user && state.user._id === event.createdBy && (
-      <div className="mt-6">
-        <h2 className="text-xl font-semibold mb-2">Feedbacks</h2>
-        {feedbacks.length > 0 ? (
-          feedbacks.map((fb) => (
-            <div key={fb._id} className="border p-3 rounded mb-2">
-              <p className="text-gray-700 font-semibold">Rating: {fb.rating}</p>
-              <p className="text-gray-700">{fb.comment}</p>
-            </div>
-          ))
-        ) : (
-          <p className="text-gray-600">No feedback yet.</p>
-        )}
-      </div>
-      )} */}
+  
       {isRegistered && hasEventEnded() && (
-        <button
-          onClick={openFeedbackModal}
-          className="w-full mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition"
-        >
-          Give Feedback
-        </button>
+        <>
+          <button
+            onClick={openFeedbackModal}
+            className="w-full mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-xl transition-all shadow-md hover:shadow-lg"
+          >
+            Give Feedback
+          </button>
+  
+          <button
+            onClick={openTestimonialModal}
+            className="w-full mt-4 bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition-all shadow-md hover:shadow-lg"
+          >
+            Leave a Testimonial
+          </button>
+        </>
       )}
-
-      {/* Testimonial Button - Visible only if registered */}
-      {isRegistered && hasEventEnded() && (
-        <button
-          onClick={openTestimonialModal}
-          className="w-full mt-6 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg transition"
-        >
-          Want to share your experience? Leave a testimonial
-        </button>
-      )}
-
-      {/* Registration Modal */}
+  
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-md">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-11/12 max-w-md">
             <h2 className="text-xl font-bold mb-4">Choose a Volunteering Position</h2>
-            <ul className="mb-4">
+            <ul className="mb-4 space-y-3">
               {event.volunteeringPositions.map((position) => (
-                <li key={position._id} className="mb-2">
+                <li key={position._id}>
                   <button
                     onClick={() => setSelectedPositionId(position._id)}
-                    className={`w-full text-left py-2 px-4 rounded border 
+                    className={`w-full text-left py-2 px-4 rounded-lg border 
                       ${selectedPositionId === position._id ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
                     disabled={position.slots <= 0 || registering}
                   >

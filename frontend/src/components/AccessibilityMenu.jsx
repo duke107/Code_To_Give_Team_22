@@ -36,8 +36,8 @@ const AccessibilityMenu = () => {
     <>
       {/* Eye Icon (Left-Bottom) */}
       <button
-        className="fixed bottom-5 left-5 bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 transition"
-        onClick={() => setIsOpen(true)}
+        className="fixed bottom-5 z-50 left-5 bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 transition"
+        onClick={() => setIsOpen(!isOpen)}
         aria-label="Open Accessibility Menu"
       >
         <FaEye size={24} />
@@ -45,7 +45,7 @@ const AccessibilityMenu = () => {
 
       {/* Accessibility Menu */}
       <div
-        className={`fixed bottom-16 left-5 bg-white shadow-lg p-4 border rounded-lg w-52 transition-transform ${
+        className={`fixed bottom-16 left-5 z-50 bg-white shadow-lg p-4 border rounded-lg w-52 transition-transform ${
           isOpen ? "scale-100 opacity-100" : "scale-0 opacity-0"
         }`}
       >

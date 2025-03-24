@@ -16,8 +16,8 @@ const ScreenReader = () => {
         voices.find(
           (voice) => voice.name.toLowerCase().includes('male')
         ) ||
-        voices.find((v) => v.lang === 'en-GB') ||
-        voices[0];
+        voices.find((v) => v.lang === 'en-UK') ||
+        voices[2];
 
       if (voice) {
         setSelectedVoice(voice);
@@ -37,7 +37,7 @@ const ScreenReader = () => {
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.voice = selectedVoice;
-    utterance.lang = 'en-GB';
+    utterance.lang = 'en-UK';
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
