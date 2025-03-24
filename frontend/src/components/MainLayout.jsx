@@ -5,12 +5,13 @@ import Footer from './Footer'
 import TranslateButton from '../TranslateButton'
 
 const MainLayout = () => {
+  
   return (
     <>
       <Header />
       <div className="min-h-screen">
         <Outlet />
-      <TranslateButton/>
+    
       </div>
       <Footer />
     </>

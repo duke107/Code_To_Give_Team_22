@@ -30,10 +30,12 @@ import AccessibilityToolbar from "./components/AccessibilityToolbar";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminRoute from "./components/AdminRoute";
 import AdminLogin from "./pages/AdminLogin";
+import AccessibilityMenu from "./components/AccessibilityMenu";
 
 
 function App() {
   const dispatch = useDispatch();
+
 
   useEffect(() => {
     dispatch(getUser());
@@ -49,6 +51,7 @@ function App() {
     <Router>
       <ScreenReaderButton />
       <TranslateButton />
+      <AccessibilityMenu/>
       {/* <AccessibilityProvider >
       <AccessibilityToolbar /> */}
       <Routes>

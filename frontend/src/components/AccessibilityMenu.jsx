@@ -8,28 +8,30 @@ const AccessibilityMenu = () => {
   const [grayscale, setGrayscale] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
 
+  // Load settings from localStorage when the component mounts
   useEffect(() => {
-    // Update text size
+    const savedTextSize = localStorage.getItem("textSize");
+    const savedHighContrast = localStorage.getItem("highContrast") === "true";
+    const savedGrayscale = localStorage.getItem("grayscale") === "true";
+    const savedDarkMode = localStorage.getItem("darkMode") === "true";
+
+    if (savedTextSize) setTextSize(parseFloat(savedTextSize));
+    setHighContrast(savedHighContrast);
+    setGrayscale(savedGrayscale);
+    setDarkMode(savedDarkMode);
+  }, []);
+
+  // Apply settings & update localStorage when changes occur
+  useEffect(() => {
     document.documentElement.style.fontSize = `${textSize}rem`;
+    document.body.classList.toggle("high-contrast", highContrast);
+    document.body.classList.toggle("grayscale", grayscale);
+    document.body.classList.toggle("dark-mode", darkMode);
 
-    // Apply/remove classes for modes
-    if (highContrast) {
-      document.body.classList.add("high-contrast");
-    } else {
-      document.body.classList.remove("high-contrast");
-    }
-
-    if (grayscale) {
-      document.body.classList.add("grayscale");
-    } else {
-      document.body.classList.remove("grayscale");
-    }
-
-    if (darkMode) {
-      document.body.classList.add("dark-mode");
-    } else {
-      document.body.classList.remove("dark-mode");
-    }
+    localStorage.setItem("textSize", textSize);
+    localStorage.setItem("highContrast", highContrast);
+    localStorage.setItem("grayscale", grayscale);
+    localStorage.setItem("darkMode", darkMode);
   }, [textSize, grayscale, darkMode, highContrast]);
 
   return (
@@ -37,17 +39,18 @@ const AccessibilityMenu = () => {
       {/* Eye Icon (Left-Bottom) */}
       <button
         className="fixed bottom-5 left-5 bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 transition"
-        onClick={() => setIsOpen(true)}
-        aria-label="Open Accessibility Menu"
+        onClick={() => setIsOpen((prev) => !prev)} // Toggle menu open/close
+        aria-label="Toggle Accessibility Menu"
       >
         <FaEye size={24} />
       </button>
 
       {/* Accessibility Menu */}
       <div
-        className={`fixed bottom-16 left-5 bg-white shadow-lg p-4 border rounded-lg w-52 transition-transform ${
+        className={`fixed bottom-16 left-5 bg-white shadow-lg p-4 border rounded-lg w-52 transition-transform z-50 ${
           isOpen ? "scale-100 opacity-100" : "scale-0 opacity-0"
         }`}
+        style={{ position: "fixed" }} // Ensure grayscale doesn't affect position
       >
         {/* Close Button */}
         <button
@@ -92,6 +95,7 @@ const AccessibilityMenu = () => {
           className={`block w-full p-1 text-xs rounded my-1 ${
             grayscale ? "bg-gray-600 text-white" : "bg-gray-200"
           } hover:bg-gray-300`}
+          // style={{ position: "relative" }} // Prevents menu shift
         >
           Grayscale
         </button>
@@ -102,6 +106,7 @@ const AccessibilityMenu = () => {
           className={`block w-full p-1 text-xs rounded my-1 ${
             darkMode ? "bg-black text-white" : "bg-gray-200"
           } hover:bg-gray-300`}
+          
         >
           {darkMode ? "Light Mode" : "Dark Mode"}
         </button>
