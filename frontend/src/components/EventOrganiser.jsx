@@ -262,123 +262,122 @@ function EventOrganiser() {
   if (!event) return <p className="text-center text-gray-500">No event data available.</p>;
 
   return (
-    <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6 relative">
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">{event.title}</h1>
-
+    <div className="max-w-3xl mt-5 mx-auto bg-white rounded-2xl shadow-lg p-6 relative">
+      <h1 className="text-3xl font-bold text-gray-900 mb-5">{event.title}</h1>
+  
       {event.image && (
-        <img src={event.image} alt={event.title} className="w-full h-60 object-cover mb-4 rounded-lg" />
+        <img
+          src={event.image}
+          alt={event.title}
+          className="w-full h-64 object-cover rounded-xl mb-5 shadow"
+        />
       )}
-
-      <div className="text-gray-700 mb-4" dangerouslySetInnerHTML={{ __html: event.content }} />
-
-      <div className="bg-gray-100 p-4 rounded-lg mb-4">
+  
+      <div className="text-gray-700 mb-5 leading-relaxed" dangerouslySetInnerHTML={{ __html: event.content }} />
+  
+      <div className="bg-gray-100 p-5 rounded-xl mb-5 shadow-sm">
         <p className="text-lg font-semibold">📍 Location: {event.eventLocation}</p>
         <p className="text-gray-600">📅 Start: {new Date(event.eventStartDate).toLocaleDateString()}</p>
         <p className="text-gray-600">📅 End: {new Date(event.eventEndDate).toLocaleDateString()}</p>
       </div>
-
-      {/* Feedback Dropdown Button */}
-      <div className="absolute top-6 right-6">
+  
+      {/* Buttons for Feedback & Visual Summary */}
+      <div className="absolute top-6 right-6 flex space-x-2">
         <button
           onClick={toggleFeedback}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition duration-200 shadow-md"
         >
-          {feedbackVisible ? 'Hide Feedback' : 'View Feedback'}
+          View Feedback
         </button>
-        {feedbackVisible && (
-          <div className="mt-2 w-80 bg-white border border-gray-200 rounded shadow-lg p-4">
-            {feedbackLoading ? (
-              <p className="text-gray-500">Loading feedback...</p>
-            ) : feedbackError ? (
-              <p className="text-red-500">Error: {feedbackError}</p>
-            ) : (
-              <>
-                {feedbacks.length > 0 ? (
-                  <>
-                    <ul className="space-y-3">
-                      {feedbacks.map((fb) => (
-                        <li key={fb._id} className="border-b pb-2">
-                          <p className="text-sm font-semibold">Rating: {fb.rating} / 10</p>
-                          <p className="text-sm">Enjoyed: {fb.enjoyed ? 'Yes' : 'No'}</p>
-                          {fb.comments && (
-                            <p className="text-sm text-gray-700">Comments: {fb.comments}</p>
-                          )}
-                          {fb.suggestions && (
-                            <p className="text-sm text-gray-700">Suggestions: {fb.suggestions}</p>
-                          )}
-                          <p className="text-xs text-gray-500">
-                            {new Date(fb.createdAt).toLocaleDateString()}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-                    <button
-                      onClick={toggleVisualDisplay}
-                      className="mt-4 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
-                    >
-                      {showVisualDisplay ? 'Hide Visual Summary' : 'Show Visual Summary'}
-                    </button>
-                  </>
-                ) : (
-                  <p className="text-gray-500">No feedback available for this event.</p>
-                )}
-              </>
-            )}
-          </div>
-        )}
+        <button
+          onClick={toggleVisualDisplay}
+          className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition duration-200 shadow-md"
+        >
+          View Visual Summary
+        </button>
       </div>
-
-      {showVisualDisplay && feedbacks.length > 0 && (
-        <div ref={pdfRef} className="mt-4 bg-gray-50 border border-gray-200 rounded p-4">
-          <h3 className="text-lg font-bold mb-2">Feedback Summary</h3>
-          {summary ? (
-            <div className="mb-4">
-              <p>Total Reviews: {summary.total}</p>
-              <p>Average Rating: {summary.averageRating} / 10</p>
-              <p>Positive Reviews: {summary.positiveCount}</p>
-              <p>Negative Reviews: {summary.negativeCount}</p>
-            </div>
-          ) : (
-            <p>No summary available.</p>
-          )}
-
-          {/* Bar Chart: Positive vs Negative */}
-          <div className="mb-6">
-            <h4 className="font-semibold mb-2">Review Breakdown</h4>
-            <div style={{ height: '150px' }}>
-              <Bar data={barData} options={{ responsive: true, maintainAspectRatio: false }} />
+  
+      {/* Feedback Modal */}
+      {feedbackVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-lg w-full relative">
+            <button
+              onClick={toggleFeedback}
+              className="absolute top-4 right-4 bg-gray-300 hover:bg-gray-400 rounded-full p-2"
+            >
+              ✖
+            </button>
+            <h3 className="text-xl font-bold mb-4">💬 Event Feedback</h3>
+  
+            <div className="max-h-64 overflow-y-auto space-y-4">
+              {feedbackLoading ? (
+                <p className="text-gray-500">Loading feedback...</p>
+              ) : feedbackError ? (
+                <p className="text-red-500">Error: {feedbackError}</p>
+              ) : feedbacks.length > 0 ? (
+                feedbacks.slice(0, 5).map((fb) => (
+                  <div key={fb._id} className="p-4 border rounded bg-gray-50 shadow-sm">
+                    <p className="font-semibold">⭐ Rating: {fb.rating} / 10</p>
+                    <p>🎉 Enjoyed: {fb.enjoyed ? 'Yes' : 'No'}</p>
+                    {fb.comments && <p className="text-sm text-gray-700">💬 {fb.comments}</p>}
+                    {fb.suggestions && <p className="text-sm text-gray-700">💡 {fb.suggestions}</p>}
+                    <p className="text-xs text-gray-500 mt-1">{new Date(fb.createdAt).toLocaleDateString()}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500">No feedback available for this event.</p>
+              )}
             </div>
           </div>
-
-          {/* Pie Chart: Rating Distribution */}
-          <div className="mb-6">
-            <h4 className="font-semibold mb-2">Rating Distribution</h4>
-            <div style={{ height: '150px' }}>
-              <Pie data={pieData} options={{ responsive: true, maintainAspectRatio: false }} />
-            </div>
-          </div>
-
-          {/* Visual display of each feedback */}
-          <div className="grid grid-cols-1 gap-4">
-            {feedbacks.map((fb) => (
-              <div key={fb._id} className="p-4 border rounded bg-white shadow-sm">
-                <p className="font-semibold">Rating: {fb.rating} / 10</p>
-                <p>Enjoyed: {fb.enjoyed ? 'Yes' : 'No'}</p>
-                {fb.comments && <p className="mt-1">Comments: {fb.comments}</p>}
-                {fb.suggestions && <p className="mt-1">Suggestions: {fb.suggestions}</p>}
-                <p className="text-xs text-gray-500 mt-1">
-                  {new Date(fb.createdAt).toLocaleDateString()}
-                </p>
+        </div>
+      )}
+  
+      {/* Visual Summary Modal */}
+      {showVisualDisplay && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-lg w-full relative">
+            <button
+              onClick={toggleVisualDisplay}
+              className="absolute top-4 right-4 bg-gray-300 hover:bg-gray-400 rounded-full p-2"
+            >
+              ✖
+            </button>
+            <h3 className="text-xl font-bold mb-4">📊 Feedback Summary</h3>
+            {summary ? (
+              <div className="mb-5">
+                <p>Total Reviews: <span className="font-semibold">{summary.total}</span></p>
+                <p>Average Rating: <span className="font-semibold">{summary.averageRating} / 10</span></p>
+                <p>Positive Reviews: <span className="font-semibold">{summary.positiveCount}</span></p>
+                <p>Negative Reviews: <span className="font-semibold">{summary.negativeCount}</span></p>
               </div>
-            ))}
+            ) : (
+              <p>No summary available.</p>
+            )}
+  
+            {/* Charts */}
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-semibold mb-2">Review Breakdown</h4>
+                <div className="h-40">
+                  <Bar data={barData} options={{ responsive: true, maintainAspectRatio: false }} />
+                </div>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Rating Distribution</h4>
+                <div className="h-40">
+                  <Pie data={pieData} options={{ responsive: true, maintainAspectRatio: false }} />
+                </div>
+              </div>
+            </div>
+  
+            {/* Download Button */}
+            <button
+              onClick={handleDownloadPDF}
+              className="mt-5 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition duration-200"
+            >
+              ⬇️ Download as PDF
+            </button>
           </div>
-          {/* Download as PDF Button */}
-          <button
-            onClick={handleDownloadPDF}
-            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
-          >
-            Download as PDF
-          </button>
         </div>
       )}
 
@@ -394,7 +393,7 @@ function EventOrganiser() {
                   <p className="font-medium">Registered Users:</p>
                   <ul className="list-disc list-inside text-gray-700">
                     {position.registeredUsers.map((volunteer, idx) => (
-                      <li key={idx} className="mb-2">
+                      <ul key={idx} className="mb-2">
                         <div className="flex flex-col gap-1">
                           <span>
                             {volunteer.name} ({volunteer.email})
@@ -418,7 +417,7 @@ function EventOrganiser() {
                             Assign Task
                           </button>
                         </div>
-                      </li>
+                      </ul>
                     ))}
                   </ul>
                 </div>

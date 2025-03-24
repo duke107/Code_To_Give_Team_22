@@ -31,6 +31,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminRoute from "./components/AdminRoute";
 import AdminLogin from "./pages/AdminLogin";
 import { useState } from 'react'
+import AccessibilityMenu from './components/AccessibilityMenu'
 
 function App() {
   const dispatch = useDispatch();
@@ -68,6 +69,7 @@ function App() {
   return (
     <Router>
       <ScreenReaderButton />
+      <AccessibilityMenu />
       <TranslateButton />
       <Routes>
         {/* Routes that require Header & Footer */}
@@ -107,6 +109,7 @@ function App() {
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
+        
       </Routes>
       <ToastContainer theme='dark' />
     </Router>
