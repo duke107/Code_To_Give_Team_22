@@ -11,6 +11,7 @@ import OTP from './pages/OTP'
 import ResetPassword from './pages/ResetPassword'
 import CreateEvent from './pages/CreateEvent'
 import Dashboard from './components/Dashboard'
+import UserDashboard from './pages/UserDashboard';
 import Events from './components/Events'
 import ChangeDetails from './components/ChangeDetails'
 import Translate from "./TranslateButton";
@@ -76,7 +77,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/donate" element={<Donate />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={user?.role === "Event Organizer" ? <Dashboard /> : <UserDashboard />} />
           <Route
             path="/events"
             element={user && user.role === "Event Organiser" ? <Events /> : <EventsUser />}
