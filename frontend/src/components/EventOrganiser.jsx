@@ -437,7 +437,6 @@ function EventOrganiser() {
       }
       toast.success("Proof rejected. Please ask the volunteer to resubmit.");
       setShowReviewModal(false);
-      fetchEventDetails();
     } catch (err) {
       toast.error(`Error rejecting proof: ${err.message}`);
     }
