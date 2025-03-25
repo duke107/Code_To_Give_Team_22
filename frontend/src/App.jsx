@@ -42,6 +42,7 @@ import AccessibilityMenu from './components/AccessibilityMenu'
 function App() {
   const dispatch = useDispatch();
 
+
   useEffect(() => {
     dispatch(getUser());
   }, [dispatch]);
@@ -77,6 +78,9 @@ function App() {
       <ScreenReaderButton />
       <AccessibilityMenu />
       <TranslateButton />
+      <AccessibilityMenu/>
+      {/* <AccessibilityProvider >
+      <AccessibilityToolbar /> */}
       <Routes>
         {/* Routes that require Header & Footer */}
         <Route element={<MainLayout notifications={notifications} />}>

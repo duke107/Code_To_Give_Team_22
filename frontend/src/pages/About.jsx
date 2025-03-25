@@ -6,7 +6,7 @@ import AboutGraph from "../components/AboutGraph";
 
 const About = () => {
   return (
-    <div>
+    <div className="min-h-screen">
       <AboutMission />
       <AboutPeople />
       <AboutStats />

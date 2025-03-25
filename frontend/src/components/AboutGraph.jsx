@@ -22,7 +22,7 @@ const options = {
 
 const AboutGraph = () => {
   return (
-    <div className="w-3/4 mx-auto my-12">
+    <div className="relative w-3/4 mx-auto my-12">
       <Bar data={data} options={options} />
     </div>
   );

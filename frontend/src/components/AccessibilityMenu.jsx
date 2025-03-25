@@ -9,45 +9,46 @@ const AccessibilityMenu = () => {
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
-    // Update text size
+    const savedTextSize = localStorage.getItem("textSize");
+    const savedHighContrast = localStorage.getItem("highContrast") === "true";
+    const savedGrayscale = localStorage.getItem("grayscale") === "true";
+    const savedDarkMode = localStorage.getItem("darkMode") === "true";
+
+    if (savedTextSize) setTextSize(parseFloat(savedTextSize));
+    setHighContrast(savedHighContrast);
+    setGrayscale(savedGrayscale);
+    setDarkMode(savedDarkMode);
+  }, []);
+
+  useEffect(() => {
     document.documentElement.style.fontSize = `${textSize}rem`;
+    document.body.classList.toggle("high-contrast", highContrast);
+    document.body.classList.toggle("grayscale", grayscale);
+    document.body.classList.toggle("dark-mode", darkMode);
 
-    // Apply/remove classes for modes
-    if (highContrast) {
-      document.body.classList.add("high-contrast");
-    } else {
-      document.body.classList.remove("high-contrast");
-    }
-
-    if (grayscale) {
-      document.body.classList.add("grayscale");
-    } else {
-      document.body.classList.remove("grayscale");
-    }
-
-    if (darkMode) {
-      document.body.classList.add("dark-mode");
-    } else {
-      document.body.classList.remove("dark-mode");
-    }
+    localStorage.setItem("textSize", textSize);
+    localStorage.setItem("highContrast", highContrast);
+    localStorage.setItem("grayscale", grayscale);
+    localStorage.setItem("darkMode", darkMode);
   }, [textSize, grayscale, darkMode, highContrast]);
 
   return (
     <>
       {/* Eye Icon (Left-Bottom) */}
       <button
-        className="fixed bottom-5 z-50 left-5 bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 transition"
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label="Open Accessibility Menu"
+        className="fixed bottom-5 left-5 bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 transition z-[1000]" // Increased z-index
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-label="Toggle Accessibility Menu"
       >
         <FaEye size={24} />
       </button>
 
       {/* Accessibility Menu */}
       <div
-        className={`fixed bottom-16 left-5 z-50 bg-white shadow-lg p-4 border rounded-lg w-52 transition-transform ${
+        className={`fixed bottom-16 left-5 bg-white shadow-lg p-4 border rounded-lg w-52 transition-transform z-[1000] ${ // Increased z-index
           isOpen ? "scale-100 opacity-100" : "scale-0 opacity-0"
         }`}
+        style={{ position: "fixed" }}
       >
         {/* Close Button */}
         <button
