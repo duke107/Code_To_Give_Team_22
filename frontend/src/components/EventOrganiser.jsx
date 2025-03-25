@@ -689,8 +689,8 @@ function EventOrganiser() {
           onClick={() => setShowSummaryForm(true)}
           disabled={event.isSummaryPublished} // Disables if summary is published
           className={`py-2 px-4 rounded text-white transition-colors ${event.isSummaryPublished
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-yellow-600 hover:bg-yellow-700"
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-yellow-600 hover:bg-yellow-700"
             }`}
         >
           {event.isSummaryPublished ? "Summary Already Published" : "Submit Event Summary"}
@@ -720,9 +720,24 @@ function EventOrganiser() {
       )}
       {/* Event Summary Form Modal */}
       {showSummaryForm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 overflow-auto">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-lg">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          {/* 
+      Modal Container:
+      - max-w-md: limit width
+      - max-h-[80vh]: limit height
+      - overflow-y-auto: scroll if content exceeds 80% of viewport
+    */}
+          <div className="relative bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-md max-h-[80vh] overflow-y-auto">
+            {/* Close Button in Top-Right */}
+            <button
+              onClick={() => setShowSummaryForm(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            >
+              ✖
+            </button>
+
             <h2 className="text-xl font-bold mb-4">Submit Event Summary</h2>
+
             {event.volunteeringPositions && event.volunteeringPositions.length > 0 && (
               <div className="mb-4">
                 <h3 className="text-lg font-semibold mb-2">Volunteering Positions</h3>
@@ -735,61 +750,137 @@ function EventOrganiser() {
                 </ul>
               </div>
             )}
+
             <form onSubmit={handleSubmitSummary} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Event Name</label>
-                <input type="text" name="eventName" value={summaryData.eventName} onChange={handleSummaryChange} className="mt-1 block w-full p-2 border rounded" required />
+                <input
+                  type="text"
+                  name="eventName"
+                  value={summaryData.eventName}
+                  onChange={handleSummaryChange}
+                  className="mt-1 block w-full p-2 border rounded"
+                  required
+                />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Location</label>
-                <input type="text" name="location" value={summaryData.location} onChange={handleSummaryChange} className="mt-1 block w-full p-2 border rounded" required />
+                <input
+                  type="text"
+                  name="location"
+                  value={summaryData.location}
+                  onChange={handleSummaryChange}
+                  className="mt-1 block w-full p-2 border rounded"
+                  required
+                />
               </div>
+
               <div className="flex gap-4">
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-700">Start Date</label>
-                  <input type="date" name="startDate" value={summaryData.startDate} onChange={handleSummaryChange} className="mt-1 block w-full p-2 border rounded" required />
+                  <input
+                    type="date"
+                    name="startDate"
+                    value={summaryData.startDate}
+                    onChange={handleSummaryChange}
+                    className="mt-1 block w-full p-2 border rounded"
+                    required
+                  />
                 </div>
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-700">End Date</label>
-                  <input type="date" name="endDate" value={summaryData.endDate} onChange={handleSummaryChange} className="mt-1 block w-full p-2 border rounded" required />
+                  <input
+                    type="date"
+                    name="endDate"
+                    value={summaryData.endDate}
+                    onChange={handleSummaryChange}
+                    className="mt-1 block w-full p-2 border rounded"
+                    required
+                  />
                 </div>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Volunteers Registered</label>
-                <input type="number" name="volunteersRegistered" value={summaryData.volunteersRegistered} onChange={handleSummaryChange} className="mt-1 block w-full p-2 border rounded" required readOnly />
+                <input
+                  type="number"
+                  name="volunteersRegistered"
+                  value={summaryData.volunteersRegistered}
+                  onChange={handleSummaryChange}
+                  className="mt-1 block w-full p-2 border rounded"
+                  required
+                  readOnly
+                />
               </div>
+
               {/* File Upload Section */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">Upload File (Optional)</label>
                 <div className="flex items-center gap-2 mt-1">
                   <input type="file" onChange={handleFileChange} className="block w-full" />
-                  <button type="button" onClick={handleUploadFile} className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded" disabled={fileUploadLoading}>
+                  <button
+                    type="button"
+                    onClick={handleUploadFile}
+                    className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
+                    disabled={fileUploadLoading}
+                  >
                     {fileUploadLoading ? "Uploading..." : "Add File"}
                   </button>
                 </div>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Upload Event Images (Optional)</label>
                 <div className="flex items-center gap-2 mt-1">
                   <input type="file" multiple onChange={handleImagesChange} className="block w-full" />
-                  <button type="button" onClick={handleUploadImages} className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded" disabled={imagesUploadLoading}>
+                  <button
+                    type="button"
+                    onClick={handleUploadImages}
+                    className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
+                    disabled={imagesUploadLoading}
+                  >
                     {imagesUploadLoading ? "Uploading..." : "Add Images"}
                   </button>
                 </div>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">How was the feel of the event?</label>
-                <textarea name="organizerFeel" value={summaryData.organizerFeel} onChange={handleSummaryChange} className="mt-1 block w-full p-2 border rounded" rows="3" required />
+                <textarea
+                  name="organizerFeel"
+                  value={summaryData.organizerFeel}
+                  onChange={handleSummaryChange}
+                  className="mt-1 block w-full p-2 border rounded"
+                  rows="3"
+                  required
+                />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Did you enjoy organising the event?</label>
-                <textarea name="organizerEnjoyment" value={summaryData.organizerEnjoyment} onChange={handleSummaryChange} className="mt-1 block w-full p-2 border rounded" rows="3" required />
+                <textarea
+                  name="organizerEnjoyment"
+                  value={summaryData.organizerEnjoyment}
+                  onChange={handleSummaryChange}
+                  className="mt-1 block w-full p-2 border rounded"
+                  rows="3"
+                  required
+                />
               </div>
+
               <div className="flex gap-4">
-                <button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded">
+                <button
+                  type="submit"
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
+                >
                   Submit
                 </button>
-                <button type="button" onClick={() => setShowSummaryForm(false)} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded">
+                <button
+                  type="button"
+                  onClick={() => setShowSummaryForm(false)}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded"
+                >
                   Cancel
                 </button>
               </div>
@@ -797,6 +888,7 @@ function EventOrganiser() {
           </div>
         </div>
       )}
+
       {/* Review Proof Modal */}
       {showReviewModal && reviewTask && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
