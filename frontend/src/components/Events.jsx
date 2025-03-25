@@ -94,7 +94,7 @@ function Events() {
           ) : (
             <>
               {[{ title: "Approved Events", events: approvedEvents, textColor: "text-green-700" },
-                { title: "Not Approved Events", events: notApprovedEvents, textColor: "text-red-700" }].map((section) => (
+              { title: "Not Approved Events", events: notApprovedEvents, textColor: "text-red-700" }].map((section) => (
                 <div key={section.title}>
                   <h2 className={`text-2xl font-semibold ${section.textColor} mb-4`}>{section.title}</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
@@ -121,9 +121,11 @@ function Events() {
                                          group-hover:text-blue-600 transition-colors duration-300">
                             {event.title}
                           </h2>
-                          <p className="text-gray-600 text-base leading-relaxed mb-4 line-clamp-3">
-                            {truncateHTML(event.content)}
-                          </p>
+                          <div
+                            className="text-gray-600 text-base leading-relaxed mb-4 line-clamp-3"
+                            dangerouslySetInnerHTML={{ __html: event.content }}
+                          />
+
                           <button
                             onClick={() => handleViewEvent(event.slug)}
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 
