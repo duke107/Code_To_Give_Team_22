@@ -5,7 +5,9 @@ import {
   replyToMessage, 
   getMessagesForOrganiser, 
   deleteMessage, 
-  deleteAllMessages 
+  deleteAllMessages,
+  deleteOrgMessage,
+  deleteAllOrgMessages
 } from "../controllers/contact.controller.js";
 import { isAuthenticated, isAdminOrOrganiser } from "../middlewares/auth.middleware.js";
 
@@ -15,10 +17,13 @@ router.post("/submit", submitContactMessage);
 router.post("/reply", replyToMessage);
 
 router.get("/admin/messages", getMessagesForAdmin);
+router.delete("/admin/messages/:messageId", deleteMessage);
+router.delete("/admin/messages", deleteAllMessages);
+
 router.get("/organiser/messages", isAuthenticated, getMessagesForOrganiser);
-
-router.delete("/delete/:messageId", isAuthenticated, isAdminOrOrganiser, deleteMessage);
-
-router.delete("/deleteAll", isAuthenticated, isAdminOrOrganiser, deleteAllMessages);
+router.delete("/organiser/messages/:messageId", isAuthenticated, deleteOrgMessage);
+router.delete("/organiser/messages", isAuthenticated, deleteAllOrgMessages);
 
 export default router;
+
+

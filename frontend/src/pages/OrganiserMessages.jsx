@@ -28,7 +28,7 @@ const OrganiserMessages = () => {
 
   const handleDeleteMessage = async (messageId) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/contact/delete/${messageId}`, {
+      const res = await fetch(`http://localhost:3000/api/v1/contact/organiser/messages/${messageId}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -43,7 +43,7 @@ const OrganiserMessages = () => {
   
   const handleDeleteAllMessages = async () => {
     try {
-      const res = await fetch("http://localhost:3000/api/v1/contact/deleteAll", {
+      const res = await fetch("http://localhost:3000/api/v1/contact/organiser/messages", {
         method: "DELETE",
         credentials: "include",
       });
@@ -142,7 +142,7 @@ const OrganiserMessages = () => {
                   title="Reply"
                   className="p-2 rounded-full text-blue-600 hover:bg-blue-200 transition-colors"
                 >
-                  {!msg.isReplied && <FaReply size={16} />}
+                  <FaReply size={16} />
                 </button>
               )}
 

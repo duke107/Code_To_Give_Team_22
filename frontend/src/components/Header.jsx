@@ -48,7 +48,7 @@ const Header = ({ notifications }) => {
             className="h-10 w-auto"
           />
         </Link>
-
+  
         {/* Desktop Navigation Links */}
         <nav className="hidden md:flex space-x-6 text-gray-700 font-medium">
           {commonLinks.map((item) => (
@@ -78,7 +78,8 @@ const Header = ({ notifications }) => {
                 {item.label}
               </Link>
             ))}
-          {isAuthenticated && user.role === 'Event Organiser' &&
+          {isAuthenticated &&
+            user.role === "Event Organiser" &&
             messageLinks.map((item) => (
               <Link
                 key={item.path}
@@ -93,7 +94,7 @@ const Header = ({ notifications }) => {
               </Link>
             ))}
         </nav>
-
+  
         {/* Right Side: Buttons + Bell Icon + Hamburger */}
         <div className="flex items-center gap-4">
           {/* Account/Login Buttons */}
@@ -120,11 +121,14 @@ const Header = ({ notifications }) => {
               Sign In
             </Link>
           )}
-
+  
           {/* Notifications */}
           {isAuthenticated && (
             <Link to="/notification" className="relative">
-              <FaBell size={22} className="text-gray-700 hover:text-gray-900 transition duration-200" />
+              <FaBell
+                size={22}
+                className="text-gray-700 hover:text-gray-900 transition duration-200"
+              />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                   {unreadCount}
@@ -132,7 +136,7 @@ const Header = ({ notifications }) => {
               )}
             </Link>
           )}
-
+  
           {/* Mobile Hamburger */}
           <button
             className="md:hidden text-gray-700 text-2xl"
@@ -142,8 +146,98 @@ const Header = ({ notifications }) => {
           </button>
         </div>
       </header>
+  
+      {/* Mobile Menu Modal */}
+      {menuModalOpen && (
+        <div
+          className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setMenuModalOpen(false)}
+        >
+          <div
+            className="bg-white w-64 p-6 rounded-lg shadow-lg relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
+              onClick={() => setMenuModalOpen(false)}
+            >
+              <FaTimes />
+            </button>
+  
+            {/* Mobile Links */}
+            <nav className="flex flex-col space-y-4 text-gray-700 font-medium">
+              {commonLinks.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="hover:text-black transition duration-200"
+                  onClick={() => setMenuModalOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              {isAuthenticated &&
+                authLinks.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className="hover:text-black transition duration-200"
+                    onClick={() => setMenuModalOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              {isAuthenticated &&
+                user.role === "Event Organiser" &&
+                messageLinks.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className="hover:text-black transition duration-200"
+                    onClick={() => setMenuModalOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+  
+              {/* Account / Logout / Sign In buttons in Mobile Menu */}
+              {isAuthenticated ? (
+                <div className="flex flex-col space-y-2 mt-4">
+                  <button
+                    onClick={() => {
+                      navigate("/change-details");
+                      setMenuModalOpen(false);
+                    }}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition duration-200"
+                  >
+                    Account
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setMenuModalOpen(false);
+                    }}
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg shadow hover:bg-red-600 transition duration-200"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  onClick={() => setMenuModalOpen(false)}
+                  className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm shadow-md hover:bg-blue-700 transition duration-200 block text-center"
+                >
+                  Sign In
+                </Link>
+              )}
+            </nav>
+          </div>
+        </div>
+      )}
     </>
   );
+  
 };
 
 export default Header;
