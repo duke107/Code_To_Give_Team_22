@@ -17,7 +17,6 @@ const router = express.Router();
 router.post("/login", login);
 router.get("/logout", isAuthenticated, logout);
 router.post("/approve/:eventId",  approveEvent);
-router.post("/reject/:eventId",  rejectEvent);
 router.post("/promote-organiser", promoteToOrganiser);
 
 router.get("/pending-events", getPendingEvents);
@@ -35,4 +34,5 @@ router.post("/getEvents", getEvents);
 router.post("/warn-organizer", warnOrganizer);
 router.put("/remove-organizer/:id", removeOrganizer);
 
+router.delete("/reject/:eventId",  rejectEvent);
 export default router;

@@ -25,6 +25,7 @@ export const register = async (req, res) => {
         if (password.length < 8 || password.length > 16) {
             return res.status(400).json({ msg: "Password must be between 8 and 16 characters" });
         }
+        location = location.charAt(0).toUpperCase() + location.slice(1).toLowerCase();
         
         const hashedPassword = await bcrypt.hash(password, 10);
         // Include location when creating the new user
@@ -236,8 +237,8 @@ export const updateUser = async (req, res) => {
   
 
       if (typeof req.body.location !== "undefined") {
-        user.location = req.body.location.charAt(0).toUpperCase() + req.body.location.slice(1);
-    }    
+        user.location = req.body.location.charAt(0).toUpperCase() + req.body.location.slice(1).toLowerCase();
+    }   
   
       if (typeof req.body.weekdays !== "undefined") {
         user.availability.weekdays =

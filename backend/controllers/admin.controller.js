@@ -68,54 +68,84 @@ export const logout =async(req,res)=>{
 
 
 export const approveEvent = async (req, res) => {
-    try {
-        const { eventId } = req.params;
+  try {
+      const { eventId } = req.params;
 
-        const event = await Event.findById(eventId);
-        if (!event) {
-            return res.status(404).json({ success: false, message: "Event not found" });
-        }
+      // Find event by ID
+      const event = await Event.findById(eventId);
+      if (!event) {
+          return res.status(404).json({ success: false, message: "Event not found" });
+      }
 
-          event.isApproved = true;
+      // Approve the event
+      event.isApproved = true;
+      await event.save(); // Save event before sending notifications
 
-          const usersInArea = await User.find({
-              location: event.eventLocation,
-              _id: { $ne: event.user_id }
-            });
-        
-            // For each user, create a notification about the new event
-            for (const user of usersInArea) {
-              const notification = await Notification.create({
-                userId: user._id,
-                message: `New event "${event.title}" is listed in your area.`,
-                type: "reminder"
-              });
-              io.to(user._id.toString()).emit("new-notification", notification);
-            }
-        
+      const eventCreatorId = event.createdBy.toString(); // Ensure it's a string
 
-        await event.save();
+      // Find users in the same area
+      const usersInArea = await User.find({ location: event.eventLocation });
 
-        res.status(200).json({ success: true, message: "Event approved successfully", event });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Server error", error: error.message });
-    }
+      // Create notifications
+      const notifications = usersInArea.map(user => ({
+          userId: user._id,
+          message: user._id.toString() === eventCreatorId 
+              ? `Congratulations, Your request for event "${event.title}" has been approved!!`
+              : `New event "${event.title}" is listed in your area.`,
+          type: "reminder"
+      }));
+
+      // Insert notifications in bulk
+      await Notification.insertMany(notifications);
+      console.log("Notifications created successfully");
+
+      // Emit notifications via Socket.IO
+      usersInArea.forEach(user => {
+          const message = user._id.toString() === eventCreatorId
+              ? `Congratulations, Your request for event "${event.title}" has been approved!!`
+              : `New event "${event.title}" is listed in your area.`;
+
+          // console.log(`Emitting notification to user ${user._id}`);
+          io.to(user._id.toString()).emit("new-notification", { userId: user._id, message, type: "reminder" });
+      });
+
+      return res.status(200).json({ success: true, message: "Event approved successfully", event });
+
+  } catch (error) {
+      console.error("Error approving event:", error);
+      return res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
 };
 
-export const rejectEvent = async (req, res) => {
-    try {
-        const { eventId } = req.params;
-        
-        const event = await Event.findByIdAndDelete(eventId);
-        if (!event) {
-            return res.status(404).json({ success: false, message: "Event not found" });
-        }   
 
-        res.status(200).json({ success: true, message: "Event rejected successfully", event });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Server error", error: error.message });
+
+export const rejectEvent = async (req, res, io) => {
+  try {
+    const { eventId } = req.params;
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(eventId)) {
+      return res.status(400).json({ success: false, message: "Invalid event ID format" });
     }
+
+    // Find and delete the event
+    const event = await Event.findByIdAndDelete(eventId);
+    if (!event) {
+      return res.status(404).json({ success: false, message: "Event not found" });
+    }
+    // Notify the event creator
+    const eventCreatorId = event.createdBy;
+
+    sendNotification(eventCreatorId, notification.message, notification.type);
+
+    res.status(200).json({ success: true, message: "Event rejected successfully" });
+
+  } catch (error) {
+    console.error("Error rejecting event:", error);
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
 };
+
 
 export const getPendingEvents = async (req, res) => {
     // console.log("Reached for checking");
@@ -129,7 +159,7 @@ export const getPendingEvents = async (req, res) => {
 
 export const getPastEvents = async (req, res) => {
     try {
-        const events = await Event.find({ isApproved: true }).sort({ createdAt: -1 });
+        const events = await Event.find({ isCompleted: true }).sort({ createdAt: -1 });
         res.status(200).json({ success: true, events });
     } catch (error) {
         res.status(500).json({ success: false, message: "Server error", error: error.message });

@@ -157,6 +157,13 @@ function ChangeDetails() {
   return (
     <div className="bg-white rounded-lg shadow-md p-6 flex flex-col items-center">
       <h2 className="text-2xl font-semibold mb-4">Change Details</h2>
+      <div className="mb-4 px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full shadow-lg">
+        <h3 className="text-2xl font-extrabold tracking-wide">
+          {user?.name || "User Name"}
+        </h3>
+      </div>
+
+
 
       {/* Avatar Preview */}
       <div className="relative mb-6">
