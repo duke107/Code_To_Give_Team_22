@@ -12,9 +12,9 @@ import { isAuthenticated, isAdminOrOrganiser } from "../middlewares/auth.middlew
 const router = express.Router();
 
 router.post("/submit", submitContactMessage); 
-router.post("/reply", isAuthenticated, replyToMessage);
+router.post("/reply", replyToMessage);
 
-router.get("/admin/messages", isAuthenticated, getMessagesForAdmin);
+router.get("/admin/messages", getMessagesForAdmin);
 router.get("/organiser/messages", isAuthenticated, getMessagesForOrganiser);
 
 router.delete("/delete/:messageId", isAuthenticated, isAdminOrOrganiser, deleteMessage);

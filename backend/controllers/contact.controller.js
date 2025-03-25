@@ -57,21 +57,15 @@ export const submitContactMessage = async (req, res) => {
 
 // Get all messages (for Admin/Organizer)
 export const getMessagesForAdmin = async (req, res) => {
-    try {
-        console.log("Authenticated user", req.user);
-    if (req.user.role !== "Admin") {
-      return res.status(403).json({ error: "Unauthorized" });
-    }
-
-    const messages = await Contact.find({ recipientId: req.user._id }).sort({
-      createdAt: -1,
-    });
+  try {
+    const messages = await Contact.find({ category: "general" }).sort({ createdAt: -1 });
     return res.status(200).json(messages);
   } catch (error) {
-    console.error("Error fetching admin messages:", error);
+    console.error("Error fetching general messages:", error);
     return res.status(500).json({ error: "Server error" });
   }
 };
+
 
 export const getMessagesForOrganiser = async (req, res) => {
   try {
