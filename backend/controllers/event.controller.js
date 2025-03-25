@@ -11,6 +11,7 @@ import { Testimonial } from '../models/testimonial.model.js';
 import EventSummary from '../models/eventSummary.model.js';
 import { sendEmail } from '../utils/sendEmail.js';
 import {generateTaskAssignmentEmailTemplate} from '../utils/emailTemplates.js';
+import { Donation } from '../models/donation.model.js';
 
 
 // Create a new event
@@ -746,5 +747,19 @@ export const markCompletedEvents = async () => {
   }
 };
 
+export const getAllDonations = async (req, res) => {
+  try {
+    const donations = await Donation.find();
+    res.status(200).json({
+      success: true,
+      data: donations
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 
 
