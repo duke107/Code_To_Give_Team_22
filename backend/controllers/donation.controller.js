@@ -125,7 +125,7 @@ export const getDonors = async (req, res, next) => {
       return next(new ApiError(500, "Error fetching organiser donors"));
     }
 };
-  
+
 export const getDonationsForAdmin = async (req, res, next) => {
   try {
     let donations = await Donation.find({});

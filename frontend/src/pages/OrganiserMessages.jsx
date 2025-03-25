@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { FaCheck, FaReply, FaTrashAlt } from "react-icons/fa";
+import * as Toastify from "react-toastify";
+import "react-toastify/dist/ReactToastify.css"
 
 const OrganiserMessages = () => {
   const [messages, setMessages] = useState([]);
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [replyText, setReplyText] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -62,6 +65,7 @@ const OrganiserMessages = () => {
   };
 
   const handleReplySubmit = async () => {
+    setLoading(true);
     if (!replyText.trim()) return alert("Reply cannot be empty.");
 
     try {
@@ -73,7 +77,8 @@ const OrganiserMessages = () => {
       });
 
       if (res.ok) {
-        alert("Reply sent!");
+        setLoading(false)
+          Toastify.toast.success("Reply sent to user's email successfully")
         setMessages((prev) =>
           prev.map((m) =>
             m._id === selectedMessage._id ? { ...m, status: "responded" } : m
@@ -81,6 +86,7 @@ const OrganiserMessages = () => {
         );
         setIsModalOpen(false);
       } else {
+        Toastify.toast.error("failed to send reply")
         alert("Failed to send reply.");
       }
     } catch (err) {
@@ -116,7 +122,7 @@ const OrganiserMessages = () => {
                 </p>
                 <p className="text-gray-700">{msg.message}</p>
                 <div className="flex items-center mt-1 text-xs text-gray-500">
-                {msg.isReplied ? (
+                {msg.isReplied === true? (
                   <>
                     <FaCheck className="text-green-500 mr-1" size={14} />
                     <span>Replied</span>
@@ -136,7 +142,7 @@ const OrganiserMessages = () => {
                   title="Reply"
                   className="p-2 rounded-full text-blue-600 hover:bg-blue-200 transition-colors"
                 >
-                  <FaReply size={16} />
+                  {!msg.isReplied && <FaReply size={16} />}
                 </button>
               )}
 
@@ -180,7 +186,7 @@ const OrganiserMessages = () => {
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
                 onClick={handleReplySubmit}
               >
-                Send Reply
+                {loading ? "Replying..." : "Send Reply"}
               </button>
             </div>
           </div>
