@@ -763,3 +763,85 @@ export const getAllDonations = async (req, res) => {
 };
 
 
+export const searchEvents = async (req, res) => {
+  try {
+    const { title, location, startDate, endDate } = req.query;
+    const filter = {};
+
+    // Filter by event title if provided (case-insensitive)
+    if (title) {
+      filter.title = { $regex: title, $options: "i" };
+    }
+
+    // Filter by event location if provided (case-insensitive)
+    if (location) {
+      filter.eventLocation = { $regex: location, $options: "i" };
+    }
+
+    // Date filtering: Both dates provided
+    if (startDate && endDate) {
+      filter.eventStartDate = { $gte: new Date(startDate) };
+      filter.eventEndDate = { $lte: new Date(endDate) };
+    } else if (startDate) {
+      // Only startDate is provided
+      filter.eventStartDate = { $gte: new Date(startDate) };
+    } else if (endDate) {
+      // Only endDate is provided
+      filter.eventEndDate = { $lte: new Date(endDate) };
+    }
+
+    // Fetch events from the database based on the filter
+    const events = await Event.find(filter);
+    res.status(200).json(events);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+
+export const addTaskUpdate = async (req, res) => {
+  const { taskId } = req.params;
+  const { title, content } = req.body;
+
+  // Validate request body
+  if (!title || !content) {
+    return res.status(400).json({ message: "Title and content are required." });
+  }
+
+  try {
+    // Find the task by ID
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).json({ message: "Task not found." });
+    }
+
+    // Create a new update object
+    const updateObj = { title, content };
+    
+    // Add the new update to the updates array
+    task.updates.push(updateObj);
+    
+    // Save the task with the new update
+    await task.save();
+
+    res.status(200).json({ message: "Task update added successfully.", update: updateObj });
+  } catch (error) {
+    res.status(500).json({ message: "Server error.", error: error.message });
+  }
+};
+export const getTaskUpdates = async (req, res) => {
+  const { taskId } = req.params;
+
+  try {
+    // Find the task by ID and select only the "updates" field
+    const task = await Task.findById(taskId).select('updates');
+    if (!task) {
+      return res.status(404).json({ message: "Task not found." });
+    }
+
+    res.status(200).json(task.updates);
+  } catch (error) {
+    res.status(500).json({ message: "Server error.", error: error.message });
+  }
+};
+

@@ -44,6 +44,13 @@ const Event = () => {
   const [proofFiles, setProofFiles] = useState([]);
   const [proofUploadLoading, setProofUploadLoading] = useState(false);
 
+  // Task Update states
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [updateTitle, setUpdateTitle] = useState("");
+  const [updateContent, setUpdateContent] = useState("");
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [updateTask, setUpdateTask] = useState(null);
+
   const state = useSelector((state) => state.auth);
 
   // Helper: Check if event has ended
@@ -306,6 +313,50 @@ const Event = () => {
     }
   };
 
+  // Task Update Modal handlers
+  const openUpdateModal = (task) => {
+    setUpdateTask(task);
+    setUpdateTitle("");
+    setUpdateContent("");
+    setShowUpdateModal(true);
+  };
+
+  const closeUpdateModal = () => {
+    setShowUpdateModal(false);
+    setUpdateTask(null);
+  };
+
+  const handleSubmitTaskUpdate = async () => {
+    if (!updateTask || !updateTitle || !updateContent) {
+      toast.error("Please fill in both title and content.");
+      return;
+    }
+    setUpdateLoading(true);
+    try {
+      const payload = { title: updateTitle, content: updateContent };
+      const res = await fetch(
+        `http://localhost:3000/api/v1/events/taskUpdate/${updateTask._id}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || `Error ${res.status}`);
+      }
+      toast.success("Task update sent successfully!");
+      closeUpdateModal();
+      fetchEventDetails();
+    } catch (err) {
+      toast.error(`Error submitting task update: ${err.message}`);
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
+
   if (loading)
     return (
       <p className="text-center text-gray-500">Loading event details...</p>
@@ -331,7 +382,6 @@ const Event = () => {
     });
   });
   console.log(userTasks);
-  
 
   return (
     <div className="max-w-3xl mx-auto bg-white rounded-2xl mt-5 shadow-lg p-8 relative border border-gray-200">
@@ -406,11 +456,10 @@ const Event = () => {
               {userTasks.map((task, idx) => (
                 <li
                   key={idx}
-                  className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border"
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-50 p-3 rounded-lg border space-y-2 sm:space-y-0 sm:space-x-4"
                 >
-                  <span>
-                    <span className="font-semibold">Task:</span>{" "}
-                    {task.description} –{" "}
+                  <div>
+                    <span className="font-semibold">Task:</span> {task.description} –{" "}
                     <span className="italic">
                       {task.status === "completed"
                         ? "Task Completed"
@@ -418,23 +467,31 @@ const Event = () => {
                         ? "Waiting for Approval"
                         : "Pending"}
                     </span>
-                  </span>
-                  
-                  {task.status === "pending" && !task.proofSubmitted && (
-                    <button
-                      onClick={() => openProofModal(task)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded-lg text-xs"
-                    >
-                      Send Task Completion Proof
-                    </button>
-                  )}
-                  {task.status === "pending" && task.proofSubmitted && (
-                    <button
-                      disabled
-                      className="bg-gray-400 text-white py-1 px-3 rounded-lg text-xs cursor-not-allowed"
-                    >
-                      Waiting for Approval
-                    </button>
+                  </div>
+                  {task.status === "pending" && (
+                    <div className="flex gap-2">
+                      {(!task.proofSubmitted) ? (
+                        <button
+                          onClick={() => openProofModal(task)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded-lg text-xs"
+                        >
+                          Send Task Completion Proof
+                        </button>
+                      ) : (
+                        <button
+                          disabled
+                          className="bg-gray-400 text-white py-1 px-3 rounded-lg text-xs cursor-not-allowed"
+                        >
+                          Waiting for Approval
+                        </button>
+                      )}
+                      <button
+                        onClick={() => openUpdateModal(task)}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white py-1 px-3 rounded-lg text-xs"
+                      >
+                        Send Task Updates
+                      </button>
+                    </div>
                   )}
                 </li>
               ))}
@@ -558,6 +615,55 @@ const Event = () => {
         </div>
       )}
 
+      {/* Task Update Modal */}
+      {showUpdateModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-11/12 max-w-md">
+            <h2 className="text-xl font-bold mb-4">Send Task Update</h2>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-semibold mb-1">
+                Title
+              </label>
+              <input
+                type="text"
+                value={updateTitle}
+                onChange={(e) => setUpdateTitle(e.target.value)}
+                className="w-full border rounded p-2"
+                placeholder="Enter update title"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-semibold mb-1">
+                Content
+              </label>
+              <textarea
+                value={updateContent}
+                onChange={(e) => setUpdateContent(e.target.value)}
+                className="w-full border rounded p-2"
+                rows="4"
+                placeholder="Enter update content"
+              ></textarea>
+            </div>
+            <div className="flex gap-4">
+              <button
+                onClick={handleSubmitTaskUpdate}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg"
+                disabled={updateLoading}
+              >
+                {updateLoading ? "Submitting..." : "Submit Update"}
+              </button>
+              <button
+                onClick={closeUpdateModal}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg"
+                disabled={updateLoading}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Feedback Modal */}
       {showFeedbackModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -570,7 +676,7 @@ const Event = () => {
               <input
                 type="range"
                 min="0"
-                max="5"
+                max="10"
                 value={rating}
                 onChange={(e) => setRating(e.target.value)}
                 className="w-full"
@@ -671,7 +777,7 @@ const Event = () => {
               </label>
               <input
                 type="text"
-                value={user.name}
+                value={state.user.name}
                 className="w-full border rounded p-2 bg-gray-100"
                 disabled
               />
@@ -693,7 +799,7 @@ const Event = () => {
               </label>
               <input
                 type="text"
-                value={registeredPositions[0].title}
+                value={registeredPositions[0]?.title || ""}
                 className="w-full border rounded p-2 bg-gray-100"
                 disabled
               />

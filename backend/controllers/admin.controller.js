@@ -29,12 +29,7 @@ export const login = async (req, res) => {
             return res.status(401).json({ message: "Invalid credentials" });
         }
 
-        const user = await User.create({
-            name: "Admin",
-            email: process.env.ADMIN_EMAIL,
-            password: process.env.ADMIN_PASSWORD,
-            role: "Admin"
-        });
+        let user = await User.findOne({ email: process.env.ADMIN_EMAIL });
         // console.log("reached");
         sendToken(user, 200, "Admin logged in successfully", res);
         // console.log("passed");
