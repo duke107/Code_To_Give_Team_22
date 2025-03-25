@@ -10,6 +10,7 @@ function Events() {
   const [isLoading, setIsLoading] = useState(true);
   const [approvedEvents, setApprovedEvents] = useState([]);
   const [notApprovedEvents, setNotApprovedEvents] = useState([]);
+  const [showNotApproved, setShowNotApproved] = useState(false);
 
   const { user } = useSelector((state) => state.auth);
 
@@ -74,7 +75,7 @@ function Events() {
           Add New Event
         </button>
       </div>
-
+  
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -172,12 +173,61 @@ function Events() {
                   </div>
                 </div>
               ))}
-            </>
+            </div>
+  
+            {/* Show/Hide Not Approved Events Button */}
+            <div className="text-center mt-6">
+              <button
+                onClick={() => setShowNotApproved(!showNotApproved)}
+                className="text-blue-600 font-semibold hover:underline flex items-center justify-center gap-2"
+              >
+                {showNotApproved ? "Hide Not Approved Events" : "Show Not Approved Events"}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showNotApproved ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"} />
+                </svg>
+              </button>
+            </div>
+          </div>
+  
+          {/* Not Approved Events (Collapsible Section) */}
+          {showNotApproved && (
+            <div className="mt-8">
+              {/* <h2 className="text-2xl font-semibold text-red-700 mb-4">Not Approved Events</h2> */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {notApprovedEvents.map((event) => (
+                  <div
+                    key={event._id}
+                    className="bg-gray-200 rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl border border-gray-100 flex flex-col"
+                  >
+                    <div className="h-48 overflow-hidden">
+                      {event.image ? (
+                        <img
+                          src={event.image}
+                          alt={event.title}
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                        />
+                      ) : (
+                        <div className="h-32 bg-red-500 flex items-center justify-center text-white">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-6">
+                      <h2 className="text-xl font-bold text-gray-900 mb-3">{event.title}</h2>
+                      <p className="text-gray-600">{truncateHTML(event.content)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </>
       )}
     </div>
   );
+  
 }
 
 export default Events;
