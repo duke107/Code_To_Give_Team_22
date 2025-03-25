@@ -142,3 +142,27 @@ export function generateEventCompletionEmailTemplate(eventTitle) {
   </div>`;
   }
   
+
+  export function generateReplyEmailTemplate(userName, replyText) {
+    return `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #000; color: #fff;">
+  
+      <h2 style="color: #fff; text-align: center;">Response to Your Inquiry</h2>
+  
+      <p style="font-size: 16px; color: #ccc;">Dear ${userName},</p>
+  
+      <p style="font-size: 16px; color: #ccc;">Thank you for reaching out to us. Below is our response to your query:</p>
+  
+      <blockquote style="font-size: 16px; color: #fff; padding: 10px; border-left: 4px solid #ccc; background: #222;">
+        ${replyText}
+      </blockquote>
+  
+      <p style="font-size: 16px; color: #ccc;">If you have any further questions, feel free to contact us again.</p>
+  
+      <footer style="margin-top: 20px; text-align: center; font-size: 14px; color: #666;">
+          <p>Best regards,<br>Samarthanam Team</p>
+          <p style="font-size: 12px; color: #444;">This is an automated message. Please do not reply to this email.</p>
+      </footer>
+  
+    </div>`;
+  }
+  

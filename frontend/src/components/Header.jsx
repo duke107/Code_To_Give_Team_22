@@ -181,6 +181,7 @@ const Header = ({ notifications }) => {
       )}
     </>
   );
+  
 };
 
 export default Header;

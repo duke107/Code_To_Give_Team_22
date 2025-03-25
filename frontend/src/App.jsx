@@ -33,6 +33,8 @@ import AdminRoute from "./components/AdminRoute";
 import AdminLogin from "./pages/AdminLogin";
 import PendingApprovals from './components/PendingApprovals'
 import PastEvents from './components/PastEvents'
+import AdminMessages from './pages/AdminMessages'
+import OrganizerMessages from './pages/OrganiserMessages'
 
 import { useState } from 'react'
 import AccessibilityMenu from './components/AccessibilityMenu'
@@ -99,6 +101,8 @@ function App() {
             path="/notification"
             element={<Notification notifications={notifications} fetchNotifications={fetchNotifications} />}
           />
+          
+          <Route path="/organiser/messages" element={<OrganizerMessages />} />
         </Route>
 
         <Route path="/login" element={<Login />} />
@@ -106,6 +110,9 @@ function App() {
         <Route path="/password/forgot" element={<ForgotPassword />} />
         <Route path="/otp-verification/:email" element={<OTP />} />
         <Route path="/password/reset/:token" element={<ResetPassword />} />
+        <Route element={<AdminRoute />}>
+          <Route path="/admin/messages" element={<AdminMessages />} />
+        </Route>
 
         <Route path="/admin/login" element={<AdminLogin /> }/>
 
