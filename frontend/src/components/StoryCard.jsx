@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 const StoryCard = ({ story }) => {
     const navigate = useNavigate();
     const shortDescription = story.description.split(" ").slice(0, 50).join(" ") + "...";
+    
 
     return (
         <motion.div
