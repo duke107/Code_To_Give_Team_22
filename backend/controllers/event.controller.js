@@ -19,6 +19,7 @@ export const createEvent = async (req, res) => {
   try {
     const {
       title,
+      category,
       content,
       image,
       eventLocation,
@@ -30,7 +31,7 @@ export const createEvent = async (req, res) => {
 
     // Basic validation for required fields
     // console.log(user_id);
-    if (!title || !eventLocation || !eventStartDate || !eventEndDate || !user_id) {
+    if (!title || !category || !eventLocation || !eventStartDate || !eventEndDate || !user_id) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -51,6 +52,7 @@ export const createEvent = async (req, res) => {
     // Create the event
     const event = await Event.create({
       title: capitalizeFirstLetter(title),
+      category,
       content,
       image,
       eventLocation: capitalizeFirstLetter(eventLocation),
@@ -196,6 +198,9 @@ export const getEvents = async (req, res) => {
     }
     if (req.query.location) {
       query.eventLocation = req.query.location;
+    }
+    if (req.query.category) {
+      query.category = category;
     }
     
 
@@ -551,12 +556,27 @@ export const createEventSummary = async (req, res) => {
       organiserId,  // Event organiser's user ID
     } = req.body;
 
-    // Check if an event summary already exists for this event
+    // Check if the event itself is marked as already having a summary
+    const foundEvent = await Event.findById(eventId);
+    if (!foundEvent) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found.",
+      });
+    }
+    if (foundEvent.isSummaryPublished) {
+      return res.status(400).json({
+        success: false,
+        message: "A summary is already published for this event.",
+      });
+    }
+
+    // Check if an event summary already exists in the EventSummary collection
     const existingSummary = await EventSummary.findOne({ eventId });
     if (existingSummary) {
       return res.status(400).json({
         success: false,
-        message: "Event summary already provided for this event",
+        message: "Event summary already provided for this event.",
       });
     }
 
@@ -579,9 +599,13 @@ export const createEventSummary = async (req, res) => {
 
     const savedSummary = await eventSummary.save();
 
-    res.status(201).json({
+    // Mark the event as having a published summary
+    foundEvent.isSummaryPublished = true;
+    await foundEvent.save();
+
+    return res.status(201).json({
       success: true,
-      message: 'Event summary created successfully',
+      message: "Event summary created successfully",
       data: savedSummary,
     });
   } catch (error) {
@@ -591,6 +615,7 @@ export const createEventSummary = async (req, res) => {
     });
   }
 };
+
 
 
 
@@ -773,41 +798,69 @@ export const getAllDonations = async (req, res) => {
   }
 };
 
-
 export const searchEvents = async (req, res) => {
   try {
-    const { title, location, startDate, endDate } = req.query;
+    const { title, location, startDate, endDate, status, dateRange, eventType, sortBy } = req.query;
     const filter = {};
 
-    // Filter by event title if provided (case-insensitive)
+    // Filter by event title (case-insensitive)
     if (title) {
       filter.title = { $regex: title, $options: "i" };
     }
 
-    // Filter by event location if provided (case-insensitive)
+    // Filter by location (case-insensitive)
     if (location) {
       filter.eventLocation = { $regex: location, $options: "i" };
     }
 
-    // Date filtering: Both dates provided
+    // Date filtering
     if (startDate && endDate) {
       filter.eventStartDate = { $gte: new Date(startDate) };
       filter.eventEndDate = { $lte: new Date(endDate) };
     } else if (startDate) {
-      // Only startDate is provided
       filter.eventStartDate = { $gte: new Date(startDate) };
     } else if (endDate) {
-      // Only endDate is provided
       filter.eventEndDate = { $lte: new Date(endDate) };
     }
 
-    // Fetch events from the database based on the filter
-    const events = await Event.find(filter);
+    // Quick date range filters
+    if (dateRange === "week") {
+      const nextWeek = new Date();
+      nextWeek.setDate(today.getDate() + 7);
+      filter.eventStartDate = { $gte: today, $lte: nextWeek };
+    } else if (dateRange === "month") {
+      const nextMonth = new Date();
+      nextMonth.setMonth(today.getMonth() + 1);
+      filter.eventStartDate = { $gte: today, $lte: nextMonth };
+    } else if (dateRange === "custom" && startDate && endDate) {
+      filter.eventStartDate = { $gte: new Date(startDate) };
+      filter.eventEndDate = { $lte: new Date(endDate) };
+    }
+
+    // Filter by status (upcoming/completed)
+    if (status === "upcoming") {
+      filter.eventEndDate = { $gte: today };
+    } else if (status === "completed") {
+      filter.eventEndDate = { $lt: today };
+    }
+
+    // Sorting
+    let sortOption = {};
+    if (sortBy === "newest") {
+      sortOption = { createdAt: -1 }; // Newest first
+    } else if (sortBy === "oldest") {
+      sortOption = { createdAt: 1 }; // Oldest first
+    }
+
+    // Fetch events from the database with filtering and sorting
+    const events = await Event.find(filter).sort(sortOption);
     res.status(200).json(events);
+
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+
 
 
 export const addTaskUpdate = async (req, res) => {

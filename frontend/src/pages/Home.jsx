@@ -1,141 +1,108 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import Slider from 'react-slick';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
-import ContactForm from '../components/ContactForm';
-
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import ContactForm from "../components/ContactForm";
 import AccessibilityMenu from "../components/AccessibilityMenu";
-import TranslateButton from '../TranslateButton';
+import TranslateButton from "../TranslateButton";
+import { Star, HandHelping, Globe, Award } from "lucide-react";
+import TestimonialCarousel from "../components/TestimonialCarousal";
+
 function Home() {
-  const [testimonials, setTestimonials] = useState([]);
+    const [testimonials, setTestimonials] = useState([]);
 
-  useEffect(() => {
-    const fetchTestimonials = async () => {
-      try {
-        const res = await fetch(
-          "http://localhost:3000/api/v1/events/getRecentTestimonials",
-          {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-          }
-        );
-        if (!res.ok) {
-          throw new Error(`Error ${res.status}: ${res.statusText}`);
-        }
-        const data = await res.json();
-        setTestimonials(data);
-      } catch (err) {
-        console.error("Error fetching testimonials:", err);
-      }
-    };
-    fetchTestimonials();
-  }, []);
+    useEffect(() => {
+        const fetchTestimonials = async () => {
+            try {
+                const res = await fetch("http://localhost:3000/api/v1/events/getRecentTestimonials", {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                });
+                if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
+                const data = await res.json();
+                setTestimonials(data);
+            } catch (err) {
+                console.error("Error fetching testimonials:", err);
+            }
+        };
+        fetchTestimonials();
+    }, []);
 
-  // Slider settings for both keyboard & regular users
-  const settings = {
-    dots: true,
-    infinite: testimonials.length > 1,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    autoplay: true, // Mouse users get auto-scroll
-    autoplaySpeed: 3000,
-    pauseOnFocus: true, // Stops when user navigates via keyboard
-    accessibility: true, // Enables keyboard arrow navigation
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-100 ">
-       
-      
+    return (
+        <div className="min-h-screen bg-gray-50">
             {/* Hero Section */}
-      <div
-        className="h-screen relative flex flex-col items-center justify-center text-white text-center bg-cover bg-center"
-        style={{
-          backgroundImage: "url('https://sontx.org/wp-content/uploads/2024/06/How-to-Help-a-Charity-Without-Donating-Money.jpeg')",
-        }}
-      >
-        <div className="bg-black bg-opacity-50 p-6 rounded-lg">
-          <h1 className="text-4xl font-bold mb-4">Welcome to Samarthanam</h1>
-          <p className="text-lg max-w-2xl mx-auto">
-            Empowering lives and creating opportunities.
-          </p>
-          <Link
-            to="/donate"
-            className="mt-6 px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg shadow-md hover:bg-gray-200 transition duration-300"
-          >
-            Donate Now
-          </Link>
-        </div>
-      </div>
+            <div className="h-[85vh] flex flex-col items-center justify-center text-center bg-gradient-to-r from-blue-600 to-blue-400 text-white px-6 relative overflow-hidden">
+                <div className="absolute inset-0 bg-blue-700 opacity-10 animate-pulse"></div>
+                <h1 className="text-4xl font-extrabold mb-4 relative z-10">Welcome to Samarthanam</h1>
+                <p className="text-lg max-w-xl mb-6 relative z-10">
+                    Empowering lives and creating opportunities through inclusivity, education, and innovation.
+                </p>
+                <Link
+                    to="/donate"
+                    className="mt-6 px-6 py-3 bg-white text-blue-600 font-semibold rounded-full shadow-md hover:bg-gray-100 transition duration-300 relative z-10 group"
+                >
+                    Donate Now
+                    <span className="absolute inset-0 border-2 border-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"></span>
+                </Link>
+            </div>
 
-
-      {/* Mission Section */}
-      <div className="p-8 text-center focus:outline-none focus:ring-4 focus:ring-gray-300" tabIndex="0">
-        <h2 className="text-3xl font-semibold mb-6">Our Mission</h2>
-        <p className="max-w-3xl mx-auto text-gray-700">
-          We strive to empower the disabled and create a more inclusive world through education, rehabilitation, and innovation.
-        </p>
-      </div>
-
-      {/* Carousel for Recent Testimonials */}
-      <div className="max-w-5xl mx-auto mb-16 focus:outline-none focus:ring-4 focus:ring-gray-300" tabIndex="0">
-        <h2 className="text-2xl font-semibold text-center mb-4">What Our Volunteers Say</h2>
-        {testimonials.length > 0 ? (
-          <Slider {...settings}>
-            {testimonials.map((testimonial) => (
-              <div key={testimonial._id} className="px-4 py-6" tabIndex="0">
-                <div className="bg-white rounded-lg shadow-md p-6 flex flex-col md:flex-row items-center justify-between gap-4 focus:outline-none focus:ring-4 focus:ring-gray-300">
-                  {/* Left side: Testimonial content */}
-                  <div className="flex-1">
-                    <p className="text-gray-800 text-base md:text-lg italic mb-4" tabIndex="0">
-                      "{testimonial.testimonial}"
-                    </p>
-                    <div className="text-sm text-gray-600">
-                      <p className="font-semibold" tabIndex="0">{testimonial.name}</p>
-                      <p tabIndex="0">
-                        {testimonial.eventTitle} - {testimonial.volunteeringPosition}
-                      </p>
+            {/* Impact Highlights */}
+            <section className="py-16 bg-white">
+                <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-4 gap-8">
+                    <div className="text-center p-6 bg-blue-50 rounded-lg shadow-sm hover:shadow-md transition duration-300">
+                        <HandHelping className="mx-auto mb-4 text-blue-600" size={48} />
+                        <h3 className="font-bold text-xl mb-2">Community Support</h3>
+                        <p className="text-gray-600">Providing comprehensive support to those in need.</p>
                     </div>
-                  </div>
-                  {/* Right side: User picture (if available) */}
-                  <div tabIndex="0">
-                    {testimonial.userPicture ? (
-                      <img
-                        src={testimonial.userPicture}
-                        alt={`Picture of ${testimonial.name}`}
-                        className="w-24 h-24 object-cover rounded-full"
-                      />
-                    ) : (
-                      <div
-                        className="w-24 h-24 flex items-center justify-center rounded-full bg-gray-300 focus:ring-4 focus:ring-gray-400"
-                        tabIndex="0"
-                        aria-label="No profile picture available"
-                      >
-                        <span className="text-gray-700">No Photo</span>
-                      </div>
-                    )}
-                  </div>
+                    <div className="text-center p-6 bg-blue-50 rounded-lg shadow-sm hover:shadow-md transition duration-300">
+                        <Globe className="mx-auto mb-4 text-blue-600" size={48} />
+                        <h3 className="font-bold text-xl mb-2">Global Reach</h3>
+                        <p className="text-gray-600">Expanding our impact across communities.</p>
+                    </div>
+                    <div className="text-center p-6 bg-blue-50 rounded-lg shadow-sm hover:shadow-md transition duration-300">
+                        <Award className="mx-auto mb-4 text-blue-600" size={48} />
+                        <h3 className="font-bold text-xl mb-2">Recognition</h3>
+                        <p className="text-gray-600">Recognized for outstanding social initiatives.</p>
+                    </div>
+                    <div className="text-center p-6 bg-blue-50 rounded-lg shadow-sm hover:shadow-md transition duration-300">
+                        <Star className="mx-auto mb-4 text-blue-600" size={48} />
+                        <h3 className="font-bold text-xl mb-2">Innovative Solutions</h3>
+                        <p className="text-gray-600">Creating transformative approaches to challenges.</p>
+                    </div>
                 </div>
-              </div>
-            ))}
-          </Slider>
-        ) : (
-          <p className="text-center text-gray-500" tabIndex="0">
-            No testimonials available yet.
-          </p>
-        )}
-      </div>
-      <div>
-        <ContactForm/>
-      </div>
-       {/* Accessibility Menu */}
-       <AccessibilityMenu />
-       <TranslateButton />
-    </div>
-  );
+            </section>
+
+            {/* Mission Section */}
+            <section className="py-16 bg-gray-50 text-center">
+                <div className="max-w-3xl mx-auto px-4">
+                    <h2 className="text-3xl font-bold mb-6 text-blue-800">Our Mission</h2>
+                    <p className="text-xl text-gray-700 leading-relaxed">
+                        We strive to empower the disabled and create a more inclusive world through education, rehabilitation, and innovative support strategies that transform lives and break down barriers.
+                    </p>
+                </div>
+            </section>
+
+            {/* Testimonials Section */}
+            <section>
+              {testimonials.length > 0 && <TestimonialCarousel testimonials={testimonials} />}
+            </section>
+
+            {/* Contact Form */}
+            <section className="py-10 bg-white">
+                <div className="max-w-4xl mx-auto px-4">
+                    <ContactForm />
+                </div>
+            </section>
+
+            {/* Accessibility & Translation */}
+            <div className="fixed bottom-4 right-4 flex gap-2 z-50">
+                <AccessibilityMenu />
+                <TranslateButton />
+            </div>
+        </div>
+    );
 }
 
 export default Home;

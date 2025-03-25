@@ -131,9 +131,9 @@ function Register() {
                             </div>
                             {/* New location field */}
                             {/* Location Picker Field */}
-      <div className="mb-2">
-        <LocationPicker eventLocation={location} setEventLocation={setLocation} />
-      </div>
+                            <div className="mb-2">
+                                <LocationPicker eventLocation={location} setEventLocation={setLocation} />
+                            </div>
                             <div className="block md:hidden font-semibold mt-5">
                                 <p>Already have Account?</p>
                                 <Link to="/login" className="text-sm text-gray-500 hover:underline">
