@@ -397,12 +397,8 @@ const Event = () => {
         {event.title}
       </h1>
       {event.image && (
-        <img
-          src={event.image}
-          alt={event.title}
-          className="w-full h-72 object-cover rounded-xl mb-6 shadow-md"
-        />
-      )}
+<img src={event.image} alt={event.title} className="w-full h-64 object-contain rounded-xl mb-5 shadow" />
+)}
       <div
         className="text-gray-700 mb-6 leading-relaxed"
         dangerouslySetInnerHTML={{ __html: event.content }}
