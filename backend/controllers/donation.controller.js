@@ -68,11 +68,15 @@ const makeDonation = async (req, res, next) => {
 
 export const getDonations = async (req, res, next) => {
     try {
+      console.log(req);
+      
       const user = req.user; // Populated by isAuthenticated middleware
   
       let donations;
   
       // If the user is admin, return all donations
+      console.log(user);
+      
       if (user.role && user.role === "Admin") {
         donations = await Donation.find({});
       } else {

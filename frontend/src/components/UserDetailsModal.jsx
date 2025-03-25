@@ -47,7 +47,7 @@ const UserDetailsModal = ({ user, onClose }) => {
     if (!user || !window.confirm("Are you sure you want to remove this organizer?")) return;
 
     try {
-      await axios.delete(`http://localhost:3000/api/v1/admin/remove-organizer/${user._id}`);
+      await axios.put(`http://localhost:3000/api/v1/admin/remove-organizer/${user._id}`);
 
       alert("Organizer removed successfully!");
       onClose(); // Close the modal after removal
