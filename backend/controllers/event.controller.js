@@ -551,12 +551,27 @@ export const createEventSummary = async (req, res) => {
       organiserId,  // Event organiser's user ID
     } = req.body;
 
-    // Check if an event summary already exists for this event
+    // Check if the event itself is marked as already having a summary
+    const foundEvent = await Event.findById(eventId);
+    if (!foundEvent) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found.",
+      });
+    }
+    if (foundEvent.isSummaryPublished) {
+      return res.status(400).json({
+        success: false,
+        message: "A summary is already published for this event.",
+      });
+    }
+
+    // Check if an event summary already exists in the EventSummary collection
     const existingSummary = await EventSummary.findOne({ eventId });
     if (existingSummary) {
       return res.status(400).json({
         success: false,
-        message: "Event summary already provided for this event",
+        message: "Event summary already provided for this event.",
       });
     }
 
@@ -579,9 +594,13 @@ export const createEventSummary = async (req, res) => {
 
     const savedSummary = await eventSummary.save();
 
-    res.status(201).json({
+    // Mark the event as having a published summary
+    foundEvent.isSummaryPublished = true;
+    await foundEvent.save();
+
+    return res.status(201).json({
       success: true,
-      message: 'Event summary created successfully',
+      message: "Event summary created successfully",
       data: savedSummary,
     });
   } catch (error) {
@@ -591,6 +610,7 @@ export const createEventSummary = async (req, res) => {
     });
   }
 };
+
 
 
 

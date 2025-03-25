@@ -23,7 +23,9 @@ const EventSchema = new mongoose.Schema(
     // Field to store the user who created the event
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     isApproved: { type: Boolean, default: false },
-    isCompleted: { type: Boolean, default: false }
+    isCompleted: { type: Boolean, default: false },
+    // New field to indicate if a summary has been published
+    isSummaryPublished: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
