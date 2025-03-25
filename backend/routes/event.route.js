@@ -15,7 +15,7 @@ router.post("/proof/:taskId",isAuthenticated, submitTaskProof);
 router.post('/taskUpdate/:taskId', addTaskUpdate);
 router.get('/taskUpdates/:taskId', getTaskUpdates);
 router.get("/getAllDonations",isAuthenticated,getAllDonations)
-router.get("/getEvents",isAuthenticated, getEvents);
+router.get("/getEvents", isAuthenticated, getEvents);
 router.get("/getEventsUser",isAuthenticated, getEventsUser);
 router.get("/getTasksUser",isAuthenticated, getTasksUser);
 router.get("/feedbacks",isAuthenticated, getFeedbacksForEvent );

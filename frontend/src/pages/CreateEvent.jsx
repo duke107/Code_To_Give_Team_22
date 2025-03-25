@@ -54,6 +54,15 @@ const modules = {
   },
 };
 
+const eventCategories = [
+  "Education & Skill Development",
+  "Sports & Cultural Events",
+  "Health & Well-being",
+  "Women Empowerment",
+  "Environmental Sustainability",
+  "Social Inclusion & Awareness"
+];
+
 export default function CreateEvent() {
   const [file, setFile] = useState(null);
   const [imageUploadProgress, setImageUploadProgress] = useState(null);
@@ -66,6 +75,7 @@ export default function CreateEvent() {
   const [eventLocation, setEventLocation] = useState("");
   const [eventStartDate, setEventStartDate] = useState(null);
   const [eventEndDate, setEventEndDate] = useState(null);
+  const [eventCategory, setEventCategory] = useState("");
 
   // Volunteering positions
   const [volPositions, setVolPositions] = useState([{ title: "", slots: "" }]);
@@ -311,6 +321,30 @@ export default function CreateEvent() {
                 sizing="lg"
               />
             </div>
+
+            {/* Event Category Field */}
+            <div>
+              <div className="mb-2 block">
+                <Label htmlFor="category" value="Event Category" className="text-lg font-medium" />
+              </div>
+                <select
+                  id="category"
+                  value={eventCategory}
+                  onChange = {(e) => {
+                    setFormData({ ...formData, category: e.target.value });
+                    setEventCategory(e.target.value);
+                  }}
+                  className="w-full p-3 border rounded text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="" disabled>Select a category</option>
+                  {eventCategories.map((category, index) => (
+                    <option key={index} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
             {/* Event Location Field */}
             <div>
