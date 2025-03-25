@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { toast, ToastContainer } from "react-toastify";
 import { Pie } from "react-chartjs-2";
@@ -7,7 +7,6 @@ import { Chart, ArcElement, Tooltip, Legend } from "chart.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { app } from "../firebase";
 import "react-toastify/dist/ReactToastify.css";
-import { Link } from "react-router-dom";
 
 Chart.register(ArcElement, Tooltip, Legend);
 
@@ -33,8 +32,6 @@ const Event = () => {
 
   // Testimonial states
   const [showTestimonialModal, setShowTestimonialModal] = useState(false);
-  const [testimonialName, setTestimonialName] = useState("");
-  const [testimonialPosition, setTestimonialPosition] = useState("");
   const [testimonialContent, setTestimonialContent] = useState("");
   const [registeredPositions, setRegisteredPositions] = useState([]);
 
@@ -82,7 +79,7 @@ const Event = () => {
         setIsRegistered(registered);
       }
 
-      // For testimonial: extract volunteering positions registered by current user
+      // For positions: find which positions the current user is registered for
       let positions = [];
       data.volunteeringPositions?.forEach((position) => {
         position.registeredUsers?.forEach((volunteer) => {
@@ -102,6 +99,7 @@ const Event = () => {
 
   useEffect(() => {
     fetchEventDetails();
+    // eslint-disable-next-line
   }, [slug, state.user]);
 
   // Registration modal handlers
@@ -186,9 +184,7 @@ const Event = () => {
       );
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(
-          errorData.message || "Error submitting feedback"
-        );
+        throw new Error(errorData.message || "Error submitting feedback");
       }
       await res.json();
       toast.success("Thank you for your feedback!");
@@ -200,8 +196,7 @@ const Event = () => {
 
   // Testimonial Modal handlers
   const openTestimonialModal = () => {
-    setTestimonialName(state.user ? state.user.name : "");
-    setTestimonialPosition("");
+    // Prefill name from user, if available
     setTestimonialContent("");
     setShowTestimonialModal(true);
   };
@@ -217,16 +212,16 @@ const Event = () => {
     }
 
     const wordCount = testimonialContent.split(/\s+/).filter(Boolean).length;
-  if (wordCount < 60) {
-    toast.error("Your testimonial must be at least 60 words long.");
-    return;
-  }
+    if (wordCount < 60) {
+      toast.error("Your testimonial must be at least 60 words long.");
+      return;
+    }
 
     const testimonialPayload = {
       name: state.user.name,
       eventId: event._id,
       eventTitle: event.title,
-      volunteeringPosition: registeredPositions[0].title,
+      volunteeringPosition: registeredPositions[0]?.title || "",
       testimonial: testimonialContent,
       userId: state.user?._id,
     };
@@ -242,9 +237,7 @@ const Event = () => {
       );
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(
-          errorData.message || "Error submitting testimonial"
-        );
+        throw new Error(errorData.message || "Error submitting testimonial");
       }
       await res.json();
       toast.success("Thank you for sharing your experience!");
@@ -309,9 +302,7 @@ const Event = () => {
       if (!res.ok) {
         throw new Error(data.message || `Error ${res.status}`);
       }
-      toast.success(
-        "Task proof submitted successfully! Waiting for approval."
-      );
+      toast.success("Task proof submitted successfully! Waiting for approval.");
       closeProofModal();
       fetchEventDetails();
     } catch (err) {
@@ -369,8 +360,7 @@ const Event = () => {
     return (
       <p className="text-center text-gray-500">Loading event details...</p>
     );
-  if (error)
-    return <p className="text-center text-red-500">Error: {error}</p>;
+  if (error) return <p className="text-center text-red-500">Error: {error}</p>;
   if (!event)
     return (
       <p className="text-center text-gray-500">No event data available.</p>
@@ -389,7 +379,6 @@ const Event = () => {
       }
     });
   });
-  console.log(userTasks);
 
   return (
     <div className="max-w-3xl mx-auto bg-white rounded-2xl mt-5 shadow-lg p-8 relative border border-gray-200">
@@ -397,12 +386,8 @@ const Event = () => {
         {event.title}
       </h1>
       {event.image && (
-        <img
-          src={event.image}
-          alt={event.title}
-          className="w-full h-72 object-cover rounded-xl mb-6 shadow-md"
-        />
-      )}
+<img src={event.image} alt={event.title} className="w-full h-64 object-contain rounded-xl mb-5 shadow" />
+)}
       <div
         className="text-gray-700 mb-6 leading-relaxed"
         dangerouslySetInnerHTML={{ __html: event.content }}
@@ -410,6 +395,9 @@ const Event = () => {
       <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 mb-6">
         <p className="text-lg font-semibold text-gray-800">
           📍 {event.eventLocation}
+        </p>
+        <p className="text-gray-600">
+          🏷 <strong>Category:</strong> {event.category}
         </p>
         <p className="text-gray-600">
           📅 <strong>Start:</strong>{" "}
@@ -420,6 +408,8 @@ const Event = () => {
           {new Date(event.eventEndDate).toLocaleDateString()}
         </p>
       </div>
+
+      {/* List all volunteering positions */}
       {event.volunteeringPositions?.length > 0 && (
         <div className="mt-8">
           <h2 className="text-2xl font-semibold text-gray-900 mb-3">
@@ -430,23 +420,31 @@ const Event = () => {
               <li key={position._id} className="p-3 bg-gray-100 rounded-lg">
                 <span className="font-semibold">{position.title}</span> -{" "}
                 {position.slots} slots available
+                {/* If position has a WhatsApp link, show it for everyone or just for those who are registered? 
+                    Typically, you'd show it only if user is in that position, but here it's just a general list. 
+                    We'll not display it to all. We'll show it in "Your Registered Positions" section below. */}
               </li>
             ))}
           </ul>
         </div>
       )}
+
       <p className="text-gray-500 mt-6 text-sm">
         Created by:{" "}
         <span className="font-medium">
           {event.createdBy?.name || "Unknown"}
         </span>
       </p>
+
+      {/* Donate Button */}
       <Link
         to={`/donate?eventId=${event._id}`}
         className="mt-2 inline-block bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"
       >
         Donate to this Event
       </Link>
+
+      {/* Registration or "Registered" Status */}
       {isRegistered ? (
         <p className="text-center text-green-600 mt-6 font-bold">
           ✅ You are registered for this event as a volunteer.
@@ -460,63 +458,100 @@ const Event = () => {
           {registering ? "Processing..." : "Register for Event"}
         </button>
       )}
-      {isRegistered && (
-        <div className="mt-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-            Your Assigned Tasks
-          </h2>
-          {userTasks.length > 0 ? (
-            <ul className="space-y-3 text-gray-700">
-              {userTasks.map((task, idx) => (
-                <li
-                  key={idx}
-                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-50 p-3 rounded-lg border space-y-2 sm:space-y-0 sm:space-x-4"
-                >
-                  <div>
-                    <span className="font-semibold">Task:</span> {task.description} –{" "}
-                    <span className="italic">
-                      {task.status === "completed"
-                        ? "Task Completed"
-                        : task.proofSubmitted
-                        ? "Waiting for Approval"
-                        : "Pending"}
-                    </span>
-                  </div>
-                  {task.status === "pending" && (
-                    <div className="flex gap-2">
-                      {(!task.proofSubmitted) ? (
-                        <button
-                          onClick={() => openProofModal(task)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded-lg text-xs"
-                        >
-                          Send Task Completion Proof
-                        </button>
-                      ) : (
-                        <button
-                          disabled
-                          className="bg-gray-400 text-white py-1 px-3 rounded-lg text-xs cursor-not-allowed"
-                        >
-                          Waiting for Approval
-                        </button>
-                      )}
-                      <button
-                        onClick={() => openUpdateModal(task)}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white py-1 px-3 rounded-lg text-xs"
-                      >
-                        Send Task Updates
-                      </button>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500 text-sm">No tasks assigned yet.</p>
-          )}
-        </div>
-      )}
+
+      {/* If user is registered, show tasks, feedback/testimonial buttons, etc. */}
       {isRegistered && (
         <>
+          {/* "Your Registered Positions" - show link to WhatsApp group if available */}
+          {registeredPositions.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-3">
+                Your Registered Positions
+              </h2>
+              <ul className="space-y-3 text-gray-700">
+                {registeredPositions.map((pos) => (
+                  <li
+                    key={pos._id}
+                    className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border"
+                  >
+                    <span className="font-semibold">{pos.title}</span>
+                    {pos.whatsappGroupLink ? (
+                      <a
+                        href={pos.whatsappGroupLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded-lg text-xs"
+                      >
+                        Join WhatsApp Group
+                      </a>
+                    ) : (
+                      <span className="text-gray-500 text-xs">
+                        No WhatsApp link available
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Assigned Tasks */}
+          <div className="mt-8">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
+              Your Assigned Tasks
+            </h2>
+            {userTasks.length > 0 ? (
+              <ul className="space-y-3 text-gray-700">
+                {userTasks.map((task, idx) => (
+                  <li
+                    key={idx}
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-50 p-3 rounded-lg border space-y-2 sm:space-y-0 sm:space-x-4"
+                  >
+                    <div>
+                      <span className="font-semibold">Task:</span>{" "}
+                      {task.description} –{" "}
+                      <span className="italic">
+                        {task.status === "completed"
+                          ? "Task Completed"
+                          : task.proofSubmitted
+                          ? "Waiting for Approval"
+                          : "Pending"}
+                      </span>
+                    </div>
+                    {task.status === "pending" && (
+                      <div className="flex gap-2">
+                        {!task.proofSubmitted ? (
+                          <button
+                            onClick={() => openProofModal(task)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded-lg text-xs"
+                          >
+                            Send Task Completion Proof
+                          </button>
+                        ) : (
+                          <button
+                            disabled
+                            className="bg-gray-400 text-white py-1 px-3 rounded-lg text-xs cursor-not-allowed"
+                          >
+                            Waiting for Approval
+                          </button>
+                        )}
+                        <button
+                          onClick={() => openUpdateModal(task)}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white py-1 px-3 rounded-lg text-xs"
+                        >
+                          Send Task Updates
+                        </button>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500 text-sm">No tasks assigned yet.</p>
+            )}
+          </div>
+
+          {/* Feedback / Testimonial Buttons */}
           <button
             onClick={openFeedbackModal}
             className="w-full mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-xl transition-all shadow-md hover:shadow-lg"
@@ -791,7 +826,7 @@ const Event = () => {
               </label>
               <input
                 type="text"
-                value={state.user.name}
+                value={state.user?.name || ""}
                 className="w-full border rounded p-2 bg-gray-100"
                 disabled
               />
