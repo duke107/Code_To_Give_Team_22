@@ -151,7 +151,7 @@ const ScreenReader = () => {
   return (
     <>
       <div className="screen-reader-controls flex items-center gap-2 z-50">
-        <button
+        <button id="screen-reader-btn"
           ref={enableButtonRef}
           onClick={() => {
             if (isEnabled) {

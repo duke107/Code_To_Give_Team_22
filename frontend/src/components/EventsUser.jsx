@@ -5,16 +5,29 @@ import { useNavigate } from 'react-router-dom';
 function EventsUser() {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
-  const [showAll, setShowAll] = useState(false); // Flag to determine which API to call
+  const [showAll, setShowAll] = useState(false); // Flag to determine which API to call for default fetching
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [searchMode, setSearchMode] = useState(false); // Determines if search results are active
+  const [searchParams, setSearchParams] = useState({
+    title: '',
+    location: '',
+    startDate: '',
+    endDate: '',
+  });
   const { user } = useSelector(state => state.auth);
 
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split("T")[0];
+
+  // Default fetch: local events or all events based on showAll flag,
+  // only if we're not in search mode
   useEffect(() => {
     const fetchEvents = async () => {
       try {
         const url = showAll
           ? `http://localhost:3000/api/v1/events/getEvents`
           : `http://localhost:3000/api/v1/events/getEvents?location=${user.location}`;
-
+          
         const res = await fetch(url, {
           method: "GET",
           headers: {
@@ -22,7 +35,7 @@ function EventsUser() {
           },
           credentials: "include",
         });
-
+  
         if (res.ok) {
           const data = await res.json();
           setEvents(data);
@@ -34,28 +47,182 @@ function EventsUser() {
       }
     };
 
-    if (user && user.location) {
+    if (user && user.location && !searchMode) {
       fetchEvents();
     }
-  }, [user, showAll]);
+  }, [user, showAll, searchMode]);
+
+  // Function to handle searching events using the modal fields
+  const handleSearchSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      // Build query params based on provided fields
+      let queryParams = [];
+      if (searchParams.title) {
+        queryParams.push(`title=${encodeURIComponent(searchParams.title)}`);
+      }
+      if (searchParams.location) {
+        queryParams.push(`location=${encodeURIComponent(searchParams.location)}`);
+      }
+      if (searchParams.startDate) {
+        queryParams.push(`startDate=${encodeURIComponent(searchParams.startDate)}`);
+      }
+      if (searchParams.endDate) {
+        queryParams.push(`endDate=${encodeURIComponent(searchParams.endDate)}`);
+      }
+      const queryString = queryParams.length ? `?${queryParams.join('&')}` : '';
+
+      const url = `http://localhost:3000/api/v1/events/search${queryString}`;
+      const res = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setEvents(data);
+        setSearchMode(true);
+      } else {
+        console.error("Error:", res.status, res.statusText);
+      }
+    } catch (error) {
+      console.error("Error fetching search results:", error);
+    } finally {
+      // Close modal after search is submitted
+      setShowSearchModal(false);
+    }
+  };
 
   const handleViewEvent = (slug) => {
     navigate(`/event/${slug}`);
   };
 
+  // Clear search results and return to default view
+  const handleClearSearch = () => {
+    setSearchMode(false);
+    setSearchParams({
+      title: '',
+      location: '',
+      startDate: '',
+      endDate: '',
+    });
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Page Header with Toggle Button */}
+      {/* Page Header with Toggle and Search Buttons */}
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Events {showAll ? " - All Locations" : " - Near You"}</h1>
-        <button
-          onClick={() => setShowAll(prev => !prev)}
-          className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow-md transition-colors"
-        >
-          {showAll ? "Show Local Events" : "Show All Events"}
-        </button>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Events {searchMode ? " - Search Results" : (showAll ? " - All Locations" : " - Near You")}
+        </h1>
+        <div className="flex gap-4">
+          <button
+            onClick={() => setShowSearchModal(true)}
+            className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg shadow-md transition-colors"
+          >
+            Search Events
+          </button>
+          <button
+            onClick={() => {
+              setShowAll(prev => !prev);
+              // Clear search mode if toggling default view
+              setSearchMode(false);
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow-md transition-colors"
+          >
+            {showAll ? "Show Local Events" : "Show All Events"}
+          </button>
+          {searchMode && (
+            <button
+              onClick={handleClearSearch}
+              className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg shadow-md transition-colors"
+            >
+              Clear Search
+            </button>
+          )}
+        </div>
       </div>
 
+      {/* Search Modal */}
+      {showSearchModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <h2 className="text-2xl font-bold mb-4">Search Events</h2>
+            <form onSubmit={handleSearchSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  value={searchParams.title}
+                  onChange={(e) => setSearchParams({ ...searchParams, title: e.target.value })}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                />
+              </div>
+              <div>
+                <label htmlFor="location" className="block text-sm font-medium text-gray-700">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  id="location"
+                  value={searchParams.location}
+                  onChange={(e) => setSearchParams({ ...searchParams, location: e.target.value })}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                />
+              </div>
+              <div>
+                <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  id="startDate"
+                  value={searchParams.startDate}
+                  onChange={(e) => setSearchParams({ ...searchParams, startDate: e.target.value })}
+                  min={today}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                />
+              </div>
+              <div>
+                <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  id="endDate"
+                  value={searchParams.endDate}
+                  onChange={(e) => setSearchParams({ ...searchParams, endDate: e.target.value })}
+                  min={today}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                />
+              </div>
+              <div className="flex justify-end gap-4">
+                <button
+                  type="button"
+                  onClick={() => setShowSearchModal(false)}
+                  className="bg-gray-400 hover:bg-gray-500 text-white py-2 px-4 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
+                >
+                  Search
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Events Grid */}
       {events.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {events.map((event) => (
@@ -105,9 +272,17 @@ function EventsUser() {
           <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          <h3 className="mt-4 text-lg font-medium text-gray-900">No events found</h3>
-          <p className="mt-2 text-gray-500">{showAll ? "No events available at the moment." : "Want to explore events in other locations?"}</p>
-          {!showAll && (
+          <h3 className="mt-4 text-lg font-medium text-gray-900">
+            {searchMode ? "No events found for your search." : "No events found"}
+          </h3>
+          <p className="mt-2 text-gray-500">
+            {searchMode
+              ? "Try adjusting your search criteria."
+              : showAll
+                ? "No events available at the moment."
+                : "Want to explore events in other locations?"}
+          </p>
+          {!searchMode && !showAll && (
             <button
               onClick={() => setShowAll(true)}
               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"

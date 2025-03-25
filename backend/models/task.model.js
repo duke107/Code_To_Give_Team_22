@@ -1,5 +1,14 @@
 import mongoose from 'mongoose';
 
+const UpdateSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true },
+    content: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+  },
+  { _id: false } // Optional: if you don't need separate _id for each update
+);
+
 const TaskSchema = new mongoose.Schema(
   {
     event: { 
@@ -21,7 +30,7 @@ const TaskSchema = new mongoose.Schema(
       enum: ['pending', 'completed'], 
       default: 'pending' 
     },
-    // New fields for task proof
+    // Fields for task proof
     proofSubmitted: { 
       type: Boolean, 
       default: false 
@@ -32,6 +41,8 @@ const TaskSchema = new mongoose.Schema(
     proofImages: [{ 
       type: String 
     }],
+    // New field to store task updates as an array of subdocuments
+    updates: [UpdateSchema]
   },
   { timestamps: true }
 );

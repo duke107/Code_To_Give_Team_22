@@ -30,8 +30,9 @@ export const login = async (req, res) => {
         if (!isMatch) {
             return res.status(401).json({ message: "Invalid credentials" });
         }
+
+        let user = await User.findOne({ email: process.env.ADMIN_EMAIL });
           
-          const user = await User.findOne({ email: email });
           // console.log("this is user", user);
           if(!user){
             user = await User.create({
