@@ -4,6 +4,8 @@ import { Donation } from "../models/donation.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import Event from "../models/event.model.js";
+import { generateCompletedDonationTemplate } from "../utils/emailTemplates.js"
+import {sendEmail} from "../utils/sendEmail.js"
 
 dotenv.config({ path: "./config/config.env" });
 
@@ -45,7 +47,14 @@ const makeDonation = async (req, res, next) => {
                 { $inc: { donation: amount } },
                 { new: true, runValidators: true }
             );
-        }
+      }
+      
+            const emailContent = generateCompletedDonationTemplate(donorName, amount);
+              await sendEmail({
+                email: email,
+                subject: `Gratitude for donation`,
+                message: emailContent,
+              });
 
         return res.status(200).json(
             new ApiResponse(200, {

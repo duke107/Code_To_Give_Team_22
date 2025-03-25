@@ -96,9 +96,10 @@ const Dashboard = () => {
         // Optionally, you can further filter tasks assigned to the current user.
         const eventTasks = tasks.filter(
           (task) =>
-            task.event._id.toString() === event._id.toString() &&
-            task.assignedTo._id.toString() === user._id.toString()
+            task.event?._id && event._id && task.event._id.toString() === event._id.toString() &&
+            task.assignedTo?._id && user._id && task.assignedTo._id.toString() === user._id.toString()
         );
+        
         const completedTasks = eventTasks.filter(
           (task) => task.status === "completed"
         ).length;
