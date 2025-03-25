@@ -444,7 +444,7 @@ const Event = () => {
           )}
         </div>
       )}
-      {isRegistered && hasEventEnded(event) && (
+      {isRegistered && (
         <>
           <button
             onClick={openFeedbackModal}

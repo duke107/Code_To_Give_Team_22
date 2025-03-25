@@ -11,6 +11,7 @@ import { Testimonial } from '../models/testimonial.model.js';
 import EventSummary from '../models/eventSummary.model.js';
 import { sendEmail } from '../utils/sendEmail.js';
 import {generateTaskAssignmentEmailTemplate} from '../utils/emailTemplates.js';
+import { Donation } from '../models/donation.model.js';
 
 
 // Create a new event
@@ -23,8 +24,8 @@ export const createEvent = async (req, res) => {
       eventLocation,
       eventStartDate,
       eventEndDate,
-      volunteeringPositions, // expecting an array of positions
-      user_id, // expecting user_id in the request body
+      volunteeringPositions, 
+      user_id, 
     } = req.body;
 
     // Basic validation for required fields
@@ -35,17 +36,19 @@ export const createEvent = async (req, res) => {
 
     // Ensure volunteeringPositions is an array and initialize each position's registeredUsers to []
     let processedVolunteeringPositions = [];
-    if (volunteeringPositions && Array.isArray(volunteeringPositions)) {
+    if (Array.isArray(volunteeringPositions)) {
       processedVolunteeringPositions = volunteeringPositions.map((position) => ({
         title: position.title,
         slots: position.slots,
-        registeredUsers: [] // initialize registeredUsers as empty array
+        registeredUsers: [],
       }));
     }
 
-    const capitalizeFirstLetter = (str) => 
+    // Capitalize first letter of title and location
+    const capitalizeFirstLetter = (str) =>
       str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
-    
+
+    // Create the event
     const event = await Event.create({
       title: capitalizeFirstLetter(title),
       content,
@@ -54,24 +57,30 @@ export const createEvent = async (req, res) => {
       eventStartDate,
       eventEndDate,
       volunteeringPositions: processedVolunteeringPositions,
-      createdBy: user_id, // storing the id of the user who created the event
+      createdBy: user_id,
     });
 
-    // After creating the event, notify users in the same area
-    // const usersInArea = await User.find({
-    //   location: eventLocation,
-    //   _id: { $ne: user_id }
-    // });
+    await event.save();
 
-    // // For each user, create a notification about the new event
-    // for (const user of usersInArea) {
-    //   const notification = await Notification.create({
-    //     userId: user._id,
-    //     message: `New event "${event.title}" is listed in your area.`,
-    //     type: "reminder"
-    //   });
-    //   io.to(user._id.toString()).emit("new-notification", notification);
-    // }
+    const usersInArea = await User.find({
+      location: eventLocation,
+      _id: { $ne: user_id },
+      role: { $ne: "Event Organiser" }, 
+    });
+
+    // Send notifications to eligible users
+    for (const user of usersInArea) {
+      await Notification.create({
+        userId: user._id,
+        message: `New event "${event.title}" is listed in your area.`,
+        type: "reminder",
+        eventSlug: event.slug,
+      });
+      io.to(user._id.toString()).emit("new-notification", {
+        message: `New event "${event.title}" is listed in your area.`,
+        eventSlug: event.slug,
+      });
+    }
 
     return res.status(201).json(event);
   } catch (error) {
@@ -79,6 +88,9 @@ export const createEvent = async (req, res) => {
     return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
+
 export const getEventBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
@@ -338,9 +350,10 @@ export const assignTask = async (req, res) => {
       await Notification.create({
         userId: volunteerId,
         message: notifMsg,
-        type: "task-assigned"
+        type: "task-assigned",
+        eventSlug: event.slug
       });
-      console.log(notifMsg);
+      console.log(event.slug);
 
       //emit notification from socketio 
       io.to(volunteerId.toString()).emit("new-notification", {
@@ -724,25 +737,40 @@ export const markCompletedEvents = async () => {
   try {
     const now = new Date();
 
-    // Find events that have ended but are not marked as completed
-    const eventsToUpdate = await Event.find({
+    const eventsToMark = await Event.find({
       eventEndDate: { $lt: now },
       isCompleted: false,
     });
 
-    if (eventsToUpdate.length === 0) {
-      console.log("No events to mark as completed.");
-      return;
-    }
+    if (eventsToMark.length === 0) return []; // No events to update
 
-    // Update all found events to mark them as completed
-    await Event.updateMany(
-      { _id: { $in: eventsToUpdate.map(event => event._id) } },
-      { isCompleted: true }
+    const updatedEvents = await Event.updateMany(
+      { _id: { $in: eventsToMark.map(e => e._id) } },
+      { $set: { isCompleted: true } }
     );
 
+    console.log(`Marked ${updatedEvents.modifiedCount} events as completed.`);
+    return eventsToMark; // Return the newly completed events
 
   } catch (error) {
     console.error("Error marking completed events:", error);
+    return [];
   }
 };
+
+export const getAllDonations = async (req, res) => {
+  try {
+    const donations = await Donation.find();
+    res.status(200).json({
+      success: true,
+      data: donations
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+

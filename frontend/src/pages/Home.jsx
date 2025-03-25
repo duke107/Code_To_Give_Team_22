@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import Slider from 'react-slick';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
+import ContactForm from '../components/ContactForm';
 
-
+import AccessibilityMenu from "../components/AccessibilityMenu";
+import TranslateButton from '../TranslateButton';
 function Home() {
   const [testimonials, setTestimonials] = useState([]);
 
@@ -126,6 +128,12 @@ function Home() {
           </p>
         )}
       </div>
+      <div>
+        <ContactForm/>
+      </div>
+       {/* Accessibility Menu */}
+       <AccessibilityMenu />
+       <TranslateButton />
     </div>
   );
 }
