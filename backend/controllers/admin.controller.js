@@ -9,6 +9,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Task } from "../models/task.model.js";
 import mongoose from "mongoose";
 import nodemailer from "nodemailer";
+import EventSummary from "../models/eventSummary.model.js";
 
 export const login = async (req, res) => {
     try {
@@ -321,5 +322,65 @@ export const warnOrganizer = async (req, res) => {
   } catch (error) {
     console.error("Error sending warning:", error);
     res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
+export const getAllEventSummaries = async (req, res) => {
+  try {
+    // Fetch all summaries, optionally sorted by creation date
+    const summaries = await EventSummary.find().sort({ createdAt: -1 });
+    res.status(200).json(summaries);
+  } catch (error) {
+    console.error("Error fetching event summaries:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+export const getEventSummaryById = async (req, res) => {
+  try {
+    const { id } = req.params; // summary ID from URL
+    const summary = await EventSummary.findById(id);
+
+    if (!summary) {
+      return res.status(404).json({ message: "Event summary not found" });
+    }
+
+    res.status(200).json(summary);
+  } catch (error) {
+    console.error("Error fetching event summary by ID:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const promoteToOrganiser = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    // Validate input
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required." });
+    }
+
+    // Find the user by ID
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // If user is already an event organiser, return an error or message
+    if (user.role === "Event Organiser") {
+      return res.status(400).json({ message: "User is already an event organiser." });
+    }
+
+    // Update the user's role
+    user.role = "Event Organiser";
+    await user.save();
+
+    return res.status(200).json({ message: "User promoted to Event Organiser successfully." });
+  } catch (error) {
+    console.error("Error promoting user:", error);
+    return res.status(500).json({ message: error.message });
   }
 };

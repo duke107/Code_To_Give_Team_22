@@ -11,10 +11,19 @@ function EventsUser() {
   const [searchMode, setSearchMode] = useState(false); // Determines if search results are active
   const [searchParams, setSearchParams] = useState({
     title: '',
+    category: '',
     location: '',
     startDate: '',
     endDate: '',
   });
+  const eventCategories = [
+    "Education & Skill Development",
+    "Sports & Cultural Events",
+    "Health & Well-being",
+    "Women Empowerment",
+    "Environmental Sustainability",
+    "Social Inclusion & Awareness"
+  ];
   const { user } = useSelector(state => state.auth);
 
   // Get today's date in YYYY-MM-DD format
@@ -61,6 +70,9 @@ function EventsUser() {
   
       if (searchParams.title) {
         queryParams.push(`title=${encodeURIComponent(searchParams.title)}`);
+      }
+      if (searchParams.category) {
+        queryParams.push(`category=${encodeURIComponent(searchParams.category)}`);
       }
       if (searchParams.location) {
         queryParams.push(`location=${encodeURIComponent(searchParams.location)}`);
@@ -174,6 +186,28 @@ function EventsUser() {
                   onChange={(e) => setSearchParams({ ...searchParams, title: e.target.value })}
                   className="mt-1 block w-full border-gray-300 bg-gray-200 rounded-md shadow-sm"
                 />
+              </div>
+
+              <div>
+                <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+                  Event Category
+                </label>
+                <select
+                  id="category"
+                  value={searchParams.category}
+                  onChange = {(e) => {
+                    setSearchParams({...searchParams, category: e.target.value});
+                  }}
+                  className="w-full p-3 border rounded text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="" disabled>Select a category</option>
+                  {eventCategories.map((category, index) => (
+                    <option key={index} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Location Filter */}
