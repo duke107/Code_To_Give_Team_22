@@ -7,7 +7,7 @@ import { Chart, ArcElement, Tooltip, Legend } from "chart.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { app } from "../firebase";
 import "react-toastify/dist/ReactToastify.css";
-
+import { motion } from "framer-motion";
 Chart.register(ArcElement, Tooltip, Legend);
 
 const Event = () => {

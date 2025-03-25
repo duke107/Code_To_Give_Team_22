@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import LocationPicker from './LocationPicker';
+import { motion } from "framer-motion";
 
 function EventsUser() {
   const navigate = useNavigate();
@@ -337,6 +338,12 @@ function EventsUser() {
       {events.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {events.map((event) => (
+             <motion.div
+             key={event._id}
+             className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-2xl transition-all duration-300 group flex flex-col"
+             whileHover={{ scale: 1.02 }}
+             whileTap={{ scale: 0.98 }}
+           >
             <div
               key={event._id}
               className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl border border-gray-100 flex flex-col"
@@ -366,17 +373,17 @@ function EventsUser() {
                     />
                   </svg>
                 </div>
+                
               )}
-              <div className="p-6 flex-grow">
-                <h2 className="text-xl font-bold text-gray-900 mb-3">
-                  {event.title}
-                </h2>
-                <div className="text-gray-600 mb-4 line-clamp-3">
-                  <div
-                    dangerouslySetInnerHTML={{ __html: event.content }}
-                  />
-                </div>
-              </div>
+             <div className="p-6 flex-grow text-center">
+      <h2 className="text-2xl font-semibold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors duration-300">
+        {event.title}
+      </h2>
+      <div
+        className="text-gray-600 text-base leading-relaxed mb-4 line-clamp-3"
+        dangerouslySetInnerHTML={{ __html: event.content }}
+      />
+    </div>
 
               <div className="px-6 pb-6 pt-2">
                 <button
@@ -400,8 +407,11 @@ function EventsUser() {
                 </button>
               </div>
             </div>
+            </motion.div>
           ))}
+         
         </div>
+        
       ) : (
         <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
           <svg
