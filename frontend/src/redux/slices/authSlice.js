@@ -169,6 +169,7 @@ export const login = (data) => async (dispatch) => {
             },
         })
         .then((res) => {
+            console.log("This is respomse in logn", res.data);
             dispatch(authSlice.actions.loginSuccess(res.data));
         })
         .catch((error) => {
@@ -201,6 +202,7 @@ export const getUser = () => async (dispatch) => {
             withCredentials: true,
         })
         .then((res) => {
+            console.log("this is response", res.data);
             dispatch(authSlice.actions.getUserSuccess(res.data));
         })
         .catch((error) => {

@@ -6,6 +6,7 @@ import { sendToken } from "../utils/sendToken.js";
 import { sendVerificationCode } from "../utils/sendVerificationCode.js";
 import bcrypt from "bcryptjs"
 import crypto from "crypto"
+
 export const register = async (req, res) => {
     try {
         // Destructure location along with other fields
@@ -98,31 +99,28 @@ export const verifyOtp = async (req, res) => {
 
 export const login = async (req, res) => {
     try {
+        const { email, password } = req.body;
 
-    const {email,password} =req.body;
-    if(!email || !password){
-      return res.status(400).json({ msg: "Please fill in all fields" });
+        if (!email || !password) {
+            return res.status(400).json({ msg: "Please fill in all fields" });
         }
-        console.log(email)
-    const user = await User.findOne({ email, accountVerified: true }).select("+password");
-    console.log(user)
-    if (!user) {
 
-        return res.status(400).json({ msg: "User not found" });
-    }
+        const user = await User.findOne({ email, accountVerified: true }).select("+password");
 
-    const isPasswordMatched = await bcrypt.compare(password, user.password);
+        if (!user) {
+            return res.status(400).json({ msg: "User not found" });
+        }
 
-    if (!isPasswordMatched) {
+        const isPasswordMatched = await bcrypt.compare(password, user.password);
 
-        return res.status(400).json({ msg: "Invalid password" });
+        if (!isPasswordMatched) {
+            return res.status(400).json({ msg: "Invalid password" });
+        }
 
-    }
-
-    sendToken(user, 200, "User logged in successfully", res);
+        sendToken(user, 200, "User logged in successfully", res);
 
     } catch (error) {
-        console.log(error.message);
+        console.error("Login error:", error.message);
         return res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 }

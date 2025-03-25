@@ -1,31 +1,20 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
-import CityDataModal from "../components/CityDataModal";
-import DashboardStats from "../components/DashboardStats";  // Import the new component
+import DashboardStats from "../components/DashboardStats";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const AdminDashboard = () => {
   const [cityData, setCityData] = useState([]);
-  const [selectedCity, setSelectedCity] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const openModal = (city) => {
-    setSelectedCity(city);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCityData = async () => {
       try {
         const response = await axios.get("http://localhost:3000/api/v1/admin/city-volunteers");
-
         if (response.data && Array.isArray(response.data)) {
           const filteredData = response.data.filter((item) => item.city);
           setCityData(filteredData);
@@ -69,10 +58,14 @@ const AdminDashboard = () => {
 
       {/* Right Section: City List */}
       <div className="bg-white shadow-lg rounded-lg p-6">
-        <h2 className="text-xl font-bold mb-4 text-center">City List</h2>
+        <h2 className="text-xl font-bold mb-4 text-center">City Details</h2>
         <div className="flex flex-wrap gap-x-8">
           {cityData.map((item) => (
-            <span key={item.city} className="cursor-pointer text-blue-600 hover:scale-105" onClick={() => openModal(item.city)}>
+            <span
+              key={item.city}
+              className="cursor-pointer text-blue-600 transition-colors duration-300 hover:text-black"
+              onClick={() => navigate(`/admin/city/${item.city}`)}
+            >
               {item.city}
             </span>
           ))}
@@ -81,9 +74,6 @@ const AdminDashboard = () => {
 
       {/* Dashboard Stats */}
       <DashboardStats />
-
-      {/* City Data Modal */}
-      {isModalOpen && <CityDataModal city={selectedCity} closeModal={closeModal} />}
     </div>
   );
 };

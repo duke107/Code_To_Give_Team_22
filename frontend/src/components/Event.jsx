@@ -210,15 +210,22 @@ const Event = () => {
   };
 
   const handleTestimonialSubmit = async () => {
-    if (!testimonialName || !testimonialContent || !testimonialPosition) {
-      toast.error("Please fill in all testimonial fields.");
+    if (!testimonialContent) {
+      toast.error("You cannot submit an empty testimonial.");
       return;
     }
+
+    const wordCount = testimonialContent.split(/\s+/).filter(Boolean).length;
+  if (wordCount < 60) {
+    toast.error("Your testimonial must be at least 60 words long.");
+    return;
+  }
+
     const testimonialPayload = {
-      name: testimonialName,
+      name: state.user.name,
       eventId: event._id,
       eventTitle: event.title,
-      volunteeringPosition: testimonialPosition,
+      volunteeringPosition: registeredPositions[0].title,
       testimonial: testimonialContent,
       userId: state.user?._id,
     };

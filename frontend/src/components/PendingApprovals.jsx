@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import StoryCard from "./StoryCard"; // Importing the StoryCard component
+import StoryCardWithModal from "./StoryCardWithModal"; // Using the new component
 
 const PendingApprovals = () => {
   const [pendingEvents, setPendingEvents] = useState([]);
@@ -16,7 +16,9 @@ const PendingApprovals = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success(response.data.message);
-      setPendingEvents(pendingEvents.filter((event) => event._id !== eventId));
+      setPendingEvents((prevEvents) =>
+        prevEvents.filter((event) => event._id !== eventId)
+      );
     } catch (error) {
       console.error("Error approving event", error);
     }
@@ -30,7 +32,9 @@ const PendingApprovals = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.error(response.data.message);
-      setPendingEvents(pendingEvents.filter((event) => event._id !== eventId));
+      setPendingEvents((prevEvents) =>
+        prevEvents.filter((event) => event._id !== eventId)
+      );
     } catch (error) {
       console.error("Error rejecting event", error);
     }
@@ -43,6 +47,7 @@ const PendingApprovals = () => {
           "http://localhost:3000/api/v1/admin/pending-events",
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        console.log(response.data);
         setPendingEvents(response.data.events);
       } catch (error) {
         console.error("Error fetching pending events", error);
@@ -65,12 +70,18 @@ const PendingApprovals = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {pendingEvents.map((event) => (
             <div key={event._id} className="relative">
-              <StoryCard
-                story={{
+              <StoryCardWithModal
+                event={{
                   id: event._id,
                   title: event.title,
-                  description: `${event.eventLocation} | ${new Date(event.eventStartDate).toLocaleDateString()} - ${new Date(event.eventEndDate).toLocaleDateString()}`,
-                  image: event.image || "https://via.placeholder.com/300", // Default placeholder image
+                  description: typeof event.content === "string" ? event.content : JSON.stringify(event.content), // Ensure it's a string
+                  image: event.image || "https://via.placeholder.com/300",
+                  eventLocation: event.eventLocation,
+                  eventStartDate: event.eventStartDate,
+                  eventEndDate: event.eventEndDate,
+                  volunteeringPositions: event.volunteeringPositions,
+                  registeredVolunteers: event.registeredVolunteers,
+                  createdBy: event.createdBy,
                 }}
               />
               {/* Approval & Rejection Buttons */}
