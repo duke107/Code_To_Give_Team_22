@@ -5,7 +5,7 @@ import { logout } from "../redux/slices/authSlice";
 import { FaBell, FaTimes, FaBars } from "react-icons/fa";
 
 const Header = ({ notifications }) => {
-  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -32,6 +32,9 @@ const Header = ({ notifications }) => {
   const authLinks = [
     { path: "/dashboard", label: "Dashboard" },
     { path: "/events", label: "Events" },
+  ];
+  const messageLinks = [
+    { path: "/organiser/messages", label: "Messages" },
   ];
 
   return (
@@ -63,6 +66,20 @@ const Header = ({ notifications }) => {
           ))}
           {isAuthenticated &&
             authLinks.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`${
+                  isActive(item.path)
+                    ? "text-blue-700 font-bold border-b-2 border-blue-700"
+                    : "hover:text-black transition duration-200"
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          {isAuthenticated && user.role === 'Event Organiser' &&
+            messageLinks.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}

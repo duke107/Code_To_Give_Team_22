@@ -35,6 +35,11 @@ const donationSchema = new mongoose.Schema(
       type: String,
       enum: ["created", "paid", "failed"],
       default: "created"
+    },
+    eventId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Event",
+      default: null
     }
   },
   { timestamps: true }

@@ -897,6 +897,7 @@ export const addTaskUpdate = async (req, res) => {
     res.status(500).json({ message: "Server error.", error: error.message });
   }
 };
+
 export const getTaskUpdates = async (req, res) => {
   const { taskId } = req.params;
 

@@ -7,6 +7,7 @@ import { Chart, ArcElement, Tooltip, Legend } from "chart.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { app } from "../firebase";
 import "react-toastify/dist/ReactToastify.css";
+import { Link } from "react-router-dom";
 
 Chart.register(ArcElement, Tooltip, Legend);
 
@@ -436,6 +437,12 @@ const Event = () => {
           {event.createdBy?.name || "Unknown"}
         </span>
       </p>
+      <Link
+        to={`/donate?eventId=${event._id}`}
+        className="mt-2 inline-block bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"
+      >
+        Donate to this Event
+      </Link>
       {isRegistered ? (
         <p className="text-center text-green-600 mt-6 font-bold">
           ✅ You are registered for this event as a volunteer.
