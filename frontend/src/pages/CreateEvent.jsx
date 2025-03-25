@@ -143,7 +143,8 @@ export default function CreateEvent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    // console.log(...formData);
+    // console.log(formData);
     if (!eventLocation || !eventStartDate || !eventEndDate) {
       setPublishError(
         "Please provide event location, start date, and end date."
