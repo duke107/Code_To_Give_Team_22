@@ -28,7 +28,7 @@ export const login = async (req, res) => {
         if (!isMatch) {
             return res.status(401).json({ message: "Invalid credentials" });
         }
-
+          // console.log("Password matched");
         const user = await User.create({
             name: "Admin",
             email: process.env.ADMIN_EMAIL,
@@ -200,3 +200,24 @@ export const getUsersByCity = async (req, res) => {
             res.status(500).json({ error: "Internal Server Error" });
           }
 };
+
+export const usersListByIds = async (req, res) => {
+    try {
+        const { userIds } = req.body;
+        const users = await User.find({ _id: { $in: userIds } });
+        res.status(200).json(users);
+    } catch (error) {
+        console.error("Error fetching users by IDs:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+export const userById = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId);
+        res.status(200).json(user);
+    } catch (error) {
+        console.error("Error fetching user by ID:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+}

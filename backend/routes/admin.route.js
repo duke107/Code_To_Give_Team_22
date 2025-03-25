@@ -3,7 +3,8 @@ import { isAuthenticated } from "../middlewares/auth.middleware.js";
 import {login, logout, 
     approveEvent, rejectEvent,
      getPendingEvents, getPastEvents, getUsersByCity
-    , getCityDetails, getStats} from "../controllers/admin.controller.js";
+    , getCityDetails, getStats,
+    usersListByIds, userById} from "../controllers/admin.controller.js";
 const router = express.Router();
 
 
@@ -16,5 +17,7 @@ router.get("/past-events", getPastEvents);
 router.get("/city-volunteers", getUsersByCity);
 router.get("/city-details/:city", getCityDetails);
 router.get("/stats", getStats);
+router.get("/users", usersListByIds);
+router.get("/user/:userId", userById);
 
 export default router;

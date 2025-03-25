@@ -31,7 +31,7 @@ function Login() {
     useEffect(() => {
         if (message) {
             // toast.success(message);
-            navigateTo("/")
+            user.role === 'Admin' ? navigateTo("/admin/dashboard") : navigateTo("/")
         }
         if (error) {
             // toast.error(error);
@@ -115,6 +115,13 @@ function Login() {
                                 className="border-2 mt-5 border-black w-full font-semibold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
                             >
                                 SIGN IN
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => navigateTo("/admin/login")}
+                                className="border-2 mt-3 border-black w-full font-semibold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
+                            >
+                                ADMIN LOGIN
                             </button>
                         </form>
                     </div>
