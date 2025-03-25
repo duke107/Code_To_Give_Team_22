@@ -10,7 +10,7 @@ import {
   CardExpiryElement,
   CardCvcElement,
 } from "@stripe/react-stripe-js";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 function Donate() {
   const [amount, setAmount] = useState("");
@@ -18,6 +18,11 @@ function Donate() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Get eventId from URL if available
+  const location = useLocation()
+  const queryParams = new URLSearchParams(location.search);
+  const eventId = queryParams.get("eventId");
 
   // Stripe states
   const [stripePromise, setStripePromise] = useState(null);
@@ -31,7 +36,7 @@ function Donate() {
     try {
       const res = await axios.post(
         "http://localhost:3000/api/v1/donate",
-        { amount, donorName, email, message },
+        { amount, donorName, email, message, eventId },
         { withCredentials: true }
       );
       const { data } = res.data;
@@ -62,6 +67,11 @@ function Donate() {
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <h1 className="text-4xl font-bold text-gray-800 mb-4">Donate</h1>
+      {eventId && (
+        <p className="text-gray-600 mb-2">
+          You are donating to event: <strong>{eventId}</strong>
+        </p>
+      )}
       <form
         onSubmit={handleDonate}
         className="max-w-md mx-auto bg-white p-6 rounded-md shadow-md"
@@ -96,6 +106,7 @@ function Donate() {
             required
           />
         </div>
+
         <div className="mb-4">
           <label className="block text-gray-700 mb-2">Message (Optional)</label>
           <textarea

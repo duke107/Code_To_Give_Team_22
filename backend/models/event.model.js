@@ -26,6 +26,7 @@ const EventSchema = new mongoose.Schema(
     isCompleted: { type: Boolean, default: false },
     // New field to indicate if a summary has been published
     isSummaryPublished: { type: Boolean, default: false },
+    donation: {type: Number, default: 0},
   },
   { timestamps: true }
 );

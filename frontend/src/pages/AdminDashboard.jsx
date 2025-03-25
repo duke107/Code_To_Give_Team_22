@@ -9,22 +9,32 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 const AdminDashboard = () => {
   const [cityData, setCityData] = useState([]);
+  const [totalDonations, setTotalDonations] = useState(0);
+  const [donors, setDonors] = useState([]);
+  const [showDonorsModal, setShowDonorsModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchCityData = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/api/v1/admin/city-volunteers");
-        if (response.data && Array.isArray(response.data)) {
-          const filteredData = response.data.filter((item) => item.city);
-          setCityData(filteredData);
+        // Fetch city volunteers
+        const cityRes = await axios.get("http://localhost:3000/api/v1/admin/city-volunteers");
+        if (cityRes.data && Array.isArray(cityRes.data)) {
+          setCityData(cityRes.data.filter((item) => item.city));
+        }
+
+        // Fetch donations
+        const donationRes = await axios.get("http://localhost:3000/api/v1/donate/fetchAdmin", { withCredentials: true });
+        if (donationRes.data && donationRes.data.data.donations) {
+          setDonors(donationRes.data.data.donations);
+          setTotalDonations(donationRes.data.data.donations.reduce((sum, d) => sum + d.amount, 0));
         }
       } catch (error) {
-        console.error("Error fetching city data:", error);
+        console.error("Error fetching data:", error);
       }
     };
 
-    fetchCityData();
+    fetchData();
   }, []);
 
   const chartData = {
@@ -74,6 +84,54 @@ const AdminDashboard = () => {
 
       {/* Dashboard Stats */}
       <DashboardStats />
+
+      {/* Total Donations Section */}
+      <div className="bg-white shadow-lg rounded-lg p-6">
+        <h2 className="text-xl font-bold mb-4 text-center">Total Donations</h2>
+        <p className="text-2xl font-semibold text-center text-green-600">₹{totalDonations}</p>
+        <button
+          onClick={() => setShowDonorsModal(true)}
+          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 w-full"
+        >
+          View Donors List
+        </button>
+      </div>
+
+      {/* Donors List Modal */}
+      {showDonorsModal && (
+        <div
+          className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center"
+          onClick={() => setShowDonorsModal(false)} // Close modal when clicking outside
+        >
+          <div
+            className="bg-white p-6 rounded-lg shadow-lg w-96 max-h-96 overflow-y-auto relative"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
+          >
+            <button
+              onClick={() => setShowDonorsModal(false)}
+              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
+            >
+              &times;
+            </button>
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Donors List</h3>
+            <ul className="space-y-4">
+              {donors.length > 0 ? (
+                donors.map((donation) => (
+                  <li key={donation._id} className="bg-gray-100 shadow-md rounded-lg p-4">
+                    <p className="font-medium">
+                      {donation.donorName} donated ₹{donation.amount}
+                    </p>
+                    <p className="text-gray-600">Message: {donation.message}</p>
+                  </li>
+                ))
+              ) : (
+                <p className="text-gray-500">No donations received yet.</p>
+              )}
+            </ul>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
