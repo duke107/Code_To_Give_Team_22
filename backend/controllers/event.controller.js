@@ -800,12 +800,16 @@ export const getAllDonations = async (req, res) => {
 
 export const searchEvents = async (req, res) => {
   try {
-    const { title, location, startDate, endDate, status, dateRange, eventType, sortBy } = req.query;
+    const { title, category, location, startDate, endDate, status, dateRange, eventType, sortBy } = req.query;
     const filter = {};
 
     // Filter by event title (case-insensitive)
     if (title) {
       filter.title = { $regex: title, $options: "i" };
+    }
+
+    if (category) {
+      filter.category = category;
     }
 
     // Filter by location (case-insensitive)
