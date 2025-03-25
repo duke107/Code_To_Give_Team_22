@@ -39,6 +39,8 @@ import OrganizerMessages from './pages/OrganiserMessages'
 import { useState } from 'react'
 import AccessibilityMenu from './components/AccessibilityMenu'
 import CityDetails from './components/CityDetails'
+import EventSummaryDetail from './components/EventSummaryDetail'
+import EventSummariesList from './components/EventSummariesList'
 
 function App() {
   const dispatch = useDispatch();
@@ -132,6 +134,8 @@ function App() {
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route element={<AdminRoute />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="admin/event-summaries" element={<EventSummariesList/>} />
+          <Route path="/admin/event-summaries/:id" element={<EventSummaryDetail />} />
         </Route>
 
         {/* Fallback */}
