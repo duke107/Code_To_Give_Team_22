@@ -3,18 +3,52 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import {User} from "../models/user.model.js";
 import Event from "../models/event.model.js"
+import { sendEmail } from "../utils/sendEmail.js";
+import {generateEventCompletionEmailTemplate, generateUserRegistrationEmailTemplate} from "../utils/emailTemplates.js"
+import { markCompletedEvents } from "../controllers/event.controller.js";
+import {io} from "../server.js"
 
 export const sendRegistrationNotification = async (event, volunteerId) => {
-    try {
-        await Notification.create({
-            userId: event.createdBy,
-            message: `Volunteeer (Id: ${volunteerId}) has registered for ${event.title}`,
-            type: "registration"
-        })
-    } catch (error) {
-        console.error("Error sending register notification", error )
+  try {
+    const volunteer = await User.findById(volunteerId);
+    if (!volunteer) {
+      console.error("Volunteer not found for ID:", volunteerId);
+      return;
     }
-}
+
+    const msg = `Volunteer ${volunteer.name} (ID: ${volunteer.id}) has registered for ${event.title}`;
+    
+    // Create a notification for the event creator
+    await Notification.create({
+      userId: event.createdBy,
+      message: msg,
+      type: "registration",
+      eventSlug: event.slug
+    });
+
+    // Fetch the event creator's email
+    const eventCreator = await User.findById(event.createdBy);
+    if (!eventCreator) {
+      console.error("Event creator not found for ID:", event.createdBy);
+      return;
+    }
+
+    // Generate the email template
+    const emailBody = generateUserRegistrationEmailTemplate(volunteer.name, event.title);
+
+    // Send the email
+    await sendEmail({
+      email: eventCreator.email,
+      subject: "New Volunteer Registration",
+      message: emailBody
+    });
+
+  } catch (error) {
+    console.error("Error sending registration notification:", error);
+  }
+};
+
+
 
 export const sendReminderNotifications = async () => {
     try {
@@ -36,14 +70,60 @@ export const sendReminderNotifications = async () => {
           await Notification.create({
             userId: user._id,
             message: `Reminder: The event "${event.title}" in your area`,
-            type: "reminder"
+            type: "reminder",
+            eventSlug: event.slug
           });
         }
       }
     } catch (error) {
       console.error("Error sending reminder notifications:", error);
     }
-  };
+};
+  
+
+export const sendEventCompletionNotifications = async () => {
+  try {
+    const completedEvents = await markCompletedEvents();
+ 
+    if (completedEvents.length === 0) return; // No new completed events, skip notifications
+
+    for (const event of completedEvents) {
+      const volunteers = await User.find({ _id: { $in: event.registeredVolunteers } }, "email name");
+
+      for (const volunteer of volunteers) {
+        const message = `The event "${event.title}" has concluded. We invite you to submit your honest feedback`;
+
+        await Notification.create({
+          userId: volunteer._id,
+          message,
+          type: "event-end",
+          eventSlug: event.slug
+        });
+
+        console.log(event._id)
+
+        io.to(volunteer._id.toString()).emit("new-notification", {
+          message,
+          type: "event-end",
+          isRead: false,
+        });
+
+        const emailContent = generateEventCompletionEmailTemplate(event.title);
+        await sendEmail({
+          email: volunteer.email,
+          subject: `Event Completed: ${event.title}`,
+          message: emailContent,
+        });
+      }
+    }
+
+    console.log(`Sent event completion notifications for ${completedEvents.length} events.`);
+  } catch (error) {
+    console.error("Error in event completion notifications:", error);
+  }
+};
+
+
 
 const sendNotification = async (req, res, next) => {
     try {
@@ -51,7 +131,7 @@ const sendNotification = async (req, res, next) => {
     if (!userId || !message || !type) {
       return next(new ApiError(400, "userId, message, and type are required"));
     }
-    const notification = await Notification.create({ userId, message, type });
+      const notification = await Notification.create({ userId, message, type });
     return res.status(201).json(new ApiResponse(201, notification, "Notification sent successfully"));
     } catch (error) {
         next(new ApiError(500, "Error sending notifications"));

@@ -251,4 +251,4 @@ export const resetPassword = (data, token) => async (dispatch) => {
         });
 };
 
-export default  authSlice.reducer;
+export default authSlice.reducer;

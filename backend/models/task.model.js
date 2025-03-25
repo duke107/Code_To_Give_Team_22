@@ -20,8 +20,20 @@ const TaskSchema = new mongoose.Schema(
       type: String, 
       enum: ['pending', 'completed'], 
       default: 'pending' 
-    }
+    },
+    // New fields for task proof
+    proofSubmitted: { 
+      type: Boolean, 
+      default: false 
+    },
+    proofMessage: { 
+      type: String 
+    },
+    proofImages: [{ 
+      type: String 
+    }],
   },
   { timestamps: true }
 );
+
 export const Task = mongoose.model('Task', TaskSchema);

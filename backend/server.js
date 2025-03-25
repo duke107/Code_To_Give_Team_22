@@ -1,10 +1,10 @@
 import cookieParser from "cookie-parser";
 import { app } from "./app.js";
 import cron from "node-cron";
-import { sendReminderNotifications } from "./controllers/notification.controller.js";
 import { Server } from "socket.io";
 import http from "http"
-
+import { sendReminderNotifications,sendEventCompletionNotifications } from "./controllers/notification.controller.js";
+import { markCompletedEvents } from "./controllers/event.controller.js"
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -16,7 +16,7 @@ const io = new Server(server, {
 })
 
 io.on("connection", (socket) => {
-    console.log("Client connected:", socket.id);
+    // console.log("Client connected:", socket.id);
   
     socket.on("join", (userId) => {
       console.log(`User ${userId} joined room`);
@@ -25,7 +25,7 @@ io.on("connection", (socket) => {
     });
   
     socket.on("disconnect", () => {
-      console.log("Client disconnected:", socket.id);
+      // console.log("Client disconnected:", socket.id);
     });
   });
 export {io}
@@ -48,7 +48,14 @@ app.use((err, req, res, next) => {
     });
 });
 
-cron.schedule("0 8 * * *", () => {
+//cron job to send reminder notifications everyday 8AM 
+cron.schedule("0 8 * * *", async () => {
     console.log("Running reminder notifications job");
-    sendReminderNotifications();
+    await sendReminderNotifications();
+});
+
+//cron job to check for completed evernts
+cron.schedule("* * * * *", async () => {  // Runs every minute
+  // console.log("Checking for completed events...");
+  await sendEventCompletionNotifications();
 });

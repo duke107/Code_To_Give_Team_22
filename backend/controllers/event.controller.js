@@ -9,6 +9,9 @@ import { sendRegistrationNotification } from './notification.controller.js';
 import {io} from "../server.js"
 import { Testimonial } from '../models/testimonial.model.js';
 import EventSummary from '../models/eventSummary.model.js';
+import { sendEmail } from '../utils/sendEmail.js';
+import {generateTaskAssignmentEmailTemplate} from '../utils/emailTemplates.js';
+import { Donation } from '../models/donation.model.js';
 
 
 // Create a new event
@@ -21,29 +24,30 @@ export const createEvent = async (req, res) => {
       eventLocation,
       eventStartDate,
       eventEndDate,
-      volunteeringPositions, // expecting an array of positions
-      user_id, // expecting user_id in the request body
+      volunteeringPositions, 
+      user_id, 
     } = req.body;
 
     // Basic validation for required fields
-    // console.log(user_id);
     if (!title || !eventLocation || !eventStartDate || !eventEndDate || !user_id) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
     // Ensure volunteeringPositions is an array and initialize each position's registeredUsers to []
     let processedVolunteeringPositions = [];
-    if (volunteeringPositions && Array.isArray(volunteeringPositions)) {
+    if (Array.isArray(volunteeringPositions)) {
       processedVolunteeringPositions = volunteeringPositions.map((position) => ({
         title: position.title,
         slots: position.slots,
-        registeredUsers: [] // initialize registeredUsers as empty array
+        registeredUsers: [],
       }));
     }
 
-    const capitalizeFirstLetter = (str) => 
+    // Capitalize first letter of title and location
+    const capitalizeFirstLetter = (str) =>
       str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
-    
+
+    // Create the event
     const event = await Event.create({
       title: capitalizeFirstLetter(title),
       content,
@@ -52,24 +56,30 @@ export const createEvent = async (req, res) => {
       eventStartDate,
       eventEndDate,
       volunteeringPositions: processedVolunteeringPositions,
-      createdBy: user_id, // storing the id of the user who created the event
+      createdBy: user_id,
     });
 
-    // After creating the event, notify users in the same area
-    // const usersInArea = await User.find({
-    //   location: eventLocation,
-    //   _id: { $ne: user_id }
-    // });
+    await event.save();
 
-    // // For each user, create a notification about the new event
-    // for (const user of usersInArea) {
-    //   const notification = await Notification.create({
-    //     userId: user._id,
-    //     message: `New event "${event.title}" is listed in your area.`,
-    //     type: "reminder"
-    //   });
-    //   io.to(user._id.toString()).emit("new-notification", notification);
-    // }
+    const usersInArea = await User.find({
+      location: eventLocation,
+      _id: { $ne: user_id },
+      role: { $ne: "Event Organiser" }, 
+    });
+
+    // Send notifications to eligible users
+    for (const user of usersInArea) {
+      await Notification.create({
+        userId: user._id,
+        message: `New event "${event.title}" is listed in your area.`,
+        type: "reminder",
+        eventSlug: event.slug,
+      });
+      io.to(user._id.toString()).emit("new-notification", {
+        message: `New event "${event.title}" is listed in your area.`,
+        eventSlug: event.slug,
+      });
+    }
 
     return res.status(201).json(event);
   } catch (error) {
@@ -79,13 +89,14 @@ export const createEvent = async (req, res) => {
 };
 
 
+
 export const getEventBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
     const event = await Event.findOne({ slug })
-      .populate('createdBy', 'name email')
-      .populate('registeredVolunteers', 'name email')
-      .populate('volunteeringPositions.registeredUsers', 'name email');
+      .populate("createdBy", "name email")
+      .populate("registeredVolunteers", "name email")
+      .populate("volunteeringPositions.registeredUsers", "name email");
 
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
@@ -101,18 +112,24 @@ export const getEventBySlug = async (req, res) => {
           position.registeredUsers.map(async (volunteer) => {
             const volunteerIdStr = volunteer._id.toString();
             const eventIdStr = eventObj._id.toString();
-            console.log('Fetching tasks for volunteer:', volunteerIdStr, 'and event:', eventIdStr);
+            console.log(
+              "Fetching tasks for volunteer:",
+              volunteerIdStr,
+              "and event:",
+              eventIdStr
+            );
             const eventObjectId = new mongoose.Types.ObjectId(eventIdStr);
             const volunteerObjectId = new mongoose.Types.ObjectId(volunteerIdStr);
 
+            // Ensure to include the proof fields by specifying them in the projection
             const tasks = await Task.find(
               {
                 event: eventObjectId,
                 assignedTo: volunteerObjectId
               },
-              "description status"
-            );
-            console.log('Found tasks:', tasks);
+              "description status proofSubmitted proofMessage proofImages"
+            ).exec();
+            console.log("Found tasks:", tasks);
             return { ...volunteer, tasks };
           })
         );
@@ -123,7 +140,10 @@ export const getEventBySlug = async (req, res) => {
     return res.status(200).json(eventObj);
   } catch (error) {
     console.error("Error fetching event:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 
@@ -266,6 +286,7 @@ export const registerVolunteer = async (req, res) => {
 export const assignTask = async (req, res) => {
   try {
     const { volunteerId, eventId, tasks } = req.body;
+    console.log("assign task hit")
 
     // Validate required fields
     if (!volunteerId || !eventId || !tasks || !Array.isArray(tasks)) {
@@ -328,14 +349,22 @@ export const assignTask = async (req, res) => {
       await Notification.create({
         userId: volunteerId,
         message: notifMsg,
-        type: "task-assigned"
+        type: "task-assigned",
+        eventSlug: event.slug
       });
+      console.log(event.slug);
+
       //emit notification from socketio 
       io.to(volunteerId.toString()).emit("new-notification", {
         message: notifMsg,
         type: "task-assigned",
         isRead: false
       });
+
+      const subject = "New Task Assignment";
+      const email = user.email;
+      const message = generateTaskAssignmentEmailTemplate(event.title, validTasks);
+      await sendEmail({ email, subject, message });
     }
 
     return res.status(200).json({
@@ -602,3 +631,145 @@ export const getEventsUser = async (req, res) => {
     });
   }
 };
+
+export const submitTaskProof = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { message, proofImages } = req.body;
+
+    // Update the task with the submitted proof data
+    const updatedTask = await Task.findByIdAndUpdate(
+      taskId,
+      {
+        proofMessage: message,
+        proofImages,
+        proofSubmitted: true,
+      },
+      { new: true }
+    );
+
+    if (!updatedTask) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Task proof submitted successfully. Waiting for approval.",
+      data: updatedTask,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+export const approveTaskProof = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+
+    // Find the task by ID
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // Approve the proof: mark task as completed
+    task.status = 'completed';
+    // Optionally, you could leave the proof fields intact or clear them
+    // For example: task.proofSubmitted = true; (it should already be true)
+    await task.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Proof approved. Task marked as completed.",
+      data: task,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const rejectTaskProof = async (req, res) => {
+  try {
+    console.log("here");
+    
+    const { taskId } = req.params;
+
+    // Find the task by ID
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // Reject the proof: reset proofSubmitted to false,
+    // clear the proofImages and proofMessage,
+    // and keep the task status as 'pending'
+    task.proofSubmitted = false;
+    task.proofImages = [];
+    task.proofMessage = "";
+    task.status = 'pending'; // Ensuring the task remains pending
+    await task.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Proof rejected. Task remains pending. Proof has been cleared.",
+      data: task,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const markCompletedEvents = async () => {
+  try {
+    const now = new Date();
+
+    const eventsToMark = await Event.find({
+      eventEndDate: { $lt: now },
+      isCompleted: false,
+    });
+
+    if (eventsToMark.length === 0) return []; // No events to update
+
+    const updatedEvents = await Event.updateMany(
+      { _id: { $in: eventsToMark.map(e => e._id) } },
+      { $set: { isCompleted: true } }
+    );
+
+    console.log(`Marked ${updatedEvents.modifiedCount} events as completed.`);
+    return eventsToMark; // Return the newly completed events
+
+  } catch (error) {
+    console.error("Error marking completed events:", error);
+    return [];
+  }
+};
+
+export const getAllDonations = async (req, res) => {
+  try {
+    const donations = await Donation.find();
+    res.status(200).json({
+      success: true,
+      data: donations
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+

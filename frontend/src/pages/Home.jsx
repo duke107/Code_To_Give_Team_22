@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Slider from 'react-slick'; // Import react-slick
+import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
+import ContactForm from '../components/ContactForm';
 
 import AccessibilityMenu from "../components/AccessibilityMenu";
 import TranslateButton from '../TranslateButton';
@@ -118,6 +119,9 @@ function Home() {
         ) : (
           <p className="text-center text-gray-500">No testimonials available yet.</p>
         )}
+      </div>
+      <div>
+        <ContactForm/>
       </div>
        {/* Accessibility Menu */}
        <AccessibilityMenu />
