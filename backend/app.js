@@ -14,6 +14,7 @@ import donationRouter from "./routes/donation.route.js"
 import volunteerRouter from "./routes/volunteer.route.js";
 import organizerRouter from "./routes/organizer.route.js";
 import adminRouter from "./routes/admin.route.js";
+import contactRouter from "./routes/contact.route.js"
 import analyzeRouter from "./routes/analyze.route.js";
 
 export const app = express();
@@ -40,6 +41,7 @@ app.use("/api/v1/donate", donationRouter)
 app.use("/api/v1/volunteer", volunteerRouter);
 app.use("/api/v1/organizer", organizerRouter); 
 app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/contact", contactRouter);
 app.use("/api/v1/analyze", analyzeRouter);
 connectDB()
 

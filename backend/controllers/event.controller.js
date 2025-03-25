@@ -24,29 +24,30 @@ export const createEvent = async (req, res) => {
       eventLocation,
       eventStartDate,
       eventEndDate,
-      volunteeringPositions, // expecting an array of positions
-      user_id, // expecting user_id in the request body
+      volunteeringPositions, 
+      user_id, 
     } = req.body;
 
     // Basic validation for required fields
-    // console.log(user_id);
     if (!title || !eventLocation || !eventStartDate || !eventEndDate || !user_id) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
     // Ensure volunteeringPositions is an array and initialize each position's registeredUsers to []
     let processedVolunteeringPositions = [];
-    if (volunteeringPositions && Array.isArray(volunteeringPositions)) {
+    if (Array.isArray(volunteeringPositions)) {
       processedVolunteeringPositions = volunteeringPositions.map((position) => ({
         title: position.title,
         slots: position.slots,
-        registeredUsers: [] // initialize registeredUsers as empty array
+        registeredUsers: [],
       }));
     }
 
-    const capitalizeFirstLetter = (str) => 
+    // Capitalize first letter of title and location
+    const capitalizeFirstLetter = (str) =>
       str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
-    
+
+    // Create the event
     const event = await Event.create({
       title: capitalizeFirstLetter(title),
       content,
@@ -55,24 +56,30 @@ export const createEvent = async (req, res) => {
       eventStartDate,
       eventEndDate,
       volunteeringPositions: processedVolunteeringPositions,
-      createdBy: user_id, // storing the id of the user who created the event
+      createdBy: user_id,
     });
 
-    // After creating the event, notify users in the same area
-    // const usersInArea = await User.find({
-    //   location: eventLocation,
-    //   _id: { $ne: user_id }
-    // });
+    await event.save();
 
-    // // For each user, create a notification about the new event
-    // for (const user of usersInArea) {
-    //   const notification = await Notification.create({
-    //     userId: user._id,
-    //     message: `New event "${event.title}" is listed in your area.`,
-    //     type: "reminder"
-    //   });
-    //   io.to(user._id.toString()).emit("new-notification", notification);
-    // }
+    const usersInArea = await User.find({
+      location: eventLocation,
+      _id: { $ne: user_id },
+      role: { $ne: "Event Organiser" }, 
+    });
+
+    // Send notifications to eligible users
+    for (const user of usersInArea) {
+      await Notification.create({
+        userId: user._id,
+        message: `New event "${event.title}" is listed in your area.`,
+        type: "reminder",
+        eventSlug: event.slug,
+      });
+      io.to(user._id.toString()).emit("new-notification", {
+        message: `New event "${event.title}" is listed in your area.`,
+        eventSlug: event.slug,
+      });
+    }
 
     return res.status(201).json(event);
   } catch (error) {
@@ -80,6 +87,9 @@ export const createEvent = async (req, res) => {
     return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
+
 export const getEventBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
