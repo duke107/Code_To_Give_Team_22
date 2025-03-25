@@ -26,19 +26,26 @@ const PendingApprovals = () => {
 
   const onReject = async (eventId) => {
     try {
-      const response = await axios.post(
+      console.log("Rejecting event with ID:", eventId); // Debugging
+  
+      const response = await axios.delete(
         `http://localhost:3000/api/v1/admin/reject/${eventId}`,
-        {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
+  
+      // console.log(response.data);
       toast.error(response.data.message);
+  
+      // Remove event from pending list
       setPendingEvents((prevEvents) =>
         prevEvents.filter((event) => event._id !== eventId)
       );
     } catch (error) {
-      console.error("Error rejecting event", error);
+      console.error("Error rejecting event:", error);
     }
   };
+  
+  
 
   useEffect(() => {
     const fetchPendingEvents = async () => {

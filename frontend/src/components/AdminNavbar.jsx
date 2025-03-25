@@ -28,7 +28,7 @@ const AdminNavbar = () => {
           to="/admin/past-events"
           className="px-6 py-3 bg-blue-500 rounded-lg hover:bg-blue-700 transition font-semibold text-white shadow-md whitespace-nowrap"
         >
-          Approved Events
+          Past Events
         </Link>
         {/* New: Event Summaries Link */}
         <Link
