@@ -1,50 +1,112 @@
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { adminLogout } from "../redux/slices/adminSlice";
+import { FaBars, FaTimes } from "react-icons/fa";
 
 const AdminNavbar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = () => {
     dispatch(adminLogout());
     navigate("/");
   };
 
+  const navItems = [
+    { path: "/admin/pending-approvals", label: "Pending Approvals" },
+    { path: "/admin/past-events", label: "Approved Events" },
+    { path: "/admin/event-summaries", label: "Event Summaries" },
+    { path: "/admin/messages", label: "Messages" },
+  ];
+
   return (
-    <nav className="bg-blue-600 text-white p-4 flex justify-between items-center w-full">
-      <Link to="/admin/dashboard" className="text-xl font-bold ">
-        Admin Dashboard
-      </Link>
-      <div className="flex space-x-4">
-        <Link
-          to="/admin/pending-approvals"
-          className="px-6 py-3 bg-blue-500 rounded-lg hover:bg-blue-700 transition font-semibold text-white shadow-md whitespace-nowrap"
-        >
-          Pending Approvals
+    <>
+      {/* Desktop Navbar */}
+      <nav className="bg-blue-700 text-white px-6 py-4 flex justify-between items-center shadow-md">
+        {/* Dashboard Link */}
+        <Link to="/admin/dashboard" className="text-xl font-bold whitespace-nowrap">
+          Admin Dashboard
         </Link>
-        <Link
-          to="/admin/past-events"
-          className="px-6 py-3 bg-blue-500 rounded-lg hover:bg-blue-700 transition font-semibold text-white shadow-md whitespace-nowrap"
+
+        {/* Navigation Links - Hidden on Mobile */}
+        <div className="hidden md:flex gap-4">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`px-4 py-2 text-sm rounded-md font-medium transition-all ${
+                location.pathname === item.path
+                  ? "bg-blue-900 shadow-md"
+                  : "bg-blue-600 hover:bg-blue-800"
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+
+        {/* Logout Button - Hidden on Mobile */}
+        <button
+          onClick={handleLogout}
+          className="hidden md:block bg-red-500 px-4 py-2 text-sm rounded-md hover:bg-red-600 transition shadow-md font-medium"
         >
-          Past Events
-        </Link>
-        {/* New: Event Summaries Link */}
-        <Link
-          to="/admin/event-summaries"
-          className="px-6 py-3 bg-blue-500 rounded-lg hover:bg-blue-700 transition font-semibold text-white shadow-md whitespace-nowrap"
+          Logout
+        </button>
+
+        {/* Mobile Menu Button */}
+        <button className="md:hidden text-2xl" onClick={() => setMenuOpen(true)}>
+          <FaBars />
+        </button>
+      </nav>
+
+      {/* Mobile Menu Modal */}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setMenuOpen(false)}
         >
-          Event Summaries
-        </Link>
-      </div>
-      <button
-        onClick={handleLogout}
-        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition text-sm shadow-md"
-      >
-        Logout
-      </button>
-    </nav>
+          <div
+            className="bg-white w-64 p-6 rounded-lg shadow-lg relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-2xl"
+              onClick={() => setMenuOpen(false)}
+            >
+              <FaTimes />
+            </button>
+
+            {/* Mobile Navigation Links */}
+            <nav className="flex flex-col space-y-4 text-gray-700 font-medium">
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="hover:text-black transition duration-200"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+
+              {/* Logout Button */}
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setMenuOpen(false);
+                }}
+                className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow hover:bg-red-600 transition duration-200"
+              >
+                Logout
+              </button>
+            </nav>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

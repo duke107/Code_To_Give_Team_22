@@ -490,29 +490,31 @@ function EventOrganiser() {
     return <p className="text-center text-gray-500">No event data available.</p>;
 
   return (
-    <div className="max-w-3xl mx-auto bg-white rounded-2xl mt-5 shadow-lg p-8 relative border border-gray-200">
-      <h1 className="text-3xl font-bold text-gray-900 mb-5">{event.title}</h1>
-      {event.image && (
-        <img src={event.image} alt={event.title} className="w-full h-64 object-cover rounded-xl mb-5 shadow" />
-      )}
-      <div className="text-gray-700 mb-5 leading-relaxed" dangerouslySetInnerHTML={{ __html: event.content }} />
-      <div className="bg-gray-100 p-5 rounded-xl mb-5 shadow-sm">
-        <p className="text-lg font-semibold">📍 Location: {event.eventLocation}</p>
-        <p className="text-gray-600">📅 Start: {new Date(event.eventStartDate).toLocaleDateString()}</p>
-        <p className="text-gray-600">📅 End: {new Date(event.eventEndDate).toLocaleDateString()}</p>
-      </div>
-      {/* Top Buttons */}
-      <div className="absolute top-6 right-6 flex space-x-2">
-        <button onClick={toggleFeedback} className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition duration-200 shadow-md">
-          {feedbackVisible ? "Hide Feedback" : "View Feedback"}
-        </button>
-        <button onClick={toggleVisualDisplay} className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition duration-200 shadow-md">
-          View Visual Summary
-        </button>
-        <button onClick={handleGenerateFeedbackSummary} className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition duration-200 shadow-md">
-          {summaryLoading ? "Generating..." : "Generate Feedback Summary"}
-        </button>
-      </div>
+    <div className="max-w-3xl mx-auto bg-white rounded-2xl mt-5 shadow-lg p-8 pt-16 relative border border-gray-200">
+
+    <h1 className="text-3xl font-bold text-gray-900 mb-5">{event.title}</h1>
+    {event.image && (
+<img src={event.image} alt={event.title} className="w-full h-64 object-contain rounded-xl mb-5 shadow" />
+)}
+
+    <div className="text-gray-700 mb-5 leading-relaxed" dangerouslySetInnerHTML={{ __html: event.content }} />
+    <div className="bg-gray-100 p-5 rounded-xl mb-5 shadow-sm">
+      <p className="text-lg font-semibold">📍 Location: {event.eventLocation}</p>
+      <p className="text-gray-600">📅 Start: {new Date(event.eventStartDate).toLocaleDateString()}</p>
+      <p className="text-gray-600">📅 End: {new Date(event.eventEndDate).toLocaleDateString()}</p>
+    </div>
+    {/* Top Buttons */}
+    <div className="absolute top-6 right-6 flex space-x-2">
+      <button onClick={toggleFeedback} className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition duration-200 shadow-md">
+        {feedbackVisible ? "Hide Feedback" : "View Feedback"}
+      </button>
+      <button onClick={toggleVisualDisplay} className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition duration-200 shadow-md">
+        View Visual Summary
+      </button>
+      <button onClick={handleGenerateFeedbackSummary} className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition duration-200 shadow-md">
+        {summaryLoading ? "Generating..." : "Generate Feedback Summary"}
+      </button>
+    </div>
       {/* Generated Feedback Summary Modal */}
       {showGeneratedSummaryModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">

@@ -6,7 +6,6 @@ import {
   Card,
   Label,
   Spinner,
-  ButtonGroup,
 } from "flowbite-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -29,8 +28,6 @@ import {
   HiMicrophone,
   HiStop,
   HiUpload,
-  HiLocationMarker,
-  HiCalendar,
 } from "react-icons/hi";
 import { useSelector } from "react-redux";
 import LocationPicker from "../components/LocationPicker";
@@ -60,7 +57,7 @@ const eventCategories = [
   "Health & Well-being",
   "Women Empowerment",
   "Environmental Sustainability",
-  "Social Inclusion & Awareness"
+  "Social Inclusion & Awareness",
 ];
 
 export default function CreateEvent() {
@@ -77,8 +74,10 @@ export default function CreateEvent() {
   const [eventEndDate, setEventEndDate] = useState(null);
   const [eventCategory, setEventCategory] = useState("");
 
-  // Volunteering positions
-  const [volPositions, setVolPositions] = useState([{ title: "", slots: "" }]);
+  // Volunteering positions (now includes whatsappGroupLink)
+  const [volPositions, setVolPositions] = useState([
+    { title: "", slots: "", whatsappGroupLink: "" },
+  ]);
 
   const navigate = useNavigate();
   const [isRecording, setIsRecording] = useState(false);
@@ -90,13 +89,8 @@ export default function CreateEvent() {
   const [language, setLanguage] = useState("en-US");
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const { loading, error, message, user, isAuthenticated } = useSelector(
-    (state) => state.auth
-  );
+  const { user } = useSelector((state) => state.auth);
 
-  // console.log('====================================');
-  // console.log(user);
-  // console.log('====================================');
   // Image upload handler
   const handleUploadImage = async () => {
     try {
@@ -109,6 +103,7 @@ export default function CreateEvent() {
       const fileName = new Date().getTime() + "-" + file.name;
       const storageRef = ref(storage, fileName);
       const uploadTask = uploadBytesResumable(storageRef, file);
+
       uploadTask.on(
         "state_changed",
         (snapshot) => {
@@ -143,25 +138,26 @@ export default function CreateEvent() {
   };
 
   const addVolPosition = () => {
-    setVolPositions([...volPositions, { title: "", slots: "" }]);
+    setVolPositions([
+      ...volPositions,
+      { title: "", slots: "", whatsappGroupLink: "" },
+    ]);
   };
 
   const removeVolPosition = (index) => {
+    if (volPositions.length === 1) return; // At least one position must remain
     const updatedPositions = volPositions.filter((_, i) => i !== index);
     setVolPositions(updatedPositions);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // console.log(...formData);
-    // console.log(formData);
     if (!eventLocation || !eventStartDate || !eventEndDate) {
       setPublishError(
         "Please provide event location, start date, and end date."
       );
       return;
     }
-
     if (isRecording) stopRecording();
 
     setIsSubmitting(true);
@@ -175,6 +171,7 @@ export default function CreateEvent() {
         body: JSON.stringify({
           ...formData,
           user_id: user._id,
+          category: eventCategory,
           eventLocation,
           eventStartDate,
           eventEndDate,
@@ -183,11 +180,6 @@ export default function CreateEvent() {
       });
 
       if (res.ok) {
-        const slug = formData.title
-          .split(" ")
-          .join("-")
-          .toLowerCase()
-          .replace(/[^a-zA-Z0-9-]/g, "");
         navigate("/");
       } else {
         console.log("Error:", res.status, res.statusText);
@@ -230,7 +222,7 @@ export default function CreateEvent() {
     } else {
       alert("Web Speech API is not supported in this browser.");
     }
-  }, []);
+  }, [language]);
 
   const startRecording = (lang) => {
     if (recognitionRef.current) {
@@ -238,7 +230,6 @@ export default function CreateEvent() {
       recognitionRef.current.lang = lang;
       recognitionRef.current.start();
       setIsRecording(true);
-      console.log("started recording");
     }
   };
 
@@ -257,10 +248,7 @@ export default function CreateEvent() {
     if (isRecording) {
       stopRecording(e);
     } else {
-      console.log("triggered recording");
-      //TODO: will do the language dropdown later on
       setShowDropdown(!showDropdown);
-      // startRecording(language)
     }
   };
 
@@ -325,26 +313,32 @@ export default function CreateEvent() {
             {/* Event Category Field */}
             <div>
               <div className="mb-2 block">
-                <Label htmlFor="category" value="Event Category" className="text-lg font-medium" />
+                <Label
+                  htmlFor="category"
+                  value="Event Category"
+                  className="text-lg font-medium"
+                />
               </div>
-                <select
-                  id="category"
-                  value={eventCategory}
-                  onChange = {(e) => {
-                    setFormData({ ...formData, category: e.target.value });
-                    setEventCategory(e.target.value);
-                  }}
-                  className="w-full p-3 border rounded text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  <option value="" disabled>Select a category</option>
-                  {eventCategories.map((category, index) => (
-                    <option key={index} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <select
+                id="category"
+                value={eventCategory}
+                onChange={(e) => {
+                  setFormData({ ...formData, category: e.target.value });
+                  setEventCategory(e.target.value);
+                }}
+                className="w-full p-3 border rounded text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="" disabled>
+                  Select a category
+                </option>
+                {eventCategories.map((category, index) => (
+                  <option key={index} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             {/* Event Location Field */}
             <div>
@@ -370,9 +364,7 @@ export default function CreateEvent() {
                 />
               </div>
               <div>
-                <label className="block mb-2 font-medium text-lg">
-                  End Date
-                </label>
+                <label className="block mb-2 font-medium text-lg">End Date</label>
                 <DatePicker
                   selected={eventEndDate}
                   onChange={(date) => setEventEndDate(date)}
@@ -411,7 +403,8 @@ export default function CreateEvent() {
                       size="md"
                       onClick={handleUploadImage}
                       disabled={imageUploadProgress}
-                      className="font-normal bg-blue-400">
+                      className="font-normal bg-blue-400"
+                    >
                       {imageUploadProgress ? (
                         <div className="w-16 h-16">
                           <CircularProgressbar
@@ -455,28 +448,29 @@ export default function CreateEvent() {
               <div className="border border-gray-700 rounded-lg overflow-hidden">
                 <ReactQuill
                   id="content"
-                  onChange={(value) =>
-                    setFormData({ ...formData, content: value })
-                  }
+                  onChange={(value) => setFormData({ ...formData, content: value })}
                   theme="snow"
                   placeholder="Express yourself..."
-                  className="h-[320px] h- overflow-hidden mb-0 bg-white"
+                  className="h-[320px] overflow-hidden mb-0 bg-white"
                   ref={quillRef}
                   modules={modules}
                 />
               </div>
+              {/* Speech recording button */}
               <div className="absolute bottom-2 right-2 z-10 rounded-xl">
                 <div className="relative">
                   {showDropdown && !isRecording && (
                     <div
                       className="sticky right-0 bottom-full mb-2 w-auto p-0 z-50 bg-white border border-gray-200 rounded shadow-lg"
-                      onClick={(e) => e.stopPropagation()}>
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <ul className="divide-y divide-gray-200 max-h-32 w-40 overflow-y-auto">
                         {indianLanguages.map((lang) => (
                           <li key={lang.code}>
                             <button
                               onClick={() => handleLanguageSelect(lang.code)}
-                              className="block w-full px-4 py-2 text-left hover:bg-blue-100 text-blue-700 text-sm">
+                              className="block w-full px-4 py-2 text-left hover:bg-blue-100 text-blue-700 text-sm"
+                            >
                               {lang.label}
                             </button>
                           </li>
@@ -490,15 +484,11 @@ export default function CreateEvent() {
                     ref={toggleButtonRef}
                     color={isRecording ? "failure" : "info"}
                     className="relative bg-red-600 px-0 py-0 rounded-3xl text-white font-medium w-15 h-15 "
-                    >
+                  >
                     {isRecording ? (
-                      <>
-                        <HiStop className="mr-0 h-4 w-4" />
-                      </>
+                      <HiStop className="mr-0 h-4 w-4" />
                     ) : (
-                      <>
-                        <HiMicrophone className="mr-0 h-4 w-4" />
-                      </>
+                      <HiMicrophone className="mr-0 h-4 w-4" />
                     )}
                   </Button>
                 </div>
@@ -517,7 +507,8 @@ export default function CreateEvent() {
                   color="success"
                   pill
                   size="md"
-                  className="font-medium bg-blue-600">
+                  className="font-medium bg-blue-600"
+                >
                   <HiPlus className="mr-2 h-5 w-5" />
                   Add Position
                 </Button>
@@ -566,14 +557,36 @@ export default function CreateEvent() {
                         />
                       </div>
                     </div>
-                    <div className="flex justify-end mt-0">
+
+                    {/* WhatsApp Group Link Field */}
+                    <div className="mt-2">
+                      <div className="mb-1">
+                        <Label
+                          htmlFor={`position-whatsapp-${index}`}
+                          value="WhatsApp Group Link"
+                        />
+                      </div>
+                      <TextInput
+                        id={`position-whatsapp-${index}`}
+                        type="url"
+                        placeholder="Enter WhatsApp group link"
+                        value={position.whatsappGroupLink}
+                        onChange={(e) =>
+                          handlePositionChange(index, "whatsappGroupLink", e.target.value)
+                        }
+                        className="py-1"
+                      />
+                    </div>
+
+                    <div className="flex justify-end mt-2">
                       <Button
                         type="button"
                         onClick={() => removeVolPosition(index)}
                         color="failure"
                         size="sm"
                         disabled={volPositions.length === 1}
-                        className="font-small bg-red-500 py-2 px-2">
+                        className="font-small bg-red-500 py-2 px-2"
+                      >
                         <HiTrash className="mr-1 h-5 w-5" />
                         Remove
                       </Button>
@@ -589,7 +602,7 @@ export default function CreateEvent() {
               color="success"
               className="w-full py-3 text-xl font-medium bg-green-600"
               disabled={isSubmitting}
-              >
+            >
               {isSubmitting ? (
                 <>
                   <Spinner size="sm" className="mr-3" />

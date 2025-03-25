@@ -95,12 +95,14 @@ function Dashboard() {
   const [totalVolunteers, setTotalVolunteers] = useState(0);
   const [totalDonations, setTotalDonations] = useState(0);
   const [treesPlanted, setTreesPlanted] = useState(0);
+  const [showDonationsModal, setShowDonationsModal] = useState(false);
 
   // Chart data
   const [eventNames, setEventNames] = useState([]);
   const [volunteersPerEvent, setVolunteersPerEvent] = useState([]);
   const [donationCategories, setDonationCategories] = useState([]);
   const [donationAmounts, setDonationAmounts] = useState([]);
+  const [eventDonations, setEventDonations] = useState([]);
 
   // Summary Form Modal
   const [showSummaryForm, setShowSummaryForm] = useState(false);
@@ -133,6 +135,7 @@ function Dashboard() {
   // Instead of a global summaryLoading, track which event is currently loading
   const [loadingEventId, setLoadingEventId] = useState(null);
   const [summaryError, setSummaryError] = useState(null);
+  const [donors, setDonors] = useState([]);
 
   // Placeholder for "Submit Feedback"
   const handleOpenFeedbackForm = (eventId) => {
@@ -304,7 +307,7 @@ function Dashboard() {
 
   useEffect(() => {
     if (!user?._id) return;
-
+  
     const fetchMyEvents = async () => {
       try {
         // Fetch events created by current user
@@ -319,12 +322,12 @@ function Dashboard() {
         const data = await res.json();
         setEvents(data);
         setTotalEvents(data.length);
-
+  
         // Compute total volunteers & bar chart data
         let overallVolunteers = 0;
         const names = [];
         const volunteersCountArray = [];
-
+  
         data.forEach((evt) => {
           let eventVolunteers = 0;
           if (evt.volunteeringPositions) {
@@ -338,13 +341,13 @@ function Dashboard() {
           names.push(evt.title);
           volunteersCountArray.push(eventVolunteers);
         });
-
+  
         setTotalVolunteers(overallVolunteers);
         setEventNames(names);
         setVolunteersPerEvent(volunteersCountArray);
-
+  
         // Fetch all donations
-        const donationRes = await fetch('http://localhost:3000/api/v1/events/getAllDonations', {
+        const donationRes = await fetch('http://localhost:3000/api/v1/donate/fetch', {
           method: 'GET',
           credentials: 'include',
         });
@@ -353,12 +356,12 @@ function Dashboard() {
         }
         const donationData = await donationRes.json();
         setDonations(donationData);
-
+  
         // Compute overall donation amount and trees planted.
-        let donationSum = donationData.data.reduce((acc, donation) => acc + donation.amount, 0);
+        let donationSum = donationData.data.donations.reduce((acc, donation) => acc + donation.amount, 0);
         setTotalDonations(donationSum);
         setTreesPlanted(donationSum * 0.25);
-
+  
         // Group donations by amount
         const donationGroups = {
           'Below ₹1000': 0,
@@ -366,8 +369,11 @@ function Dashboard() {
           '₹5000-₹10000': 0,
           'Above ₹10000': 0,
         };
-
-        donationData.data.forEach((donation) => {
+  
+        // Track event-wise donations
+        // const eventWiseDonations = {};
+  
+        donationData.data.donations.forEach((donation) => {
           const amt = donation.amount;
           if (amt < 1000) {
             donationGroups['Below ₹1000'] += amt;
@@ -378,19 +384,30 @@ function Dashboard() {
           } else {
             donationGroups['Above ₹10000'] += amt;
           }
+  
+          // // Event-wise donation accumulation
+          // if (donation.eventId) {
+          //   if (!eventWiseDonations[donation.eventId]) {
+          //     eventWiseDonations[donation.eventId] = 0;
+          //   }
+          //   eventWiseDonations[donation.eventId] += amt;
+          // }
         });
-
+  
         setDonationCategories(Object.keys(donationGroups));
         setDonationAmounts(Object.values(donationGroups));
+        // setEventDonations(eventWiseDonations); // Store event-wise donations
+  
       } catch (err) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchMyEvents();
   }, [user]);
+  
 
   if (loading) {
     return <p className="p-6 text-center text-gray-600">Loading dashboard data...</p>;
@@ -458,6 +475,25 @@ function Dashboard() {
     },
   };
 
+  const fetchDonors = async () => {
+    console.log("hit 1")
+    try {
+      const response = await fetch('http://localhost:3000/api/v1/donate/donors', {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      const data = await response.json();
+      // data.data.donations should be an array of donation objects
+      setDonors(data.data.donations);
+      console.log(donors)
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <h2 className="text-3xl font-bold mb-6 text-gray-800">Organiser Dashboard</h2>
@@ -481,11 +517,9 @@ function Dashboard() {
         </div>
 
         {/* Donations Received */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-sm font-medium text-gray-500 uppercase">Donations Received</h3>
-          <p className="mt-2 text-3xl font-semibold text-gray-800">
-            ₹{totalDonations}
-          </p>
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h3 className="text-sm font-medium text-gray-500 uppercase">Donations Received</h3>
+        <p className="mt-2 text-3xl font-semibold text-gray-800">₹{totalDonations}</p>
         </div>
 
         {/* Trees Planted */}
@@ -510,38 +544,61 @@ function Dashboard() {
         </div>
 
         {/* Pie Chart (Donation Distribution by Denomination) */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">
-            Donation Distribution by Denomination
-          </h3>
-          <div className="h-64">
-            <Pie data={pieData} options={pieOptions} />
-          </div>
+        {/* Open Modal Button */}
+
+      {/* Pie Chart (Donation Distribution by Denomination) */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h3 className="text-lg font-semibold text-gray-700 mb-4">
+          Donation Distribution by Denomination
+        </h3>
+        <div className="h-64">
+          <Pie data={pieData} options={pieOptions} />
         </div>
       </div>
 
       {/* Donations List */}
-      <div className="mt-8">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Donations Received</h3>
-        {donations.length > 0 ? (
-          <ul className="space-y-4">
-            {donations.map((donation) => (
-              <li key={donation._id} className="bg-white shadow-md rounded-lg p-4">
-                <p className="font-medium">
-                  {donation.donorName} donated ₹{donation.amount}
-                </p>
-                <p className="text-gray-600">Email: {donation.email}</p>
-                <p className="text-gray-600">Message: {donation.message}</p>
-                <p className="text-gray-500 text-sm">
-                  Status: {donation.status}
-                </p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-500">No donations received yet.</p>
-        )}
+        <button
+          onClick={() => {
+            fetchDonors();
+            setShowDonationsModal(true);
+          }}
+          className="mt-3 text-blue-500 underline hover:text-blue-700"
+        >
+          View Donors list
+        </button>
       </div>
+      <div className="mt-8 bg-white rounded-lg shadow-md p-6">
+      {donors.length > 0 ? (
+      <div>
+      {showDonationsModal && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96 max-h-96 overflow-y-auto relative">
+            <button
+              onClick={() => setShowDonationsModal(false)}
+              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
+            >
+              &times;
+            </button>
+            <ul className="space-y-4">
+              {donors.map((donation) => (
+                <li key={donation._id} className="bg-gray-100 shadow-md rounded-lg p-4">
+                  <p className="font-medium">
+                    {donation.donorName} donated ₹{donation.amount}
+                  </p>
+                  <p className="text-gray-600">Message: {donation.message}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+    </div>
+  ) : (
+    <p className="text-gray-500">No donations received yet.</p>
+  )
+  }
+</div>
+
 
       {/* Past Events Section */}
       <div className="mt-8">

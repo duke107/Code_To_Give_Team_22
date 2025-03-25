@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import LocationPicker from './LocationPicker'
+import LocationPicker from './LocationPicker';
 
 function EventsUser() {
   const navigate = useNavigate();
@@ -15,7 +15,11 @@ function EventsUser() {
     location: '',
     startDate: '',
     endDate: '',
+    status: '',
+    dateRange: '',
+    sortBy: '',
   });
+
   const eventCategories = [
     "Education & Skill Development",
     "Sports & Cultural Events",
@@ -24,12 +28,20 @@ function EventsUser() {
     "Environmental Sustainability",
     "Social Inclusion & Awareness"
   ];
+
   const { user } = useSelector(state => state.auth);
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split("T")[0];
 
-  // Default fetch: local events or all events based on showAll flag,
+  // 1. As soon as we have user info, default the search location to user.location
+  useEffect(() => {
+    if (user?.location) {
+      setSearchParams(prev => ({ ...prev, location: user.location }));
+    }
+  }, [user]);
+
+  // 2. Default fetch: local events or all events based on showAll flag,
   // only if we're not in search mode
   useEffect(() => {
     const fetchEvents = async () => {
@@ -37,7 +49,7 @@ function EventsUser() {
         const url = showAll
           ? `http://localhost:3000/api/v1/events/getEvents`
           : `http://localhost:3000/api/v1/events/getEvents?location=${user.location}`;
-          
+
         const res = await fetch(url, {
           method: "GET",
           headers: {
@@ -45,7 +57,7 @@ function EventsUser() {
           },
           credentials: "include",
         });
-  
+
         if (res.ok) {
           const data = await res.json();
           setEvents(data);
@@ -62,12 +74,12 @@ function EventsUser() {
     }
   }, [user, showAll, searchMode]);
 
-  // Function to handle searching events using the modal fields
+  // 3. Handle searching events
   const handleSearchSubmit = async (e) => {
     e.preventDefault();
     try {
       let queryParams = [];
-  
+
       if (searchParams.title) {
         queryParams.push(`title=${encodeURIComponent(searchParams.title)}`);
       }
@@ -92,16 +104,16 @@ function EventsUser() {
       if (searchParams.sortBy) {
         queryParams.push(`sortBy=${encodeURIComponent(searchParams.sortBy)}`);
       }
-  
+
       const queryString = queryParams.length ? `?${queryParams.join('&')}` : '';
       const url = `http://localhost:3000/api/v1/events/search${queryString}`;
-  
+
       const res = await fetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
-  
+
       if (res.ok) {
         const data = await res.json();
         setEvents(data);
@@ -115,7 +127,6 @@ function EventsUser() {
       setShowSearchModal(false);
     }
   };
-  
 
   const handleViewEvent = (slug) => {
     navigate(`/event/${slug}`);
@@ -126,9 +137,13 @@ function EventsUser() {
     setSearchMode(false);
     setSearchParams({
       title: '',
-      location: '',
+      category: '',
+      location: user?.location || '', // reset to user's location
       startDate: '',
       endDate: '',
+      status: '',
+      dateRange: '',
+      sortBy: '',
     });
   };
 
@@ -188,6 +203,7 @@ function EventsUser() {
                 />
               </div>
 
+              {/* Category Filter */}
               <div>
                 <label htmlFor="category" className="block text-sm font-medium text-gray-700">
                   Event Category
@@ -195,13 +211,10 @@ function EventsUser() {
                 <select
                   id="category"
                   value={searchParams.category}
-                  onChange = {(e) => {
-                    setSearchParams({...searchParams, category: e.target.value});
-                  }}
+                  onChange={(e) => setSearchParams({...searchParams, category: e.target.value})}
                   className="w-full p-3 border rounded text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
                 >
-                  <option value="" disabled>Select a category</option>
+                  <option value="">All Categories</option>
                   {eventCategories.map((category, index) => (
                     <option key={index} value={category}>
                       {category}
@@ -211,13 +224,15 @@ function EventsUser() {
               </div>
 
               {/* Location Filter */}
-              <div className="mb-2">
-  <label htmlFor="location" className="block text-sm font-medium text-gray-700">
-    Location
-  </label>
-  <LocationPicker eventLocation={searchParams.location} setEventLocation={(value) => setSearchParams({ ...searchParams, location: value })} />
-</div>
-
+              <div>
+                <label htmlFor="location" className="block text-sm font-medium text-gray-700">
+                  Location
+                </label>
+                <LocationPicker
+                  eventLocation={searchParams.location}
+                  setEventLocation={(value) => setSearchParams({ ...searchParams, location: value })}
+                />
+              </div>
 
               {/* Status Filter */}
               <div>
@@ -318,7 +333,6 @@ function EventsUser() {
         </div>
       )}
 
-
       {/* Events Grid */}
       {events.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -337,26 +351,50 @@ function EventsUser() {
                 </div>
               ) : (
                 <div className="h-32 bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-12 w-12"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
                   </svg>
                 </div>
               )}
               <div className="p-6 flex-grow">
-                <h2 className="text-xl font-bold text-gray-900 mb-3">{event.title}</h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-3">
+                  {event.title}
+                </h2>
                 <div className="text-gray-600 mb-4 line-clamp-3">
-                  <div dangerouslySetInnerHTML={{ __html: event.content }} />
+                  <div
+                    dangerouslySetInnerHTML={{ __html: event.content }}
+                  />
                 </div>
               </div>
-              
+
               <div className="px-6 pb-6 pt-2">
                 <button
                   onClick={() => handleViewEvent(event.slug)}
                   className="w-full bg-gray-800 hover:bg-gray-900 text-white py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
                     <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                    <path
+                      fillRule="evenodd"
+                      d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   View Details
                 </button>
@@ -366,8 +404,19 @@ function EventsUser() {
         </div>
       ) : (
         <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-16 w-16 mx-auto text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
           </svg>
           <h3 className="mt-4 text-lg font-medium text-gray-900">
             {searchMode ? "No events found for your search." : "No events found"}
@@ -376,8 +425,8 @@ function EventsUser() {
             {searchMode
               ? "Try adjusting your search criteria."
               : showAll
-                ? "No events available at the moment."
-                : "Want to explore events in other locations?"}
+              ? "No events available at the moment."
+              : "Want to explore events in other locations?"}
           </p>
           {!searchMode && !showAll && (
             <button

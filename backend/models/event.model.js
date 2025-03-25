@@ -9,11 +9,13 @@ const eventCategories = [
   "Social Inclusion & Awareness"
 ];
 
-// Sub-schema for volunteering positions, now with a registeredUsers field
+// Sub-schema for volunteering positions, now with a registeredUsers field and WhatsApp link
 const VolunteeringPositionSchema = new mongoose.Schema({
   title: { type: String, required: true },
   slots: { type: Number, required: true },
   registeredUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  // New field for the WhatsApp group link
+  whatsappGroupLink: { type: String, default: "" },
 });
 
 // Main event schema
@@ -34,8 +36,10 @@ const EventSchema = new mongoose.Schema(
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     isApproved: { type: Boolean, default: false },
     isCompleted: { type: Boolean, default: false },
-    // New field to indicate if a summary has been published
+    // Field to indicate if a summary has been published
     isSummaryPublished: { type: Boolean, default: false },
+    // Donations received for the event (if any)
+    donation: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

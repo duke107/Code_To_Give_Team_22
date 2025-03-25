@@ -57,21 +57,15 @@ export const submitContactMessage = async (req, res) => {
 
 // Get all messages (for Admin/Organizer)
 export const getMessagesForAdmin = async (req, res) => {
-    try {
-        console.log("Authenticated user", req.user);
-    if (req.user.role !== "Admin") {
-      return res.status(403).json({ error: "Unauthorized" });
-    }
-
-    const messages = await Contact.find({ recipientId: req.user._id }).sort({
-      createdAt: -1,
-    });
+  try {
+    const messages = await Contact.find({ category: "general" }).sort({ createdAt: -1 });
     return res.status(200).json(messages);
   } catch (error) {
-    console.error("Error fetching admin messages:", error);
+    console.error("Error fetching general messages:", error);
     return res.status(500).json({ error: "Server error" });
   }
 };
+
 
 export const getMessagesForOrganiser = async (req, res) => {
   try {
@@ -91,7 +85,7 @@ export const getMessagesForOrganiser = async (req, res) => {
 
 export const replyToMessage = async (req, res) => {
   try {
-    console.log("Reply function called", req.body);
+    // console.log("Reply function called", req.body);
 
     const { messageId, replyText } = req.body;
     if (!messageId || !replyText) {
@@ -130,13 +124,14 @@ export const replyToMessage = async (req, res) => {
 
 export const deleteMessage = async (req, res) => {
   try {
+    console.log("hit")
     const { messageId } = req.params;
 
     const message = await Contact.findById(messageId);
     if (!message) return res.status(404).json({ error: "Message not found." });
-
-    // Check if the logged-in user is authorized to delete
-    if (message.recipientId.toString() !== req.user._id.toString()) {
+    
+    // For admin: Ensure it's a "general" message before deleting
+    if (message.category !== "general") {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -149,10 +144,48 @@ export const deleteMessage = async (req, res) => {
 };
 
 
+
 export const deleteAllMessages = async (req, res) => {
   try {
-    await Contact.deleteMany({ recipientId: req.user._id });
-    return res.status(200).json({ message: "All messages deleted successfully." });
+    // Only delete messages with category "general"
+    await Contact.deleteMany({ category: "general" });
+
+    return res.status(200).json({ message: "All admin messages deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting all messages:", error);
+    return res.status(500).json({ error: "Server error." });
+  }
+};
+
+export const deleteOrgMessage = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { messageId } = req.params;
+
+    const message = await Contact.findById(messageId);
+    if (!message) return res.status(404).json({ error: "Message not found." });
+
+    // Ensure the message belongs to the organizer
+    if (message.recipientId.toString() !== userId.toString()) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    await Contact.findByIdAndDelete(messageId);
+    return res.status(200).json({ message: "Message deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting message:", error);
+    return res.status(500).json({ error: "Server error." });
+  }
+};
+
+
+export const deleteAllOrgMessages = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    await Contact.deleteMany({ recipientId: userId, category: "event" });
+
+    return res.status(200).json({ message: "All event messages deleted successfully." });
   } catch (error) {
     console.error("Error deleting all messages:", error);
     return res.status(500).json({ error: "Server error." });
