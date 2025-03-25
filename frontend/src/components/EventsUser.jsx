@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import LocationPicker from './LocationPicker'
 
 function EventsUser() {
   const navigate = useNavigate();
@@ -56,8 +57,8 @@ function EventsUser() {
   const handleSearchSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Build query params based on provided fields
       let queryParams = [];
+  
       if (searchParams.title) {
         queryParams.push(`title=${encodeURIComponent(searchParams.title)}`);
       }
@@ -70,17 +71,25 @@ function EventsUser() {
       if (searchParams.endDate) {
         queryParams.push(`endDate=${encodeURIComponent(searchParams.endDate)}`);
       }
+      if (searchParams.status) {
+        queryParams.push(`status=${encodeURIComponent(searchParams.status)}`);
+      }
+      if (searchParams.dateRange) {
+        queryParams.push(`dateRange=${encodeURIComponent(searchParams.dateRange)}`);
+      }
+      if (searchParams.sortBy) {
+        queryParams.push(`sortBy=${encodeURIComponent(searchParams.sortBy)}`);
+      }
+  
       const queryString = queryParams.length ? `?${queryParams.join('&')}` : '';
-
       const url = `http://localhost:3000/api/v1/events/search${queryString}`;
+  
       const res = await fetch(url, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
-
+  
       if (res.ok) {
         const data = await res.json();
         setEvents(data);
@@ -91,10 +100,10 @@ function EventsUser() {
     } catch (error) {
       console.error("Error fetching search results:", error);
     } finally {
-      // Close modal after search is submitted
       setShowSearchModal(false);
     }
   };
+  
 
   const handleViewEvent = (slug) => {
     navigate(`/event/${slug}`);
@@ -152,6 +161,8 @@ function EventsUser() {
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
             <h2 className="text-2xl font-bold mb-4">Search Events</h2>
             <form onSubmit={handleSearchSubmit} className="space-y-4">
+              
+              {/* Title Filter */}
               <div>
                 <label htmlFor="title" className="block text-sm font-medium text-gray-700">
                   Title
@@ -161,52 +172,103 @@ function EventsUser() {
                   id="title"
                   value={searchParams.title}
                   onChange={(e) => setSearchParams({ ...searchParams, title: e.target.value })}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  className="mt-1 block w-full border-gray-300 bg-gray-200 rounded-md shadow-sm"
                 />
               </div>
+
+              {/* Location Filter */}
+              <div className="mb-2">
+  <label htmlFor="location" className="block text-sm font-medium text-gray-700">
+    Location
+  </label>
+  <LocationPicker eventLocation={searchParams.location} setEventLocation={(value) => setSearchParams({ ...searchParams, location: value })} />
+</div>
+
+
+              {/* Status Filter */}
               <div>
-                <label htmlFor="location" className="block text-sm font-medium text-gray-700">
-                  Location
-                </label>
-                <input
-                  type="text"
-                  id="location"
-                  value={searchParams.location}
-                  onChange={(e) => setSearchParams({ ...searchParams, location: e.target.value })}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                />
+                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <select
+                  value={searchParams.status}
+                  onChange={(e) => setSearchParams({ ...searchParams, status: e.target.value })}
+                  className="mt-1 block w-full border-gray-300 bg-gray-200  rounded-md shadow-sm"
+                >
+                  <option value="">All</option>
+                  <option value="upcoming">Upcoming</option>
+                  <option value="completed">Completed</option>
+                </select>
               </div>
+
+              {/* Quick Date Range Filters */}
               <div>
-                <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
-                  Start Date
+                <label htmlFor="dateRange" className="block text-sm font-medium text-gray-700">
+                  Date Range
                 </label>
-                <input
-                  type="date"
-                  id="startDate"
-                  value={searchParams.startDate}
-                  onChange={(e) => setSearchParams({ ...searchParams, startDate: e.target.value })}
-                  min={today}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                />
+                <select
+                  id="dateRange"
+                  value={searchParams.dateRange}
+                  onChange={(e) => setSearchParams({ ...searchParams, dateRange: e.target.value })}
+                  className="mt-1 block w-full border-gray-300 bg-gray-200 rounded-md shadow-sm"
+                >
+                  <option value="">All Dates</option>
+                  <option value="week">This Week</option>
+                  <option value="month">This Month</option>
+                  <option value="custom">Custom Range</option>
+                </select>
               </div>
+
+              {/* Show Start/End Date inputs only if "Custom Range" is selected */}
+              {searchParams.dateRange === "custom" && (
+                <>
+                  <div>
+                    <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      id="startDate"
+                      value={searchParams.startDate}
+                      onChange={(e) => setSearchParams({ ...searchParams, startDate: e.target.value })}
+                      min={today}
+                      className="mt-1 block w-full border-gray-300 bg-gray-200 rounded-md shadow-sm"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      id="endDate"
+                      value={searchParams.endDate}
+                      onChange={(e) => setSearchParams({ ...searchParams, endDate: e.target.value })}
+                      min={searchParams.startDate || today}
+                      className="mt-1 block w-full border-gray-300 bg-gray-200 rounded-md shadow-sm"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Sorting */}
               <div>
-                <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  id="endDate"
-                  value={searchParams.endDate}
-                  onChange={(e) => setSearchParams({ ...searchParams, endDate: e.target.value })}
-                  min={today}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                />
+                <label className="block text-sm font-medium text-gray-700">Sort By</label>
+                <select
+                  value={searchParams.sortBy}
+                  onChange={(e) => setSearchParams({ ...searchParams, sortBy: e.target.value })}
+                  className="mt-1 block w-full border-gray-300 bg-gray-200 rounded-md shadow-sm"
+                >
+                  <option value="">Default</option>
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                </select>
               </div>
+
+              {/* Buttons */}
               <div className="flex justify-end gap-4">
                 <button
                   type="button"
                   onClick={() => setShowSearchModal(false)}
-                  className="bg-gray-400 hover:bg-gray-500 text-white py-2 px-4 rounded-lg"
+                  className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg"
                 >
                   Cancel
                 </button>
@@ -221,6 +283,7 @@ function EventsUser() {
           </div>
         </div>
       )}
+
 
       {/* Events Grid */}
       {events.length > 0 ? (

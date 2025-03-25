@@ -773,41 +773,69 @@ export const getAllDonations = async (req, res) => {
   }
 };
 
-
 export const searchEvents = async (req, res) => {
   try {
-    const { title, location, startDate, endDate } = req.query;
+    const { title, location, startDate, endDate, status, dateRange, eventType, sortBy } = req.query;
     const filter = {};
 
-    // Filter by event title if provided (case-insensitive)
+    // Filter by event title (case-insensitive)
     if (title) {
       filter.title = { $regex: title, $options: "i" };
     }
 
-    // Filter by event location if provided (case-insensitive)
+    // Filter by location (case-insensitive)
     if (location) {
       filter.eventLocation = { $regex: location, $options: "i" };
     }
 
-    // Date filtering: Both dates provided
+    // Date filtering
     if (startDate && endDate) {
       filter.eventStartDate = { $gte: new Date(startDate) };
       filter.eventEndDate = { $lte: new Date(endDate) };
     } else if (startDate) {
-      // Only startDate is provided
       filter.eventStartDate = { $gte: new Date(startDate) };
     } else if (endDate) {
-      // Only endDate is provided
       filter.eventEndDate = { $lte: new Date(endDate) };
     }
 
-    // Fetch events from the database based on the filter
-    const events = await Event.find(filter);
+    // Quick date range filters
+    if (dateRange === "week") {
+      const nextWeek = new Date();
+      nextWeek.setDate(today.getDate() + 7);
+      filter.eventStartDate = { $gte: today, $lte: nextWeek };
+    } else if (dateRange === "month") {
+      const nextMonth = new Date();
+      nextMonth.setMonth(today.getMonth() + 1);
+      filter.eventStartDate = { $gte: today, $lte: nextMonth };
+    } else if (dateRange === "custom" && startDate && endDate) {
+      filter.eventStartDate = { $gte: new Date(startDate) };
+      filter.eventEndDate = { $lte: new Date(endDate) };
+    }
+
+    // Filter by status (upcoming/completed)
+    if (status === "upcoming") {
+      filter.eventEndDate = { $gte: today };
+    } else if (status === "completed") {
+      filter.eventEndDate = { $lt: today };
+    }
+
+    // Sorting
+    let sortOption = {};
+    if (sortBy === "newest") {
+      sortOption = { createdAt: -1 }; // Newest first
+    } else if (sortBy === "oldest") {
+      sortOption = { createdAt: 1 }; // Oldest first
+    }
+
+    // Fetch events from the database with filtering and sorting
+    const events = await Event.find(filter).sort(sortOption);
     res.status(200).json(events);
+
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+
 
 
 export const addTaskUpdate = async (req, res) => {
