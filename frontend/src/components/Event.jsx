@@ -9,6 +9,7 @@ import { app } from "../firebase";
 import "react-toastify/dist/ReactToastify.css";
 import ShareButtons from "./ShareButtons";
 
+import { motion } from "framer-motion";
 Chart.register(ArcElement, Tooltip, Legend);
 
 const Event = () => {
