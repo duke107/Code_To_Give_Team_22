@@ -1,29 +1,49 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 const StoryCard = ({ story }) => {
     const navigate = useNavigate();
     const shortDescription = story.description.split(" ").slice(0, 50).join(" ") + "...";
+    
 
     return (
-        <div className="bg-gray-100 rounded-lg shadow-lg p-5 transition-transform duration-300 hover:scale-95 hover:shadow-xl">
-            {/* Circular Image */}
-            <div className="flex justify-center">
-                <img src={story.image} alt={story.title} className="w-32 h-32 object-cover rounded-full border-4 border-gray-300 shadow-md" />
+        <motion.div
+            className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 
+                      hover:shadow-2xl transition-all duration-300 group p-6 text-center"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+        >
+            {/* Circular Image Holder */}
+            <div className="relative w-32 h-32 mx-auto rounded-full overflow-hidden shadow-lg">
+                <img
+                    src={story.image}
+                    alt={story.title}
+                    className="w-full h-full object-cover transition-transform duration-300 
+                               group-hover:scale-105"
+                />
             </div>
 
-            <h2 className="text-xl font-semibold text-center mt-4">{story.title}</h2>
-            <p className="text-gray-600 text-center mt-2">{shortDescription}</p>
+            {/* Content */}
+            <div className="mt-4">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-2 
+                               group-hover:text-blue-600 transition-colors duration-300">
+                    {story.title}
+                </h2>
+                <p className="text-gray-600 text-base leading-relaxed mb-4 line-clamp-3">
+                    {shortDescription}
+                </p>
 
-            <div className="flex justify-center mt-4">
+                {/* Read More Button */}
                 <button
                     onClick={() => navigate(`/stories/${story.id}`)}
-                    className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-700 transition duration-300"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 
+                               rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
                 >
                     Read More
                 </button>
             </div>
-        </div>
+        </motion.div>
     );
 };
 
