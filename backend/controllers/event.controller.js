@@ -25,13 +25,19 @@ export const createEvent = async (req, res) => {
       eventLocation,
       eventStartDate,
       eventEndDate,
-      volunteeringPositions, 
-      user_id, 
+      volunteeringPositions,
+      user_id,
     } = req.body;
 
     // Basic validation for required fields
-    // console.log(user_id);
-    if (!title || !category || !eventLocation || !eventStartDate || !eventEndDate || !user_id) {
+    if (
+      !title ||
+      !category ||
+      !eventLocation ||
+      !eventStartDate ||
+      !eventEndDate ||
+      !user_id
+    ) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -41,6 +47,8 @@ export const createEvent = async (req, res) => {
       processedVolunteeringPositions = volunteeringPositions.map((position) => ({
         title: position.title,
         slots: position.slots,
+        // New field for WhatsApp group link
+        whatsappGroupLink: position.whatsappGroupLink || "",
         registeredUsers: [],
       }));
     }
@@ -64,13 +72,13 @@ export const createEvent = async (req, res) => {
 
     await event.save();
 
+    // Notify users in the same area, except the creator or event organisers
     const usersInArea = await User.find({
       location: eventLocation,
       _id: { $ne: user_id },
-      role: { $ne: "Event Organiser" }, 
+      role: { $ne: "Event Organiser" },
     });
 
-    // Send notifications to eligible users
     for (const user of usersInArea) {
       await Notification.create({
         userId: user._id,
@@ -87,10 +95,11 @@ export const createEvent = async (req, res) => {
     return res.status(201).json(event);
   } catch (error) {
     console.error("Error creating event:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
-
 
 
 export const getEventBySlug = async (req, res) => {
