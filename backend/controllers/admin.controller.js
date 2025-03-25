@@ -353,3 +353,34 @@ export const getEventSummaryById = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const promoteToOrganiser = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    // Validate input
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required." });
+    }
+
+    // Find the user by ID
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // If user is already an event organiser, return an error or message
+    if (user.role === "Event Organiser") {
+      return res.status(400).json({ message: "User is already an event organiser." });
+    }
+
+    // Update the user's role
+    user.role = "Event Organiser";
+    await user.save();
+
+    return res.status(200).json({ message: "User promoted to Event Organiser successfully." });
+  } catch (error) {
+    console.error("Error promoting user:", error);
+    return res.status(500).json({ message: error.message });
+  }
+};

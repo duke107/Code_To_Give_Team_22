@@ -7,7 +7,8 @@ import {login, logout,
     usersListByIds, userById, getEvents,
     warnOrganizer, removeOrganizer,
     getAllEventSummaries,
-    getEventSummaryById} from "../controllers/admin.controller.js";
+    getEventSummaryById,
+    promoteToOrganiser} from "../controllers/admin.controller.js";
 import { getFeedbacksForEvent } from "../controllers/event.controller.js";
 import { analyze } from "../controllers/analyze.controller.js";
 const router = express.Router();
@@ -17,6 +18,7 @@ router.post("/login", login);
 router.get("/logout", isAuthenticated, logout);
 router.post("/approve/:eventId",  approveEvent);
 router.post("/reject/:eventId",  rejectEvent);
+router.post("/promote-organiser", promoteToOrganiser);
 
 router.get("/pending-events", getPendingEvents);
 router.get("/past-events", getPastEvents);
