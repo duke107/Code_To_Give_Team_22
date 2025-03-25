@@ -38,6 +38,7 @@ import OrganizerMessages from './pages/OrganiserMessages'
 
 import { useState } from 'react'
 import AccessibilityMenu from './components/AccessibilityMenu'
+import CityDetails from './components/CityDetails'
 
 function App() {
   const dispatch = useDispatch();
@@ -122,6 +123,7 @@ function App() {
         {/* Pending Approvals directly under /admin */}
         <Route path="pending-approvals" element={<PendingApprovals />} />
         <Route path="past-events" element={<PastEvents />} />
+        <Route path="/admin/city/:city" element={<CityDetails />} />
       </Route>
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route element={<AdminRoute />}>

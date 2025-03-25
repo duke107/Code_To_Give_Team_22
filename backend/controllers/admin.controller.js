@@ -7,6 +7,8 @@ import { Notification } from '../models/notification.model.js';
 import { io } from "../server.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Task } from "../models/task.model.js";
+import mongoose from "mongoose";
+import nodemailer from "nodemailer";
 
 export const login = async (req, res) => {
     try {
@@ -28,13 +30,17 @@ export const login = async (req, res) => {
         if (!isMatch) {
             return res.status(401).json({ message: "Invalid credentials" });
         }
-          // console.log("Password matched");
-        const user = await User.create({
-            name: "Admin",
-            email: process.env.ADMIN_EMAIL,
-            password: process.env.ADMIN_PASSWORD,
-            role: "Admin"
-        });
+          
+          const user = await User.findOne({ email: email });
+          // console.log("this is user", user);
+          if(!user){
+            user = await User.create({
+              name: "Admin",
+              email: process.env.ADMIN_EMAIL,
+              password: process.env.ADMIN_PASSWORD,
+              role: "Admin"
+            });
+          }
         // console.log("reached");
         sendToken(user, 200, "Admin logged in successfully", res);
         // console.log("passed");
@@ -165,17 +171,19 @@ export const getUsersByCity = async (req, res) => {
         try {
             const { city } = req.params;
             const today = new Date();
-        
+            
             // Fetch users in the city
-            const users = await User.find({ location: city }).select("name email role avatar");
-        
+            const allUsers = await User.find({ location: city });
+            const users = allUsers.filter((user) => user.role === "User");
+            const organizers = allUsers.filter((user) => user.role === "Event Organiser");
+          
             // Fetch past events
             const pastEvents = await Event.find({ eventLocation: city, eventEndDate: { $lt: today } });
         
             // Fetch upcoming events
             const upcomingEvents = await Event.find({ eventLocation: city, eventStartDate: { $gte: today } });
             // console.log(users, pastEvents, upcomingEvents);
-            res.status(200).json({ users, pastEvents, upcomingEvents });
+            res.status(200).json({ users, organizers, pastEvents, upcomingEvents });
           } catch (error) {
             console.error("Error fetching city data:", error);
             res.status(500).json({ message: "Internal Server Error" });
@@ -221,3 +229,96 @@ export const userById = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error" });
     }
 }
+
+export const getEvents = async (req, res) => {
+  const { eventIds } = req.body;
+  // console.log(eventIds);
+  if (!eventIds || !Array.isArray(eventIds) || eventIds.length === 0) {
+    return res.status(400).json({ message: "Invalid event IDs" });
+  }
+
+  try {
+    const events = await Event.find({ _id: { $in: eventIds } });
+
+    res.status(200).json({ events });
+  } catch (error) {
+    console.error("Error fetching events:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const removeOrganizer = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await User.findById(id);
+    if (!user || user.role !== "Event Organiser") {
+      return res.status(404).json({ message: "Organizer not found" });
+    }
+
+    // Change role to "User"
+    user.role = "User";
+    await user.save();
+
+    // Send Notification
+    const message = "Your role has been changed to User by the Admin.";
+    await sendNotification(id, message, "role_change");
+
+    res.status(200).json({ message: "Organizer role changed to User successfully" });
+  } catch (error) {
+    console.error("Error updating organizer role:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
+const sendNotification = async (userId, message, type) => {
+  try {
+    if (!userId || !message || !type) {
+      throw new Error("userId, message, and type are required");
+    }
+    
+    const notification = await Notification.create({ userId, message, type });
+    return notification;
+  } catch (error) {
+    console.error("Error sending notification:", error);
+    throw new Error("Failed to send notification");
+  }
+};
+
+export const warnOrganizer = async (req, res) => {
+  const { userId, message } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user || user.role !== "Event Organiser") {
+      return res.status(404).json({ message: "Organizer not found" });
+    }
+
+    // Send email using Nodemailer
+    const transporter = nodemailer.createTransport({
+      service: "Gmail",
+      auth: {
+        user: process.env.SMTP_MAIL,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.SMTP_MAIL,
+      to: user.email,
+      subject: "Warning from Admin",
+      text: `Dear ${user.name},\n\n${message}\n\nPlease take necessary action.\n\nRegards,\nAdmin`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    // Store notification in the database
+    await sendNotification(userId, message, "warning");
+
+    res.status(200).json({ message: "Warning sent successfully" });
+  } catch (error) {
+    console.error("Error sending warning:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
