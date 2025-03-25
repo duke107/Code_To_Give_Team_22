@@ -8,7 +8,7 @@ const MainLayout = ({notifications}) => {
   return (
     <>
       <Header notifications={notifications}/>
-      <div className="min-h-screen">
+      <div className="min-h-screen ">
         <Outlet />
     
       </div>

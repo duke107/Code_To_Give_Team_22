@@ -7,7 +7,7 @@ const AccessibilityToolbar = () => {
   return (
     <div
       style={{ top: "100px", zIndex: "2" }}
-      className="fixed right-5 bg-red-600 text-white px-2 py-2 rounded shadow transition transform focus:outline-none flex items-center space-x-2"
+      className="fixed z-50 right-5 bg-red-600 text-white px-2 py-2 rounded shadow transition transform focus:outline-none flex items-center space-x-2"
     >
       <span className="text-lg">🔎</span> 
       

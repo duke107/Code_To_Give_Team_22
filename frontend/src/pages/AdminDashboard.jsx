@@ -1,55 +1,89 @@
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Bar } from "react-chartjs-2";
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
+import CityDataModal from "../components/CityDataModal";
+import DashboardStats from "../components/DashboardStats";  // Import the new component
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
+  const [cityData, setCityData] = useState([]);
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminToken"); // Remove token from storage
-    navigate("/admin/login"); // Redirect to login page
+  const openModal = (city) => {
+    setSelectedCity(city);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  useEffect(() => {
+    const fetchCityData = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/api/v1/admin/city-volunteers");
+
+        if (response.data && Array.isArray(response.data)) {
+          const filteredData = response.data.filter((item) => item.city);
+          setCityData(filteredData);
+        }
+      } catch (error) {
+        console.error("Error fetching city data:", error);
+      }
+    };
+
+    fetchCityData();
+  }, []);
+
+  const chartData = {
+    labels: cityData.map((item) => item.city),
+    datasets: [
+      {
+        label: "Volunteers Per City",
+        data: cityData.map((item) => item.users),
+        backgroundColor: ["#3498db", "#2ecc71", "#f39c12", "#e74c3c", "#9b59b6", "#1abc9c", "#e67e22", "#34495e"],
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      title: { display: true, text: "Volunteers Per City" },
+      legend: { display: true },
+    },
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-10">
-      <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-2xl">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
-          Admin Dashboard
-        </h1>
-        
-        <ul className="space-y-4">
-          <li>
-            <Link
-              to="/admin/users"
-              className="block w-full text-lg text-white bg-blue-500 hover:bg-blue-600 py-3 rounded-md text-center transition-all"
-            >
-              Manage Users
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/admin/events"
-              className="block w-full text-lg text-white bg-green-500 hover:bg-green-600 py-3 rounded-md text-center transition-all"
-            >
-              Manage Events
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/admin/jobs"
-              className="block w-full text-lg text-white bg-purple-500 hover:bg-purple-600 py-3 rounded-md text-center transition-all"
-            >
-              Manage Jobs
-            </Link>
-          </li>
-        </ul>
-
-        <button
-          onClick={handleLogout}
-          className="w-full mt-6 text-lg text-white bg-red-500 hover:bg-red-600 py-3 rounded-md text-center transition-all"
-        >
-          Logout
-        </button>
+    <div className="grid grid-cols-[70%_30%] gap-6 p-6">
+      {/* Left Section: Graph */}
+      <div className="bg-white shadow-lg rounded-lg p-6">
+        <h2 className="text-xl font-bold mb-4">Volunteers Per City</h2>
+        <div className="w-full h-96 overflow-hidden">
+          <Bar data={chartData} options={chartOptions} />
+        </div>
       </div>
+
+      {/* Right Section: City List */}
+      <div className="bg-white shadow-lg rounded-lg p-6">
+        <h2 className="text-xl font-bold mb-4 text-center">City List</h2>
+        <div className="flex flex-wrap gap-x-8">
+          {cityData.map((item) => (
+            <span key={item.city} className="cursor-pointer text-blue-600 hover:scale-105" onClick={() => openModal(item.city)}>
+              {item.city}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Dashboard Stats */}
+      <DashboardStats />
+
+      {/* City Data Modal */}
+      {isModalOpen && <CityDataModal city={selectedCity} closeModal={closeModal} />}
     </div>
   );
 };

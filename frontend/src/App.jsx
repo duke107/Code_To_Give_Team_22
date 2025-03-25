@@ -31,9 +31,11 @@ import AccessibilityToolbar from "./components/AccessibilityToolbar";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminRoute from "./components/AdminRoute";
 import AdminLogin from "./pages/AdminLogin";
-import AccessibilityMenu from "./components/AccessibilityMenu";
+import PendingApprovals from './components/PendingApprovals'
+import PastEvents from './components/PastEvents'
 
 import { useState } from 'react'
+import AccessibilityMenu from './components/AccessibilityMenu'
 
 function App() {
   const dispatch = useDispatch();
@@ -72,6 +74,7 @@ function App() {
   return (
     <Router>
       <ScreenReaderButton />
+      <AccessibilityMenu />
       <TranslateButton />
       <AccessibilityMenu/>
       {/* <AccessibilityProvider >
@@ -83,7 +86,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/donate" element={<Donate />} />
-          <Route path="/dashboard" element={user?.role === "Event Organizer" ? <Dashboard /> : <UserDashboard />} />
+          <Route path="/dashboard" element={user?.role === "Event Organiser" ? <Dashboard /> : <UserDashboard />} />
           <Route
             path="/events"
             element={user && user.role === "Event Organiser" ? <Events /> : <EventsUser />}
@@ -107,6 +110,16 @@ function App() {
         <Route path="/password/forgot" element={<ForgotPassword />} />
         <Route path="/otp-verification/:email" element={<OTP />} />
         <Route path="/password/reset/:token" element={<ResetPassword />} />
+
+        <Route path="/admin/login" element={<AdminLogin /> }/>
+
+        <Route path="/admin" element={<AdminRoute />}>
+        {/* Admin Dashboard */}
+        <Route path="dashboard" element={<AdminDashboard />} />
+        {/* Pending Approvals directly under /admin */}
+        <Route path="pending-approvals" element={<PendingApprovals />} />
+        <Route path="past-events" element={<PastEvents />} />
+      </Route>
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route element={<AdminRoute />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -114,6 +127,7 @@ function App() {
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
+        
       </Routes>
       <ToastContainer theme='dark' />
     </Router>

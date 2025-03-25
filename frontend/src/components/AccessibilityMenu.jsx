@@ -8,7 +8,6 @@ const AccessibilityMenu = () => {
   const [grayscale, setGrayscale] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
 
-  // Load settings from localStorage when the component mounts
   useEffect(() => {
     const savedTextSize = localStorage.getItem("textSize");
     const savedHighContrast = localStorage.getItem("highContrast") === "true";
@@ -21,7 +20,6 @@ const AccessibilityMenu = () => {
     setDarkMode(savedDarkMode);
   }, []);
 
-  // Apply settings & update localStorage when changes occur
   useEffect(() => {
     document.documentElement.style.fontSize = `${textSize}rem`;
     document.body.classList.toggle("high-contrast", highContrast);
@@ -38,8 +36,8 @@ const AccessibilityMenu = () => {
     <>
       {/* Eye Icon (Left-Bottom) */}
       <button
-        className="fixed bottom-5 left-5 bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 transition"
-        onClick={() => setIsOpen((prev) => !prev)} // Toggle menu open/close
+        className="fixed bottom-5 left-5 bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 transition z-[1000]" // Increased z-index
+        onClick={() => setIsOpen((prev) => !prev)}
         aria-label="Toggle Accessibility Menu"
       >
         <FaEye size={24} />
@@ -47,10 +45,10 @@ const AccessibilityMenu = () => {
 
       {/* Accessibility Menu */}
       <div
-        className={`fixed bottom-16 left-5 bg-white shadow-lg p-4 border rounded-lg w-52 transition-transform z-50 ${
+        className={`fixed bottom-16 left-5 bg-white shadow-lg p-4 border rounded-lg w-52 transition-transform z-[1000] ${ // Increased z-index
           isOpen ? "scale-100 opacity-100" : "scale-0 opacity-0"
         }`}
-        style={{ position: "fixed" }} // Ensure grayscale doesn't affect position
+        style={{ position: "fixed" }}
       >
         {/* Close Button */}
         <button
@@ -95,7 +93,6 @@ const AccessibilityMenu = () => {
           className={`block w-full p-1 text-xs rounded my-1 ${
             grayscale ? "bg-gray-600 text-white" : "bg-gray-200"
           } hover:bg-gray-300`}
-          // style={{ position: "relative" }} // Prevents menu shift
         >
           Grayscale
         </button>
@@ -106,7 +103,6 @@ const AccessibilityMenu = () => {
           className={`block w-full p-1 text-xs rounded my-1 ${
             darkMode ? "bg-black text-white" : "bg-gray-200"
           } hover:bg-gray-300`}
-          
         >
           {darkMode ? "Light Mode" : "Dark Mode"}
         </button>

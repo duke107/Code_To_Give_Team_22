@@ -3,18 +3,50 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import {User} from "../models/user.model.js";
 import Event from "../models/event.model.js"
+import { sendEmail } from "../utils/sendEmail.js";
+import {generateEventCompletionEmailTemplate, generateUserRegistrationEmailTemplate} from "../utils/emailTemplates.js"
+import { markCompletedEvents } from "../controllers/event.controller.js";
 
 export const sendRegistrationNotification = async (event, volunteerId) => {
-    try {
-        await Notification.create({
-            userId: event.createdBy,
-            message: `Volunteeer (Id: ${volunteerId}) has registered for ${event.title}`,
-            type: "registration"
-        })
-    } catch (error) {
-        console.error("Error sending register notification", error )
+  try {
+    const volunteer = await User.findById(volunteerId);
+    if (!volunteer) {
+      console.error("Volunteer not found for ID:", volunteerId);
+      return;
     }
-}
+
+    const msg = `Volunteer ${volunteer.name} (ID: ${volunteer.id}) has registered for ${event.title}`;
+    
+    // Create a notification for the event creator
+    await Notification.create({
+      userId: event.createdBy,
+      message: msg,
+      type: "registration"
+    });
+
+    // Fetch the event creator's email
+    const eventCreator = await User.findById(event.createdBy);
+    if (!eventCreator) {
+      console.error("Event creator not found for ID:", event.createdBy);
+      return;
+    }
+
+    // Generate the email template
+    const emailBody = generateUserRegistrationEmailTemplate(volunteer.name, event.title);
+
+    // Send the email
+    await sendEmail({
+      email: eventCreator.email,
+      subject: "New Volunteer Registration",
+      message: emailBody
+    });
+
+  } catch (error) {
+    console.error("Error sending registration notification:", error);
+  }
+};
+
+
 
 export const sendReminderNotifications = async () => {
     try {
@@ -43,7 +75,28 @@ export const sendReminderNotifications = async () => {
     } catch (error) {
       console.error("Error sending reminder notifications:", error);
     }
-  };
+};
+  
+
+export const sendEventCompletionNotifications = async () => {
+  try {
+    // Ensure all ended events are marked as completed first
+    await markCompletedEvents();
+
+    const events = await Event.find({
+      endDate: { $lt: new Date() },
+      isCompleted: true,
+    });
+
+    for (const event of events) {
+      // Notify volunteers (same logic as before)
+    }
+
+  } catch (error) {
+    console.error("Error in event completion notifications:", error);
+  }
+};
+
 
 const sendNotification = async (req, res, next) => {
     try {
@@ -51,7 +104,7 @@ const sendNotification = async (req, res, next) => {
     if (!userId || !message || !type) {
       return next(new ApiError(400, "userId, message, and type are required"));
     }
-    const notification = await Notification.create({ userId, message, type });
+      const notification = await Notification.create({ userId, message, type });
     return res.status(201).json(new ApiResponse(201, notification, "Notification sent successfully"));
     } catch (error) {
         next(new ApiError(500, "Error sending notifications"));

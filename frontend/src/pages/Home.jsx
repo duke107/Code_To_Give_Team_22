@@ -45,27 +45,30 @@ function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Hero Section */}
+    <div className="min-h-screen bg-gray-100 ">
+       
+      
+            {/* Hero Section */}
       <div
-        className="h-[70vh] flex flex-col items-center justify-center bg-blue-600 text-white text-center focus:outline-none focus:ring-4 focus:ring-blue-300"
-        tabIndex="0"
-        role="banner"
-        aria-label="Welcome Section"
+        className="h-screen relative flex flex-col items-center justify-center text-white text-center bg-cover bg-center"
+        style={{
+          backgroundImage: "url('https://sontx.org/wp-content/uploads/2024/06/How-to-Help-a-Charity-Without-Donating-Money.jpeg')",
+        }}
       >
-        <h1 className="text-4xl font-bold mb-4">Welcome to Samarthanam</h1>
-        <p className="text-lg max-w-2xl mx-auto">
-          Empowering lives and creating opportunities.
-        </p>
-        <Link
-          to="/donate"
-          className="mt-6 px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg shadow-md hover:bg-gray-200 transition duration-300 focus:ring-4 focus:ring-blue-400"
-          tabIndex="0"
-          aria-label="Donate Now"
-        >
-          Donate Now
-        </Link>
+        <div className="bg-black bg-opacity-50 p-6 rounded-lg">
+          <h1 className="text-4xl font-bold mb-4">Welcome to Samarthanam</h1>
+          <p className="text-lg max-w-2xl mx-auto">
+            Empowering lives and creating opportunities.
+          </p>
+          <Link
+            to="/donate"
+            className="mt-6 px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg shadow-md hover:bg-gray-200 transition duration-300"
+          >
+            Donate Now
+          </Link>
+        </div>
       </div>
+
 
       {/* Mission Section */}
       <div className="p-8 text-center focus:outline-none focus:ring-4 focus:ring-gray-300" tabIndex="0">
