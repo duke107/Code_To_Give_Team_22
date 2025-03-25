@@ -19,6 +19,7 @@ export const createEvent = async (req, res) => {
   try {
     const {
       title,
+      category,
       content,
       image,
       eventLocation,
@@ -30,7 +31,7 @@ export const createEvent = async (req, res) => {
 
     // Basic validation for required fields
     // console.log(user_id);
-    if (!title || !eventLocation || !eventStartDate || !eventEndDate || !user_id) {
+    if (!title || !category || !eventLocation || !eventStartDate || !eventEndDate || !user_id) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -51,6 +52,7 @@ export const createEvent = async (req, res) => {
     // Create the event
     const event = await Event.create({
       title: capitalizeFirstLetter(title),
+      category,
       content,
       image,
       eventLocation: capitalizeFirstLetter(eventLocation),
@@ -196,6 +198,9 @@ export const getEvents = async (req, res) => {
     }
     if (req.query.location) {
       query.eventLocation = req.query.location;
+    }
+    if (req.query.category) {
+      query.category = category;
     }
     
 
