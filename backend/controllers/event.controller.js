@@ -192,7 +192,7 @@ export const deleteEvent = async (req, res) => {
 export const getEvents = async (req, res) => {
   try {
     // Build a query object based on query parameters
-    const query = { isApproved: { $eq: true } };
+    const query = { };
     if (req.query.createdBy) {
       query.createdBy = req.query.createdBy;
     }

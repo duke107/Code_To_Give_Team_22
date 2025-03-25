@@ -327,21 +327,32 @@ function EventsUser() {
               key={event._id}
               className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl border border-gray-100 flex flex-col"
             >
-              {event.image ? (
-                <div className="h-48 overflow-hidden">
-                  <img
-                    src={event.image}
-                    alt={event.title}
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                  />
-                </div>
-              ) : (
-                <div className="h-32 bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-              )}
+{event.image ? (
+  <img
+    src={event.image}
+    alt={event.title}
+    className="w-full h-auto max-h-64 object-contain rounded-xl mb-5 shadow"
+  />
+) : (
+  <div className="h-32 bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-12 w-12"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+      />
+    </svg>
+  </div>
+)}
+
+
               <div className="p-6 flex-grow">
                 <h2 className="text-xl font-bold text-gray-900 mb-3">{event.title}</h2>
                 <div className="text-gray-600 mb-4 line-clamp-3">
