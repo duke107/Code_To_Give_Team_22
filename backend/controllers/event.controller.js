@@ -12,6 +12,7 @@ import EventSummary from '../models/eventSummary.model.js';
 import { sendEmail } from '../utils/sendEmail.js';
 import {generateTaskAssignmentEmailTemplate} from '../utils/emailTemplates.js';
 import { Donation } from '../models/donation.model.js';
+import { Feedback } from '../models/feedback.model.js';
 
 
 // Create a new event

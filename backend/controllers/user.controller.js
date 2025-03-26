@@ -12,6 +12,8 @@ export const register = async (req, res) => {
         // Destructure location along with other fields
         const { name, email, password, location } = req.body;
         
+
+        
         // Validate all required fields including location
         if (!name || !email || !password || !location) {
             return res.status(400).json({ msg: "Please fill in all fields, including location" });
@@ -22,14 +24,17 @@ export const register = async (req, res) => {
             return res.status(400).json({ msg: "Email is already registered" });
         }
         
+        
         if (password.length < 8 || password.length > 16) {
             return res.status(400).json({ msg: "Password must be between 8 and 16 characters" });
         }
-        location = location.charAt(0).toUpperCase() + location.slice(1).toLowerCase();
-        
+       
+        const formattedLocation =
+  location.charAt(0).toUpperCase() + location.slice(1).toLowerCase();
+        console.log("here");
         const hashedPassword = await bcrypt.hash(password, 10);
         // Include location when creating the new user
-        const user = await User.create({ name, email, password: hashedPassword, location });
+        const user = await User.create({ name, email, password: hashedPassword, location : formattedLocation });
         
         const verificationCode = await user.generateVerificationCode();
         await user.save();

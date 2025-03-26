@@ -138,6 +138,8 @@ export const register = (data) => async (dispatch) => {
             dispatch(authSlice.actions.registerSuccess(res.data));
         })
         .catch((error) => {
+            console.log(error.message);
+            
             dispatch(authSlice.actions.registerFailed(error.response.data.message));
         });
 };
