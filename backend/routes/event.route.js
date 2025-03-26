@@ -5,9 +5,9 @@ import { createEvent, deleteEvent, getEventBySlug, getEvents, updateEvent, regis
 
 
 const router = express.Router();
-
 // Create event
 router.post("/create",isAuthenticated, createEvent);
+router.put("/update/:eventId",isAuthenticated, updateEvent);
 router.post("/assign",isAuthenticated, assignTask);
 router.post("/submitFeedback",isAuthenticated,createFeedback)
 router.post("/submitTestimonial",isAuthenticated,submitTestimonial)
