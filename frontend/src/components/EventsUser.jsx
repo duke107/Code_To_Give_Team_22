@@ -20,6 +20,8 @@ function EventsUser() {
     dateRange: '',
     sortBy: '',
   });
+  const [showRegistered, setShowRegistered] = useState(false);
+
 
   const eventCategories = [
     "Education & Skill Development",
@@ -47,10 +49,14 @@ function EventsUser() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const url = showAll
-          ? `http://localhost:3000/api/v1/events/getEvents`
-          : `http://localhost:3000/api/v1/events/getEvents?location=${user.location}`;
-
+        let url = "http://localhost:3000/api/v1/events/getEvents";
+  
+        if (showRegistered) {
+          url = `http://localhost:3000/api/v1/events/registeredEvents`;
+        } else if (!showAll) {
+          url = `http://localhost:3000/api/v1/events/getEvents?location=${user.location}`;
+        }
+  
         const res = await fetch(url, {
           method: "GET",
           headers: {
@@ -58,10 +64,11 @@ function EventsUser() {
           },
           credentials: "include",
         });
-
+  
         if (res.ok) {
           const data = await res.json();
           setEvents(data);
+          console.log(data);
         } else {
           console.error("Error:", res.status, res.statusText);
         }
@@ -69,11 +76,12 @@ function EventsUser() {
         console.error("Error fetching events:", error);
       }
     };
-
+  
     if (user && user.location && !searchMode) {
       fetchEvents();
     }
-  }, [user, showAll, searchMode]);
+  }, [user, showAll, showRegistered, searchMode]);
+  
 
   // 3. Handle searching events
   const handleSearchSubmit = async (e) => {
@@ -152,36 +160,56 @@ function EventsUser() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Page Header with Toggle and Search Buttons */}
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Events {searchMode ? " - Search Results" : (showAll ? " - All Locations" : " - Near You")}
+      <h1 className="text-3xl font-bold text-gray-900">
+          Events {searchMode 
+            ? " - Search Results" 
+            : showRegistered 
+              ? " - Registered" 
+              : showAll 
+                ? " - All Locations" 
+                : " - Near You"}
         </h1>
-        <div className="flex gap-4">
+  <div className="flex gap-4">
+    <button
+      onClick={() => setShowSearchModal(true)}
+      className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg shadow-md transition-colors"
+    >
+      Search Events
+    </button>
+    
+    <button
+      onClick={() => {
+        setShowAll((prev) => !prev);
+        setSearchMode(false); // Clear search mode if toggling default view
+        setShowRegistered(false); // Ensure registered events mode is off
+      }}
+      className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow-md transition-colors"
+    >
+      {showAll ? "Show Local Events" : "Show All Events"}
+    </button>
+
           <button
-            onClick={() => setShowSearchModal(true)}
-            className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg shadow-md transition-colors"
-          >
-            Search Events
-          </button>
-          <button
-            onClick={() => {
-              setShowAll(prev => !prev);
-              // Clear search mode if toggling default view
-              setSearchMode(false);
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow-md transition-colors"
-          >
-            {showAll ? "Show Local Events" : "Show All Events"}
-          </button>
-          {searchMode && (
-            <button
-              onClick={handleClearSearch}
-              className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg shadow-md transition-colors"
-            >
-              Clear Search
-            </button>
-          )}
-        </div>
-      </div>
+        onClick={() => {
+          setShowRegistered(true);  // Set fetchingRegistered to true
+          setShowAll(false);            // Reset other filters
+          setSearchMode(false);
+        }}
+          className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg shadow-md transition-colors"
+        >
+          Show Registered Events
+        </button>
+
+    {searchMode && (
+      <button
+        onClick={handleClearSearch}
+        className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg shadow-md transition-colors"
+      >
+        Clear Search
+      </button>
+    )}
+  </div>
+</div>
+
 
       {/* Search Modal */}
       {showSearchModal && (
@@ -344,79 +372,74 @@ function EventsUser() {
              whileHover={{ scale: 1.02 }}
              whileTap={{ scale: 0.98 }}
            >
-            <div
-              key={event._id}
-              className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl border border-gray-100 flex flex-col"
-            >
-              {event.image ? (
-                <div className="h-48 overflow-hidden">
-                  <img
-                    src={event.image}
-                    alt={event.title}
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                  />
-                </div>
-              ) : (
-                <div className="h-32 bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-12 w-12"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-                
-              )}
-             <div className="p-6 flex-grow text-center">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors duration-300">
-        {event.title}
-      </h2>
-      { event.category &&
-        <span className="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full mb-3">
-          {event.category}
-        </span>
-      }
-      <div
-        className="text-gray-600 text-base leading-relaxed mb-4 line-clamp-3"
-        dangerouslySetInnerHTML={{ __html: event.content }}
-      />
-    </div>
-
-              <div className="px-6 pb-6 pt-2">
-                <button
-                  onClick={() => handleViewEvent(event.slug)}
-                  className="w-full bg-gray-800 hover:bg-gray-900 text-white py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                    <path
-                      fillRule="evenodd"
-                      d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  View Details
-                </button>
-              </div>
-            </div>
-            </motion.div>
+             {/* Event Image */}
+             {event.image ? (
+               <div className="h-48 overflow-hidden">
+                 <img
+                   src={event.image}
+                   alt={event.title}
+                   className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                 />
+               </div>
+             ) : (
+               <div className="h-32 bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white">
+                 <svg
+                   xmlns="http://www.w3.org/2000/svg"
+                   className="h-12 w-12"
+                   fill="none"
+                   viewBox="0 0 24 24"
+                   stroke="currentColor"
+                 >
+                   <path
+                     strokeLinecap="round"
+                     strokeLinejoin="round"
+                     strokeWidth={2}
+                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                   />
+                 </svg>
+               </div>
+             )}
+           
+             {/* Event Content */}
+             <div className="p-6 flex-grow flex flex-col">
+               {/* Title */}
+               <h2 className="text-xl font-bold text-gray-900 mb-2">{event.title}</h2>
+           
+               {/* Description */}
+               <div className="text-gray-600 line-clamp-3 mb-3">
+                 <div dangerouslySetInnerHTML={{ __html: event.content }} />
+               </div>
+           
+               {/* Date */}
+               <p className="text-gray-500 text-sm mb-4">📅 Date: {new Date(event.eventStartDate).toLocaleDateString()}</p>
+           
+               {/* Button (stays at bottom) */}
+               <div className="mt-auto">
+                 <button
+                   onClick={() => handleViewEvent(event.slug)}
+                   className="w-full bg-gray-800 hover:bg-gray-900 text-white py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                 >
+                   <svg
+                     xmlns="http://www.w3.org/2000/svg"
+                     className="h-5 w-5"
+                     viewBox="0 0 20 20"
+                     fill="currentColor"
+                   >
+                     <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                     <path
+                       fillRule="evenodd"
+                       d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10z"
+                       clipRule="evenodd"
+                     />
+                   </svg>
+                   View Details
+                 </button>
+               </div>
+             </div>
+           </motion.div>
+           
           ))}
-         
         </div>
-        
       ) : (
         <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
           <svg

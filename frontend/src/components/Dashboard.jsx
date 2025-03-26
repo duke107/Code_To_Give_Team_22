@@ -602,68 +602,68 @@ function Dashboard() {
 
       {/* Past Events Section */}
       <div className="mt-8">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">
-          Past Events (Ended)
-        </h3>
-        {events.length > 0 && (
-          <p className="text-sm text-gray-500 mb-2">
-            Showing only events whose end date is before today
+  <h3 className="text-xl font-bold text-gray-800 mb-4">
+    Past Events (Ended)
+  </h3>
+  {events.length > 0 && (
+    <p className="text-sm text-gray-500 mb-2">
+      Showing only events whose end date is before today
+    </p>
+  )}
+  {pastEvents.length > 0 ? (
+    <ul className="space-y-4">
+      {pastEvents.map((evt) => (
+        <li key={evt._id} className="bg-white shadow-md rounded-lg p-4">
+          <p className="font-medium text-lg text-gray-800">{evt.title}</p>
+          <p className="text-gray-600">Location: {evt.eventLocation}</p>
+          <p className="text-gray-600">
+            Ended on {new Date(evt.eventEndDate).toLocaleDateString()}
           </p>
-        )}
-        {pastEvents.length > 0 ? (
-          <ul className="space-y-4">
-            {pastEvents.map((evt) => (
-              <li key={evt._id} className="bg-white shadow-md rounded-lg p-4">
-                <p className="font-medium text-lg text-gray-800">{evt.title}</p>
-                <p className="text-gray-600">Location: {evt.eventLocation}</p>
-                <p className="text-gray-600">
-                  Ended on {new Date(evt.eventEndDate).toLocaleDateString()}
-                </p>
 
-                {/* If event.isSummaryPublished is true, disable the summary button */}
-                <div className="mt-2 flex flex-wrap gap-4">
-                  {/* Submit Feedback Button */}
-                  <button
-                    onClick={() => handleOpenFeedbackForm(evt._id)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
-                  >
-                    Submit Feedback
-                  </button>
+          {/* Buttons Section */}
+          <div className="mt-2 flex flex-wrap gap-4">
+            {/* Submit Feedback Button */}
+            <button
+              onClick={() => handleOpenFeedbackForm(evt._id)}
+              className="bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded"
+            >
+              Submit Feedback
+            </button>
 
-                  {/* Submit Event Summary Button with isSummaryPublished check */}
-                  <button
-                    onClick={() => handleOpenSummaryForm(evt)}
-                    disabled={evt.isSummaryPublished}
-                    className={`py-2 px-4 rounded text-white transition-colors ${
-                      evt.isSummaryPublished
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-green-600 hover:bg-green-700"
-                    }`}
-                  >
-                    {evt.isSummaryPublished
-                      ? "Summary Already Published"
-                      : "Submit Event Summary"}
-                  </button>
+            {/* Submit Event Summary Button */}
+            <button
+              onClick={() => handleOpenSummaryForm(evt)}
+              disabled={evt.isSummaryPublished}
+              className={`py-2 px-4 rounded text-white transition-colors ${
+                evt.isSummaryPublished
+                  ? "bg-teal-400 cursor-not-allowed"
+                  : "bg-teal-600 hover:bg-teal-700"
+              }`}
+            >
+              {evt.isSummaryPublished
+                ? "Summary Already Published"
+                : "Submit Event Summary"}
+            </button>
 
-                  {/* Generate Feedback Summary Button */}
-                  <button
-                    onClick={() => handleGenerateFeedbackSummary(evt._id)}
-                    // Only disable & change text for the event that is loading
-                    disabled={loadingEventId === evt._id}
-                    className={`bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded ${
-                      loadingEventId === evt._id ? "opacity-70 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    {loadingEventId === evt._id ? "Generating..." : "Generate Feedback Summary"}
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-500">No past events found.</p>
-        )}
-      </div>
+            {/* Generate Feedback Summary Button */}
+            <button
+              onClick={() => handleGenerateFeedbackSummary(evt._id)}
+              disabled={loadingEventId === evt._id}
+              className={`bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded ${
+                loadingEventId === evt._id ? "opacity-70 cursor-not-allowed" : ""
+              }`}
+            >
+              {loadingEventId === evt._id ? "Generating..." : "Generate Feedback Summary"}
+            </button>
+          </div>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p className="text-gray-500">No past events found.</p>
+  )}
+</div>
+
 
       {/* Modal: Submit Event Summary Form */}
       {showSummaryForm && (

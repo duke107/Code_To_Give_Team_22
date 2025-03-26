@@ -26,6 +26,7 @@ export const register = async (req, res) => {
             return res.status(400).json({ msg: "Password must be between 8 and 16 characters" });
         }
         location = location.charAt(0).toUpperCase() + location.slice(1).toLowerCase();
+        name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
         
         const hashedPassword = await bcrypt.hash(password, 10);
         // Include location when creating the new user
