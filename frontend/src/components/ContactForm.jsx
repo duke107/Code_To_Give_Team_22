@@ -116,7 +116,7 @@ const ContactForm = () => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           required
-          className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-0 focus:ring-blue-500 focus:border-blue-500  min-h-[120px]"
+          className="w-full px-4 py-2  border rounded-md focus:outline-none focus:ring-0 focus:ring-blue-500 focus:border-blue-500  min-h-[120px]"
         />
           <SpeechToText textAreaRef={textAreaRef} setText={setMessage} left="10px" bottom="10px"/>
         {/* </textarea> */}

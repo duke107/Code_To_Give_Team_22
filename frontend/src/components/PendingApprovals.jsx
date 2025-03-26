@@ -2,12 +2,17 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import StoryCardWithModal from "./StoryCardWithModal"; // Using the new component
+import StoryCardWithModal from "./StoryCardWithModal";
 
 const PendingApprovals = () => {
   const [pendingEvents, setPendingEvents] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedEventId, setSelectedEventId] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+
   const token = useSelector((state) => state.admin.token);
 
+  // Function to approve an event
   const onApprove = async (eventId) => {
     try {
       const response = await axios.post(
@@ -24,28 +29,38 @@ const PendingApprovals = () => {
     }
   };
 
-  const onReject = async (eventId) => {
+  // Function to handle reject button click
+  const handleRejectClick = (eventId) => {
+    if (window.confirm("Are you sure you want to reject this event?")) {
+      setSelectedEventId(eventId);
+      setShowModal(true);
+    }
+  };
+
+  // Function to reject an event
+  const onReject = async () => {
+    if (!rejectionReason.trim()) {
+      toast.error("Rejection reason is required!");
+      return;
+    }
+
     try {
-      console.log("Rejecting event with ID:", eventId); // Debugging
-  
-      const response = await axios.delete(
-        `http://localhost:3000/api/v1/admin/reject/${eventId}`,
+      const response = await axios.post(
+        `http://localhost:3000/api/v1/admin/reject/${selectedEventId}`,
+        { reason: rejectionReason }, // Send reason in request body
         { headers: { Authorization: `Bearer ${token}` } }
       );
-  
-      // console.log(response.data);
+
       toast.error(response.data.message);
-  
-      // Remove event from pending list
       setPendingEvents((prevEvents) =>
-        prevEvents.filter((event) => event._id !== eventId)
+        prevEvents.filter((event) => event._id !== selectedEventId)
       );
+      setShowModal(false);
+      setRejectionReason("");
     } catch (error) {
       console.error("Error rejecting event:", error);
     }
   };
-  
-  
 
   useEffect(() => {
     const fetchPendingEvents = async () => {
@@ -54,7 +69,6 @@ const PendingApprovals = () => {
           "http://localhost:3000/api/v1/admin/pending-events",
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        console.log(response.data);
         setPendingEvents(response.data.events);
       } catch (error) {
         console.error("Error fetching pending events", error);
@@ -81,7 +95,7 @@ const PendingApprovals = () => {
                 event={{
                   id: event._id,
                   title: event.title,
-                  description: typeof event.content === "string" ? event.content : JSON.stringify(event.content), // Ensure it's a string
+                  description: typeof event.content === "string" ? event.content : JSON.stringify(event.content),
                   image: event.image || "https://via.placeholder.com/300",
                   eventLocation: event.eventLocation,
                   eventStartDate: event.eventStartDate,
@@ -101,13 +115,42 @@ const PendingApprovals = () => {
                 </button>
                 <button
                   className="bg-red-500 text-white px-3 py-1 rounded-md transition-all duration-200 hover:bg-red-600 shadow-md"
-                  onClick={() => onReject(event._id)}
+                  onClick={() => handleRejectClick(event._id)}
                 >
                   X
                 </button>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Rejection Modal */}
+      {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-96">
+            <h2 className="text-xl font-semibold mb-4 text-center">Reject Event</h2>
+            <textarea
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500"
+              placeholder="Enter rejection reason..."
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+            ></textarea>
+            <div className="flex justify-end mt-4">
+              <button
+                className="bg-gray-400 text-white px-4 py-2 rounded-md mr-2 hover:bg-gray-500"
+                onClick={() => setShowModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                onClick={onReject}
+              >
+                Reject
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

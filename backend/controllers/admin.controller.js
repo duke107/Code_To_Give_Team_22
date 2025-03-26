@@ -118,25 +118,29 @@ export const approveEvent = async (req, res) => {
 };
 
 
-
 export const rejectEvent = async (req, res, io) => {
   try {
     const { eventId } = req.params;
+    const { reason } = req.body; // Get rejection reason from request body
 
     // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(eventId)) {
       return res.status(400).json({ success: false, message: "Invalid event ID format" });
     }
 
-    // Find and delete the event
+    if (!reason || reason.trim() === "") {
+      return res.status(400).json({ success: false, message: "Rejection reason is required" });
+    }
+
     const event = await Event.findByIdAndDelete(eventId);
     if (!event) {
       return res.status(404).json({ success: false, message: "Event not found" });
     }
-    // Notify the event creator
-    const eventCreatorId = event.createdBy;
 
-    sendNotification(eventCreatorId, notification.message, notification.type);
+    const eventCreatorId = event.createdBy;
+    const notificationMessage = `Your event "${event.title}" was rejected by Admin. Reason: ${reason}`;
+    
+    await sendNotification(eventCreatorId, notificationMessage, "Event_Rejection");
 
     res.status(200).json({ success: true, message: "Event rejected successfully" });
 
@@ -199,28 +203,28 @@ export const getUsersByCity = async (req, res) => {
       .catch((err) => res.status(400).json("Error: " + err));
   }
 
-    export const getCityDetails = async (req, res) => {
-        try {
-            const { city } = req.params;
-            const today = new Date();
-            
-            // Fetch users in the city
-            const allUsers = await User.find({ location: city });
-            const users = allUsers.filter((user) => user.role === "User");
-            const organizers = allUsers.filter((user) => user.role === "Event Organiser");
-          
-            // Fetch past events
-            const pastEvents = await Event.find({ eventLocation: city, eventEndDate: { $lt: today } });
+export const getCityDetails = async (req, res) => {
+    try {
+        const { city } = req.params;
+        const today = new Date();
         
-            // Fetch upcoming events
-            const upcomingEvents = await Event.find({ eventLocation: city, eventStartDate: { $gte: today } });
-            // console.log(users, pastEvents, upcomingEvents);
-            res.status(200).json({ users, organizers, pastEvents, upcomingEvents });
-          } catch (error) {
-            console.error("Error fetching city data:", error);
-            res.status(500).json({ message: "Internal Server Error" });
-          }
-    };
+        // Fetch users in the city
+        const allUsers = await User.find({ location: city });
+        const users = allUsers.filter((user) => user.role === "User");
+        const organizers = allUsers.filter((user) => user.role === "Event Organiser");
+      
+        // Fetch past events
+        const pastEvents = await Event.find({ eventLocation: city, eventEndDate: { $lt: today } });
+    
+        // Fetch upcoming events
+        const upcomingEvents = await Event.find({ eventLocation: city, eventStartDate: { $gte: today } });
+        // console.log(users, pastEvents, upcomingEvents);
+        res.status(200).json({ users, organizers, pastEvents, upcomingEvents });
+      } catch (error) {
+        console.error("Error fetching city data:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
+};
 
     export const getStats = async (req, res) => {
         try {
@@ -294,7 +298,7 @@ export const removeOrganizer = async (req, res) => {
 
     // Send Notification
     const message = "Your role has been changed to User by the Admin.";
-    await sendNotification(id, message, "role_change");
+    await sendNotification(id.toString(), message, "role_change");
 
     res.status(200).json({ message: "Organizer role changed to User successfully" });
   } catch (error) {
@@ -340,13 +344,14 @@ export const warnOrganizer = async (req, res) => {
       from: process.env.SMTP_MAIL,
       to: user.email,
       subject: "Warning from Admin",
-      text: `Dear ${user.name},\n\n${message}\n\nPlease take necessary action.\n\nRegards,\nAdmin`,
+      text: `Dear ${user.name},\n\n${message}\n\nPlease take necessary action.\n\nRegards,\nSamarthanam Web Team Admin`,
     };
 
     await transporter.sendMail(mailOptions);
+    const warningMessage = `Warning from Admin: ${message}.`
 
     // Store notification in the database
-    await sendNotification(userId, message, "warning");
+    await sendNotification(userId, warningMessage, "warning");
 
     res.status(200).json({ message: "Warning sent successfully" });
   } catch (error) {

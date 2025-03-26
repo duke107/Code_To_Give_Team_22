@@ -34,5 +34,5 @@ router.post("/getEvents", getEvents);
 router.post("/warn-organizer", warnOrganizer);
 router.put("/remove-organizer/:id", removeOrganizer);
 
-router.delete("/reject/:eventId",  rejectEvent);
+router.post("/reject/:eventId",  rejectEvent);
 export default router;

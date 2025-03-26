@@ -16,7 +16,7 @@ const notificationSchema = new Schema({
     },
     type: {
         type: String,
-        enum: ['registration', 'reminder', 'feedback', 'task-assigned', "task-complete", "event-end", "warning"],
+        enum: ['registration', 'reminder', 'feedback', 'task-assigned', "task-complete", "event-end", "warning", "Event_Rejection", "role_change"],
         required: true
     },
     eventSlug: {

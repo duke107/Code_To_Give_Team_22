@@ -5,6 +5,7 @@ const UserDetailsModal = ({ user, onClose }) => {
   const [eventDetails, setEventDetails] = useState([]);
   const [warningMessage, setWarningMessage] = useState("");
   const [showWarnForm, setShowWarnForm] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
     // If user is an organiser and has events, fetch them
@@ -28,6 +29,7 @@ const UserDetailsModal = ({ user, onClose }) => {
 
   const handleWarnSubmit = async () => {
     if (!user) return;
+    setIsSending(true);
     try {
       await axios.post("http://localhost:3000/api/v1/admin/warn-organizer", {
         userId: user._id,
@@ -37,6 +39,7 @@ const UserDetailsModal = ({ user, onClose }) => {
       alert("Warning sent successfully!");
       setShowWarnForm(false);
       setWarningMessage("");
+      setIsSending(false);
     } catch (error) {
       console.error("Error sending warning:", error);
       alert("Failed to send warning.");
@@ -165,7 +168,7 @@ const UserDetailsModal = ({ user, onClose }) => {
                     className="bg-blue-500 text-white px-4 py-2 rounded"
                     onClick={handleWarnSubmit}
                   >
-                    Send Warning
+                  Send Warning
                   </button>
                   <button
                     className="bg-gray-500 text-white px-4 py-2 rounded"
@@ -176,6 +179,13 @@ const UserDetailsModal = ({ user, onClose }) => {
                 </div>
               </div>
             )}
+            {isSending && (
+        <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-md shadow-lg text-center">
+            <p className="text-lg font-semibold">⚠️ Sending Warning...</p>
+          </div>
+        </div>
+      )}
           </>
         ) : (
           // If user is just "User," allow promoting them to "Event Organiser"

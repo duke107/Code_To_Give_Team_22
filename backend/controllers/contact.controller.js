@@ -99,7 +99,7 @@ export const replyToMessage = async (req, res) => {
       return res.status(404).json({ error: "Message not found." });
     }
 
-    console.log("Found message:", message);
+    // console.log("Found message:", message);
 
     // Generate email template
     const emailContent = generateReplyEmailTemplate(message.name, replyText);
