@@ -7,7 +7,9 @@ import { Chart, ArcElement, Tooltip, Legend } from "chart.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { app } from "../firebase";
 import "react-toastify/dist/ReactToastify.css";
+import ShareButtons from "./ShareButtons";
 
+import { motion } from "framer-motion";
 Chart.register(ArcElement, Tooltip, Legend);
 
 const Event = () => {
@@ -382,12 +384,15 @@ const Event = () => {
 
   return (
     <div className="max-w-3xl mx-auto bg-white rounded-2xl mt-5 shadow-lg p-8 relative border border-gray-200">
+      <div className="flex justify-between">
       <h1 className="text-4xl text-center font-extrabold text-gray-900 mb-6">
         {event.title}
       </h1>
+      <ShareButtons event={event} />
+      </div>
       {event.image && (
-<img src={event.image} alt={event.title} className="w-full h-64 object-contain rounded-xl mb-5 shadow" />
-)}
+        <img src={event.image} alt={event.title} className="w-full h-64 object-contain rounded-xl mb-5 shadow" />
+      )}
       <div
         className="text-gray-700 mb-6 leading-relaxed"
         dangerouslySetInnerHTML={{ __html: event.content }}
@@ -552,18 +557,22 @@ const Event = () => {
           </div>
 
           {/* Feedback / Testimonial Buttons */}
-          <button
-            onClick={openFeedbackModal}
-            className="w-full mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-xl transition-all shadow-md hover:shadow-lg"
-          >
-            Give Feedback
-          </button>
-          <button
-            onClick={openTestimonialModal}
-            className="w-full mt-4 bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition-all shadow-md hover:shadow-lg"
-          >
-            Leave a Testimonial
-          </button>
+          { hasEventEnded(event) &&
+            <>
+              <button
+                onClick={openFeedbackModal}
+                className="w-full mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-xl transition-all shadow-md hover:shadow-lg"
+              >
+                Give Feedback
+              </button>
+              <button
+                onClick={openTestimonialModal}
+                className="w-full mt-4 bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition-all shadow-md hover:shadow-lg"
+              >
+                Leave a Testimonial
+              </button>
+            </>
+          }
         </>
       )}
 

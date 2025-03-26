@@ -1,9 +1,8 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { adminLogout } from "../redux/slices/adminSlice";
 import { FaBars, FaTimes } from "react-icons/fa";
-
 
 const AdminNavbar = () => {
   const navigate = useNavigate();
@@ -26,22 +25,19 @@ const AdminNavbar = () => {
   return (
     <>
       {/* Desktop Navbar */}
-      <nav className="bg-blue-700 text-white px-4 py-3 flex justify-between items-center shadow-md">
+      <nav className="bg-blue-700 text-white px-6 py-4 flex justify-between items-center shadow-md">
         {/* Dashboard Link */}
-        <Link
-          to="/admin/dashboard"
-          className="text-lg font-bold whitespace-nowrap"
-        >
+        <Link to="/admin/dashboard" className="text-xl font-bold whitespace-nowrap">
           Admin Dashboard
         </Link>
 
         {/* Navigation Links - Hidden on Mobile */}
-        <div className="hidden md:flex flex-wrap gap-2">
+        <div className="hidden md:flex gap-4">
           {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`px-3 py-1.5 text-sm rounded-md font-medium transition-all ${
+              className={`px-4 py-2 text-sm rounded-md font-medium transition-all ${
                 location.pathname === item.path
                   ? "bg-blue-900 shadow-md"
                   : "bg-blue-600 hover:bg-blue-800"
@@ -55,13 +51,13 @@ const AdminNavbar = () => {
         {/* Logout Button - Hidden on Mobile */}
         <button
           onClick={handleLogout}
-          className="hidden md:block bg-red-500 px-3 py-1.5 text-sm rounded-md hover:bg-red-600 transition shadow-md font-medium"
+          className="hidden md:block bg-red-500 px-4 py-2 text-sm rounded-md hover:bg-red-600 transition shadow-md font-medium"
         >
           Logout
         </button>
 
         {/* Mobile Menu Button */}
-        <button className="md:hidden text-xl" onClick={() => setMenuOpen(true)}>
+        <button className="md:hidden text-2xl" onClick={() => setMenuOpen(true)}>
           <FaBars />
         </button>
       </nav>
@@ -77,7 +73,7 @@ const AdminNavbar = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
+              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-2xl"
               onClick={() => setMenuOpen(false)}
             >
               <FaTimes />

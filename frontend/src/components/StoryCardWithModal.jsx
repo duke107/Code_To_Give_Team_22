@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import DOMPurify from "dompurify";
 import { motion, AnimatePresence } from "framer-motion";
 
 const StoryCardWithModal = ({ event }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [createdByUser, setCreatedByUser] = useState(null);
-  const [volunteeringUsers, setVolunteeringUsers] = useState([]);
-  const [registeredUsers, setRegisteredUsers] = useState([]);
 
   useEffect(() => {
     if (isModalOpen) {
-      fetchUserDetails(event.createdBy, setCreatedByUser);
-      fetchUserList(event.volunteeringPositions, setVolunteeringUsers);
-      fetchUserList(event.registeredVolunteers, setRegisteredUsers);
+      fetchUserDetails(event.createdBy, setCreatedByUser)
     }
   }, [isModalOpen, event]);
 
@@ -24,20 +21,6 @@ const StoryCardWithModal = ({ event }) => {
     } catch (error) {
       console.error("Error fetching user:", error);
       setUserState("Unknown User");
-    }
-  };
-
-  const fetchUserList = async (userIds, setUsersState) => {
-    if (!userIds || userIds.length === 0) {
-      setUsersState([]);
-      return;
-    }
-    try {
-      const response = await axios.get("http://localhost:3000/api/v1/admin/users", { userIds });
-      setUsersState(response.data || []);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      setUsersState([]);
     }
   };
 
@@ -58,7 +41,7 @@ const StoryCardWithModal = ({ event }) => {
           onClick={() => setIsModalOpen(true)}
           className="mt-3 bg-blue-600 text-white px-4 py-2 rounded transition hover:bg-blue-700"
         >
-          Read More
+          Details
         </button>
       </div> 
 
@@ -86,10 +69,22 @@ const StoryCardWithModal = ({ event }) => {
               <p className="text-gray-600 mt-2"><strong>Location:</strong> {event.eventLocation}</p>
               <p className="text-gray-600"><strong>Start Date:</strong> {new Date(event.eventStartDate).toLocaleDateString()}</p>
               <p className="text-gray-600"><strong>End Date:</strong> {new Date(event.eventEndDate).toLocaleDateString()}</p>
-              <p className="text-gray-600 mt-2"><strong>Details:</strong> {typeof event.description === "string" ? event.description : JSON.stringify(event.description)}</p>
+              <p className="text-gray-600 mt-2">
+                <strong>Description:</strong>{" "}
+                {typeof event.description === "string" ? (
+                  <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(event.description) }} />
+                ) : (
+                  JSON.stringify(event.description)
+                )}
+              </p>
               <p className="text-gray-600 mt-2"><strong>Created By:</strong> {createdByUser || "Unknown"}</p>
-              <p className="text-gray-600 mt-2"><strong>Volunteering Positions:</strong> {volunteeringUsers.length > 0 ? volunteeringUsers.map((user) => user.name).join(", ") : "N/A"}</p>
-              <p className="text-gray-600 mt-2"><strong>Registered Volunteers:</strong> {registeredUsers.length > 0 ? registeredUsers.map((user) => user.name).join(", ") : "None"}</p>
+              <p className="text-gray-600 mt-2">
+                <strong>Volunteering Positions:</strong>{" "}
+                {event.volunteeringPositions.length > 0
+                  ? event.volunteeringPositions.map((user) => `${user.title} (${user.slots})`).join(", ")
+                  : "N/A"}
+              </p>
+              <p className="text-gray-600 mt-2"><strong>Registered Volunteers:</strong> {event.registeredVolunteers.length > 0 ? event.registeredVolunteers.length : "0"}</p>
               <div className="flex justify-end mt-4">
                 <button
                   onClick={() => setIsModalOpen(false)}
