@@ -24,7 +24,7 @@ const OrganiserMessages = () => {
       }
     };
     fetchMessages();
-  }, []);
+  }, [isModalOpen]);
 
   const handleDeleteMessage = async (messageId) => {
     try {

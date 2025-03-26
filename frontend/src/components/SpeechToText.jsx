@@ -84,12 +84,17 @@ const SpeechToText = ({ textAreaRef, quillRef, setText, left, bottom }) => {
     useEffect(() => {
         if (quillRef?.current) {
             const editor = quillRef.current.getEditor();
-            editor.setText(transcript);
+            if (editor.getText() !== transcript) {
+                editor.setText(transcript);
+            }
         } else if (textAreaRef?.current) {
-            textAreaRef.current.value = transcript;
-            setText(transcript); // Updates state if needed
+            if (textAreaRef.current.value !== transcript) {
+                textAreaRef.current.value = transcript;
+                setText(transcript); // Only update state if value is different
+            }
         }
-    }, [transcript, setText, quillRef, textAreaRef]);
+    }, [transcript]); // Removed `setText, quillRef, textAreaRef` from dependencies
+    
 
     const indianLanguages = [
         { code: "en-IN", label: "English" },

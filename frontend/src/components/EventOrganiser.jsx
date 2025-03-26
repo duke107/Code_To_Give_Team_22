@@ -9,6 +9,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { app } from "../firebase";
 import "react-toastify/dist/ReactToastify.css";
 import RenderGeneratedSummary from "./RenderGeneratedSummary";
+import SpeechToText from "./SpeechToText";
 
 Chart.register(ArcElement, Tooltip, Legend);
 
@@ -75,6 +76,8 @@ function EventOrganiser() {
   // For collapsible panels: positions & volunteers
   const [expandedPositions, setExpandedPositions] = useState({});
   const [expandedVolunteers, setExpandedVolunteers] = useState({});
+  const textAreaRefb = useRef();
+  const textAreaRefa = useRef();
 
   // Fetch event details
   useEffect(() => {
@@ -876,7 +879,7 @@ function EventOrganiser() {
             <h2 className="text-xl font-bold mb-4">Submit Event Summary</h2>
             {event.volunteeringPositions && event.volunteeringPositions.length > 0 && (
               <div className="mb-4">
-                <h3 className="text-lg font-semibold mb-2">Volunteering Positions</h3>
+                <h3 className="text-bas font-medium mb-2">Volunteering Positions</h3>
                 <ul className="list-disc pl-5 text-sm text-gray-700">
                   {event.volunteeringPositions.map((pos) => (
                     <li key={pos._id}>
@@ -895,6 +898,7 @@ function EventOrganiser() {
                   type="text"
                   name="eventName"
                   value={summaryData.eventName}
+                  disabled
                   onChange={handleSummaryChange}
                   className="mt-1 block w-full p-2 border rounded"
                   required
@@ -909,6 +913,7 @@ function EventOrganiser() {
                   type="text"
                   name="location"
                   value={summaryData.location}
+                  disabled
                   onChange={handleSummaryChange}
                   className="mt-1 block w-full p-2 border rounded"
                   required
@@ -924,6 +929,7 @@ function EventOrganiser() {
                     type="date"
                     name="startDate"
                     value={summaryData.startDate}
+                    disabled
                     onChange={handleSummaryChange}
                     className="mt-1 block w-full p-2 border rounded"
                     required
@@ -937,6 +943,7 @@ function EventOrganiser() {
                     type="date"
                     name="endDate"
                     value={summaryData.endDate}
+                    disabled
                     onChange={handleSummaryChange}
                     className="mt-1 block w-full p-2 border rounded"
                     required
@@ -992,32 +999,54 @@ function EventOrganiser() {
                   </button>
                 </div>
               </div>
-              <div>
                 <label className="block text-sm font-medium text-gray-700">
                   How was the feel of the event?
                 </label>
+                <div className="relative">
                 <textarea
                   name="organizerFeel"
+                  ref={textAreaRefa}
                   value={summaryData.organizerFeel}
                   onChange={handleSummaryChange}
-                  className="mt-1 block w-full p-2 border rounded"
+                  className="mt-1 block w-full p-2 border rounded min-h-[120px]"
                   rows="3"
                   required
                 />
+                <SpeechToText
+                  textAreaRef={textAreaRefa}
+                  setText={(text) =>
+                    setSummaryData((prev) => ({ ...prev, organizerFeel: text }))
+                  }
+                  left="10px"
+                  bottom="10px"
+                />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Did you enjoy organising the event?
                 </label>
-                <textarea
-                  name="organizerEnjoyment"
-                  value={summaryData.organizerEnjoyment}
-                  onChange={handleSummaryChange}
-                  className="mt-1 block w-full p-2 border rounded"
-                  rows="3"
-                  required
-                />
+                <div className="relative">
+                  <textarea
+                    ref={textAreaRefb}
+                    name="organizerEnjoyment"
+                    value={summaryData.organizerEnjoyment}
+                    onChange={handleSummaryChange}
+                    className="mt-1 block w-full p-2 border rounded min-h-[120px]"
+                    rows="3"
+                    required
+                  />
+                  <SpeechToText
+                    textAreaRef={textAreaRefb}
+                    setText={(text) =>
+                      setSummaryData((prev) => ({ ...prev, organizerEnjoyment: text }))
+                    }
+                    left="10px"
+                    bottom="10px"
+                  />
+                </div>
               </div>
+
               <div className="flex gap-4">
                 <button
                   type="submit"

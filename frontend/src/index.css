@@ -2,13 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* apparently this font is better for people with visual impairment (braille website) */
+@font-face {
+  font-family: 'Atkinson Hyperlegible';
+  src: url('/fonts/Atkinson-Hyperlegible-Regular-102a.woff2') format('woff2'),
+       url('/fonts/Atkinson-Hyperlegible-Regular-102.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
 * {
-  font-family: "Montserrat", serif;
+  font-family: 'Atkinson Hyperlegible', Arial, sans-serif !important;
   font-optical-sizing: auto;
   font-style: normal;
   overflow-x: hidden;
   box-sizing: border-box;
 }
+
 
 /* High Contrast Mode */
 .high-contrast {
@@ -155,4 +165,3 @@ div[role="menuitem"]:focus-visible {
   background-color: #004d00;
   color: white;
 }
-

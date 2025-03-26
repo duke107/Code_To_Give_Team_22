@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import SpeechToText from './SpeechToText';
 import { HiMicrophone, HiStop } from "react-icons/hi";
+import { Toast } from 'flowbite-react';
+import { toast } from 'react-toastify';
 
 const ContactForm = () => {
   const [name, setName] = useState("");
@@ -52,7 +54,7 @@ const ContactForm = () => {
       if (!res.ok) {
         throw new Error(result.error || "Something went wrong");
       }
-      alert("Your query has been submitted successfully!");
+      toast.success("Your query has been submitted successfully!");
       setName("");
       setEmail("");
       setQueryType("general");
@@ -60,7 +62,7 @@ const ContactForm = () => {
       setSelectedEvent("");
     } catch (error) {
       console.error("Error sending message:", error);
-      alert(error.message);
+      toast.error(error.message);
     }
   };
 
@@ -114,7 +116,7 @@ const ContactForm = () => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           required
-          className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-0 focus:ring-blue-500 focus:border-blue-500  min-h-[180px]"
+          className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-0 focus:ring-blue-500 focus:border-blue-500  min-h-[120px]"
         />
           <SpeechToText textAreaRef={textAreaRef} setText={setMessage} left="10px" bottom="10px"/>
         {/* </textarea> */}

@@ -10,7 +10,7 @@ import crypto from "crypto"
 export const register = async (req, res) => {
     try {
         // Destructure location along with other fields
-        const { name, email, password, location } = req.body;
+        let { name, email, password, location } = req.body;
         
         // Validate all required fields including location
         if (!name || !email || !password || !location) {
