@@ -264,9 +264,9 @@ export const deleteEvent = async (req, res) => {
 };
 
 export const getEvents = async (req, res) => {
-  try {
+  try { 
     // Build a query object based on query parameters
-    const query = { };
+    const query = {isApproved: true};
     if (req.query.createdBy) {
       query.createdBy = req.query.createdBy;
     }
@@ -276,7 +276,6 @@ export const getEvents = async (req, res) => {
     if (req.query.category) {
       query.category = category;
     }
-    
 
     // Fetch events from the database based on the query, sorted by creation date
     const events = await Event.find(query).sort({ createdAt: -1 });
@@ -707,6 +706,7 @@ export const getTasksUser = async (req, res) => {
   try {
     // Filter tasks by the logged-in user's ID
     const tasks = await Task.find({ assignedTo: req.user._id })
+      .where("isApproved").equals(true)
       .populate("event", "title eventStartDate eventEndDate")
       .populate("assignedTo", "name email");
       
@@ -726,7 +726,7 @@ export const getTasksUser = async (req, res) => {
 export const getEventsUser = async (req, res) => {
   try {
     // Populate the createdBy field and the registered users in each volunteering position
-    const events = await Event.find()
+    const events = await Event.find() 
       .populate("createdBy", "name email")
       .populate("volunteeringPositions.registeredUsers", "name email");
       

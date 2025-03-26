@@ -33,6 +33,42 @@ const PastEvents = () => {
     if (token) fetchPastEvents();
   }, [token]);
 
+  const defaultEventImage = (
+    <div className="h-32 bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-12 w-12"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+        />
+      </svg>
+    </div>
+  );
+  
+  const EventCard = ({ event }) => {
+    return (
+      <div>
+        {event.image ? (
+          <img
+            src={event.image}
+            alt={event.title}
+            className="w-full h-40 object-cover rounded-md"
+          />
+        ) : (
+          defaultEventImage
+        )}
+      </div>
+    );
+  };
+  
+
   return (
     <div className="p-8 bg-gray-50 shadow-lg rounded-lg mx-auto max-w-6xl mt-8">
       <h2 className="text-3xl font-bold text-gray-800 border-b pb-3 tracking-wide">
@@ -54,11 +90,15 @@ const PastEvents = () => {
               transition={{ duration: 0.3 }}
               className="bg-white p-6 rounded-lg shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg"
             >
-              <img
-                src={event.image || "/default-event.jpg"} // Placeholder image
-                alt={event.title}
-                className="w-full h-40 object-cover rounded-md"
-              />
+              {event.image ? (
+                  <img
+                    src={event.image}
+                    alt={event.title}
+                    className="w-full h-40 object-cover rounded-md"
+                  />
+                ) : (
+                  defaultEventImage
+                )}
               <div className="mt-4">
                 <h3 className="text-xl font-semibold text-gray-900">
                   {event.title}
@@ -102,11 +142,15 @@ const PastEvents = () => {
               transition={{ duration: 0.3 }}
             >
               {/* Event Image */}
-              <img
-                src={selectedEvent.image || "/default-event.jpg"}
-                alt={selectedEvent.title}
-                className="w-full h-48 object-cover rounded"
-              />
+              {selectedEvent.image ? (
+                  <img
+                    src={selectedEvent.image}
+                    alt={selectedEvent.title}
+                    className="w-full h-40 object-cover rounded-md"
+                  />
+                ) : (
+                  defaultEventImage
+                )}
 
               <h2 className="text-2xl font-semibold mt-4">{selectedEvent.title}</h2>
               <p className="text-gray-600 mt-2">

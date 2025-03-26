@@ -4,6 +4,8 @@ import { FaCheck, FaReply, FaTrashAlt } from "react-icons/fa";
 import axios from 'axios'
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useRef } from "react";
+import SpeechToText from "../components/SpeechToText";
 
 const AdminMessages = () => {
   const [messages, setMessages] = useState([]);
@@ -14,6 +16,7 @@ const AdminMessages = () => {
   const [loading, setLoading] = useState(false)
   const [isMsgModalOpen, setIsMsgModalOpen] = useState(false);
   const [isReplyModalOpen, setIsReplyModalOpen] = useState(false);
+  const textAreaRef = useRef();
   
     const openMessageModal = (msg) => {
       setSelectedMessage(msg);
@@ -117,7 +120,7 @@ const AdminMessages = () => {
             className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-all"
             onClick={handleDeleteAllMessages}
           >
-            Delete All
+            Clear All
           </button>
         )}
       </div>
@@ -153,10 +156,10 @@ const AdminMessages = () => {
                   {msg.isReplied ? (
                     <>
                       <FaCheck className="text-green-500 mr-1" size={14} />
-                      <span>Read</span>
+                      <span>Replied</span>
                     </>
                   ) : (
-                    <span className="text-gray-400">Unread</span>
+                    <span className="text-gray-400">Reply Pending</span>
                   )}
                 </div>
               </div>
@@ -218,14 +221,18 @@ const AdminMessages = () => {
       {/* Reply Modal */}
       {isReplyModalOpen && selectedMessage && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="bg-white p-6 rounded-lg shadow-md w-96">
+          <div className="bg-white p-6 rounded-lg shadow-md sm:w-96 lg:w-[500px]">
             <h3 className="text-lg font-semibold mb-4">Reply to {selectedMessage.name}</h3>
+            <div className="relative">
             <textarea
-              className="w-full p-2 border rounded-md"
+              ref={textAreaRef}
+              className="w-full p-2 border rounded-md min-h-[120px]"
               placeholder="Write your reply..."
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
             />
+            <SpeechToText textAreaRef={textAreaRef} setText={setReplyText} left="10px" bottom="10px" />
+            </div>
             <div className="flex justify-end mt-4 gap-2">
               <button
                 className="px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500"

@@ -8,6 +8,8 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { app } from "../firebase";
 import "react-toastify/dist/ReactToastify.css";
 import ShareButtons from "./ShareButtons";
+import { useRef } from "react";
+import SpeechToText from "./SpeechToText";
 
 import { motion } from "framer-motion";
 Chart.register(ArcElement, Tooltip, Legend);
@@ -51,6 +53,7 @@ const Event = () => {
   const [updateLoading, setUpdateLoading] = useState(false);
   const [updateTask, setUpdateTask] = useState(null);
 
+  const textAreaRef = useRef();
   const state = useSelector((state) => state.auth);
 
   // Helper: Check if event has ended
@@ -758,7 +761,7 @@ const Event = () => {
                   <input
                     type="radio"
                     name="enjoyed"
-                    value="no"
+                    value="no" 
                     checked={enjoyed === "no"}
                     onChange={() => setEnjoyed("no")}
                     className="form-radio"
@@ -767,43 +770,58 @@ const Event = () => {
                 </label>
               </div>
             </div>
-            {enjoyed === "yes" && (
+            {enjoyed === "yes" && ( 
               <div className="mb-4">
                 <label className="block text-gray-700 font-semibold mb-1">
                   What did you enjoy/like most in the event?
                 </label>
-                <textarea
-                  value={enjoyedFeedback}
-                  onChange={(e) => setEnjoyedFeedback(e.target.value)}
-                  className="w-full border rounded p-2"
-                  rows="3"
-                ></textarea>
+                <div className="relative">
+                  <textarea
+                    ref={textAreaRef}
+                    value={enjoyedFeedback}
+                    onChange={(e) => setEnjoyedFeedback(e.target.value)}
+                    className="w-full border rounded p-2 min-h-[120px]"
+                    rows="3"
+                  />
+                  <SpeechToText textAreaRef={textAreaRef} setText={setEnjoyedFeedback} left="10px" bottom="10px"/>
+                </div>
               </div>
             )}
+
             {enjoyed === "no" && (
               <div className="mb-4">
                 <label className="block text-gray-700 font-semibold mb-1">
                   What went wrong?
                 </label>
-                <textarea
-                  value={notEnjoyedFeedback}
-                  onChange={(e) => setNotEnjoyedFeedback(e.target.value)}
-                  className="w-full border rounded p-2"
-                  rows="3"
-                ></textarea>
+                <div className="relative">
+                  <textarea
+                    ref={textAreaRef}
+                    value={notEnjoyedFeedback}
+                    onChange={(e) => setNotEnjoyedFeedback(e.target.value)}
+                    className="w-full border rounded p-2 min-h-[120px]"
+                    rows="3"
+                  />
+                  <SpeechToText textAreaRef={textAreaRef} setText={setNotEnjoyedFeedback} left="10px" bottom="10px"/>
+                </div>
               </div>
             )}
+
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-1">
                 Suggest any improvements or changes
               </label>
-              <textarea
-                value={improvementSuggestions}
-                onChange={(e) => setImprovementSuggestions(e.target.value)}
-                className="w-full border rounded p-2"
-                rows="2"
-              ></textarea>
+              <div className="relative">
+                <textarea
+                  ref={textAreaRef}
+                  value={improvementSuggestions}
+                  onChange={(e) => setImprovementSuggestions(e.target.value)}
+                  className="w-full border rounded p-2 min-h-[120px]"
+                  rows="2"
+                />
+                <SpeechToText textAreaRef={textAreaRef} setText={setImprovementSuggestions} left="10px" bottom="10px"/>
+              </div>
             </div>
+
             <div className="flex gap-4">
               <button
                 onClick={handleFeedbackSubmit}
@@ -864,14 +882,18 @@ const Event = () => {
               <label className="block text-gray-700 font-semibold mb-1">
                 Testimonial
               </label>
+              <div className="relative">
               <textarea
+                ref={textAreaRef}
                 value={testimonialContent}
                 onChange={(e) => setTestimonialContent(e.target.value)}
-                className="w-full border rounded p-2"
+                className="w-full border rounded p-2 min-h-[120px]"
                 rows="4"
                 placeholder="Share your experience..."
-              ></textarea>
-            </div>
+              />
+                <SpeechToText textAreaRef={textAreaRef} setText={setTestimonialContent} left="10px" bottom="10px"/>
+              </div>
+              </div>
             <div className="flex gap-4">
               <button
                 onClick={handleTestimonialSubmit}

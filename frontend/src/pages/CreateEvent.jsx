@@ -153,14 +153,19 @@ export default function CreateEvent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (!eventLocation || !eventStartDate || !eventEndDate) {
-      setPublishError(
-        "Please provide event location, start date, and end date."
-      );
+      setPublishError("Please provide event location, start date, and end date.");
       return;
     }
+    
+    if (typeof formData.content !== "string" || formData.content.split(" ").length < 30) {
+      setPublishError("Event description must be at least 30 words.");
+      return;
+    }
+  
     if (isRecording) stopRecording();
-
+  
     setIsSubmitting(true);
     try {
       const res = await fetch("http://localhost:3000/api/v1/events/create", {
@@ -179,7 +184,7 @@ export default function CreateEvent() {
           volunteeringPositions: volPositions,
         }),
       });
-
+  
       if (res.ok) {
         navigate("/");
       } else {
@@ -192,6 +197,7 @@ export default function CreateEvent() {
       setIsSubmitting(false);
     }
   };
+  
 
   // Speech recognition setup
   useEffect(() => {

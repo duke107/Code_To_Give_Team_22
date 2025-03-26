@@ -146,8 +146,13 @@ function Events() {
                               }
                               <div
                                 className="text-gray-600 text-base leading-relaxed mb-4 line-clamp-3"
-                                dangerouslySetInnerHTML={{ __html: event.content }}
+                                dangerouslySetInnerHTML={{
+                                  __html: event?.content
+                                    ? event.content.split(" ").slice(0, 30).join(" ") + "..."
+                                    : "",
+                                }}
                               />
+
                             </div> 
 
                             <div className="px-6 pb-6 pt-2">

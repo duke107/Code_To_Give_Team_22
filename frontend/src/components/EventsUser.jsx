@@ -407,8 +407,17 @@ function EventsUser() {
            
                {/* Description */}
                <div className="text-gray-600 line-clamp-3 mb-3">
-                 <div dangerouslySetInnerHTML={{ __html: event?.content }} />
-               </div>
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      event?.content
+                        ?.split(" ")
+                        .slice(0, 20)
+                        .join(" ") + "...",
+                  }}
+                />
+              </div>
+
            
                {/* Date */}
                <p className="text-gray-500 text-sm mb-4">📅 Date: {new Date(event?.eventStartDate).toLocaleDateString()}</p>

@@ -101,7 +101,7 @@ const PendingApprovals = () => {
                   eventStartDate: event.eventStartDate,
                   eventEndDate: event.eventEndDate,
                   volunteeringPositions: event.volunteeringPositions,
-                  registeredVolunteers: event.registeredVolunteers,
+                  // registeredVolunteers: event.registeredVolunteers,
                   createdBy: event.createdBy,
                 }}
               />

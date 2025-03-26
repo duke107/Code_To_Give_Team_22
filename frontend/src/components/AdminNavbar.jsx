@@ -16,6 +16,7 @@ const AdminNavbar = () => {
   };
 
   const navItems = [
+    { path: "/admin/dashboard", label: "Dashboard"},
     { path: "/admin/pending-approvals", label: "Pending Approvals" },
     { path: "/admin/past-events", label: "Approved Events" },
     { path: "/admin/event-summaries", label: "Event Summaries" },
@@ -26,9 +27,12 @@ const AdminNavbar = () => {
     <>
       {/* Desktop Navbar */}
       <nav className="bg-blue-700 text-white px-6 py-4 flex justify-between items-center shadow-md">
-        {/* Dashboard Link */}
-        <Link to="/admin/dashboard" className="text-xl font-bold whitespace-nowrap">
-          Admin Dashboard
+        <Link to="/admin/dashboard">
+          <img
+            src="https://org1.hyundai.com/content/dam/hyundai/in/en/images/hyundai-story/samrath/samarthanam_logo.png"
+            alt="Samarthanam Logo"
+            className="h-10 w-auto"
+          />
         </Link>
 
         {/* Navigation Links - Hidden on Mobile */}
