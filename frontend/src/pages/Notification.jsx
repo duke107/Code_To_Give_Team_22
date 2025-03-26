@@ -49,6 +49,7 @@ const Notification = ({ notifications, fetchNotifications }) => {
   };
 
   const handleViewEvent = (slug) => {
+    console.log(`/event/${slug}`);
     navigate(`/event/${slug}`);
   };
 

@@ -1,0 +1,9 @@
+{
+  "default": "Join us for an impactful event! Register now: {eventLink}",
+  "eventShare": {
+    "whatsapp": "🚀 Exciting Event Alert! 🚀\n\n🎉 {eventTitle}\n📅 Date: {eventStartDate} - {eventEndDate}\n📍 Location: {eventLocation} \nJoin us and make a difference! Sign up here: {eventLink}",
+    "twitter": "📢 Join {eventTitle} at {eventLocation} from {eventStartDate} to {eventEndDate}! Make an impact. Register now: {eventLink} #Volunteer #MakeADifference",
+    "facebook": "🌟 Be a part of {eventTitle}! 🌟\n\n📅 {eventStartDate} - {eventEndDate}\n📍 {eventLocation} \nJoin us today: {eventLink}",
+    "linkedin": "📢 Exciting Opportunity! {eventTitle} is happening at {eventLocation} from {eventStartDate} to {eventEndDate}. Join us in making a difference. Register now: {eventLink}"
+  }
+}

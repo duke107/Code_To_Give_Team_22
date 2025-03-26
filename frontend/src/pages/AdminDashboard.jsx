@@ -76,43 +76,56 @@ const AdminDashboard = () => {
 
   return (
     <div className="grid grid-cols-[70%_30%] gap-6 p-6">
-      <div className="bg-white shadow-lg rounded-lg p-6">
-        <h2 className="text-xl font-bold mb-4">Volunteers Per City</h2>
-        <div className="w-full h-96 overflow-hidden">
-          <Bar data={chartData} options={chartOptions} />
-        </div>
-      </div>
+  {/* Volunteers Per City (Left) */}
+  <div className="bg-white shadow-lg rounded-lg p-6">
+    <h2 className="text-xl font-bold mb-4">Volunteers Per City</h2>
+    <div className="w-full h-96 overflow-hidden">
+      <Bar data={chartData} options={chartOptions} />
+    </div>
+  </div>
 
-      <div className="bg-white shadow-lg rounded-lg p-6">
-        <h2 className="text-xl font-bold mb-4 text-center">City Details</h2>
-        <div className="flex flex-wrap gap-x-8">
-          {cityData.map((item) => (
-            <span
-              key={item.city}
-              className="cursor-pointer text-blue-600 transition-colors duration-300 hover:text-black"
-              onClick={() => navigate(`/admin/city/${item.city}`)}
-            >
-              {item.city}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <DashboardStats />
-
-      <div className="bg-white shadow-lg rounded-lg p-6">
-        <h2 className="text-xl font-bold mb-4 text-center">Total Donations</h2>
-        <p className="text-2xl font-semibold text-center text-green-600">₹{totalDonations}</p>
-        <button
-          onClick={() => setShowDonorsModal(true)}
-          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 w-full"
+  {/* City Details (Right) */}
+  <div className="bg-white shadow-lg rounded-lg p-6">
+    <h2 className="text-xl font-bold mb-4 text-center">City Details</h2>
+    <div className="flex flex-wrap gap-x-8">
+      {cityData.map((item) => (
+        <span
+          key={item.city}
+          className="cursor-pointer text-blue-600 transition-colors duration-300 hover:text-black"
+          onClick={() => navigate(`/admin/city/${item.city}`)}
         >
-          View Donors List
-        </button>
-        <div className="w-full h-64 mt-6">
-          <Pie data={pieChartData} />
-        </div>
+          {item.city}
+        </span>
+      ))}
+    </div>
+  </div>
+
+  {/* Total Donations (Left) */}
+  <div className="bg-white shadow-lg rounded-lg p-6">
+    <h2 className="text-xl font-bold mb-4 text-center">Total Donations</h2>
+    <p className="text-2xl font-semibold text-center text-green-600">₹{totalDonations}</p>
+
+    {/* Flexbox for Alignment */}
+    <div className="flex flex-row items-center justify-around mt-4">
+      
+      {/* Left-Aligned Pie Chart */}
+      <div className="size-96">
+        <Pie data={pieChartData} />
       </div>
+
+      {/* Right-Aligned Button */}
+      <button
+        onClick={() => setShowDonorsModal(true)}
+        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 w-40"
+      >
+        View Donors List
+      </button>
+    </div>
+  </div>
+
+  {/* DashboardStats (Right) */}
+  <DashboardStats />
+
 
       {showDonorsModal && (
         <div

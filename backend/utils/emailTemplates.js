@@ -166,3 +166,17 @@ export function generateEventCompletionEmailTemplate(eventTitle) {
     </div>`;
   }
   
+
+
+export const generateCompletedDonationTemplate = (donorName, amount, ) => {
+    return `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #000; color: #fff;">
+        <h2 style="color: #fff; text-align: center;">Thank You for Your Support!</h2>
+        <p style="font-size: 16px; color: #ccc;">Dear ${donorName},</p>
+        <p style="font-size: 16px; color: #ccc;">We sincerely appreciate your generous donation of <strong>₹${amount}</strong>.</p>
+        <p style="font-size: 16px; color: #ccc;">Your support helps us continue our mission to make a difference. Thank you!</p>
+        <footer style="margin-top: 20px; text-align: center; font-size: 14px; color: #666;">
+            <p>Thank you,<br>Samarthanam Team</p>
+            <p style="font-size: 12px; color: #444;">This is an automated message. Please do not reply to this email.</p>
+        </footer>
+    </div>`;
+};

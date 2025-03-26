@@ -70,7 +70,7 @@ const StoryCardWithModal = ({ event }) => {
               <p className="text-gray-600"><strong>Start Date:</strong> {new Date(event.eventStartDate).toLocaleDateString()}</p>
               <p className="text-gray-600"><strong>End Date:</strong> {new Date(event.eventEndDate).toLocaleDateString()}</p>
               <p className="text-gray-600 mt-2">
-                <strong>Details:</strong>{" "}
+                <strong>Description:</strong>{" "}
                 {typeof event.description === "string" ? (
                   <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(event.description) }} />
                 ) : (
