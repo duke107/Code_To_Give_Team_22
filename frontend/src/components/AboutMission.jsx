@@ -4,19 +4,7 @@ const AboutMission = () => {
   return (
     <div className="py-16 px-6 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-3xl font-bold text-red-600">ABOUT US</h2>
-        <p className="mt-4 text-gray-700 text-lg">
-        Samarthanam Trust for the Disabled is a National Award winning NGO established in the year 1997 by Founder Managing Trustee Dr.Mahantesh G Kivadasannavar and his schoolmate and childhood friend, Late Sugur Paramashivaiah Nagesh.
-        </p>
-        <p className="mt-4 text-gray-700 text-lg">
-        Samarthanam,one of the biggest NGOs in India, works for the empowerment of persons with disabilities and the underserved through its diverse initiatives focused on providing quality education, accommodation, nutritious food, vocational training and placement based rehabilitation.
-        It facilitates opportunities to enable persons with disabilities and the underserved to keep pace with the rest of the society.
-         
-        </p>
-        <h2 className="text-4xl font-extrabold text-blue-800 mb-8 relative inline-block">
-          Our Mission & Vision
-          <span className="relative left-0 bottom-[-4px] w-full h-1 bg-gradient-to-r from-blue-400 to-purple-500"></span>
-        </h2>
+        
         <div className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-8 border border-gray-200/50">
           <h3 className="text-2xl font-semibold text-blue-700 mb-6 flex items-center justify-center gap-2">
             <svg

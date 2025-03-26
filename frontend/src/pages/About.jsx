@@ -15,7 +15,7 @@ const slideshowImages = [
 
 const About = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white">
       <AboutMission />
       <AboutPeople />
       <AboutStats />

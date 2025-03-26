@@ -17,7 +17,7 @@ const AboutSlideshow = ({ images, slideDuration = 5000 }) => {
     <div style={{
       width: '100vw',
       marginLeft: 'calc(-50vw + 50%)',
-      backgroundColor: '#f5f5f5', // Light grey background
+      backgroundColor: '#0000', // Light grey background
       padding: '60px 0', // Vertical padding for the grey area
       marginBottom: '80px' // Space before footer
     }}>

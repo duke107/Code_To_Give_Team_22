@@ -288,6 +288,16 @@ export const getEvents = async (req, res) => {
   }
 };
 
+export const getEventById = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.eventId);
+    if (!event) return res.status(404).json({ error: "Event not found" });
+    res.json({ name: event.name });
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
+}
+
 
 export const registerVolunteer = async (req, res) => {
   try {
