@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import SpeechToText from './SpeechToText';
+import { HiMicrophone, HiStop } from "react-icons/hi";
 
 const ContactForm = () => {
   const [name, setName] = useState("");
@@ -7,6 +9,7 @@ const ContactForm = () => {
   const [message, setMessage] = useState("");
   const [selectedEvent, setSelectedEvent] = useState("");
   const [activeEvents, setActiveEvents] = useState([]);
+  const textAreaRef = useRef(null)
 
   // Fetch active events if query type is "event"
   useEffect(() => {
@@ -105,13 +108,17 @@ const ContactForm = () => {
             ))}
           </select>
         )}
-        <textarea
+        <div className='relative'><textarea
           placeholder="Your Message"
+          ref={textAreaRef}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           required
-          className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-0 focus:ring-blue-500 focus:border-blue-500"
-        ></textarea>
+          className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-0 focus:ring-blue-500 focus:border-blue-500  min-h-[180px]"
+        />
+          <SpeechToText textAreaRef={textAreaRef} setText={setMessage} left="10px" bottom="10px"/>
+        {/* </textarea> */}
+        </div>
         <button
           type="submit"
           className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"

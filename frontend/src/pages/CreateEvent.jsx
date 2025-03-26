@@ -31,6 +31,7 @@ import {
 } from "react-icons/hi";
 import { useSelector } from "react-redux";
 import LocationPicker from "../components/LocationPicker";
+import SpeechToText from "../components/SpeechToText";
 
 const modules = {
   toolbar: [
@@ -493,6 +494,7 @@ export default function CreateEvent() {
                   </Button>
                 </div>
               </div>
+              {/* <SpeechToText quillRef={quillRef}/> */}
             </div>
 
             {/* Volunteering Positions */}

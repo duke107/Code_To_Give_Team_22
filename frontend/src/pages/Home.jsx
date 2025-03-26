@@ -8,9 +8,11 @@ import AccessibilityMenu from "../components/AccessibilityMenu";
 import TranslateButton from "../TranslateButton";
 import { Star, HandHelping, Globe, Award } from "lucide-react";
 import TestimonialCarousel from "../components/TestimonialCarousal";
+import { useSelector } from "react-redux";
 
 function Home() {
     const [testimonials, setTestimonials] = useState([]);
+    const { isAuthenticated, user } = useSelector((state) => state.auth);
 
     useEffect(() => {
         const fetchTestimonials = async () => {
@@ -90,11 +92,11 @@ function Home() {
             </section>
 
             {/* Contact Form */}
-            <section className="py-10 bg-white">
+            {user?.role !== "Event Organiser" && <section section className="py-10 bg-white">
                 <div className="max-w-4xl mx-auto px-4">
                     <ContactForm />
                 </div>
-            </section>
+            </section>}
 
             {/* Accessibility & Translation */}
             <div className="fixed bottom-4 right-4 flex gap-2 z-50">

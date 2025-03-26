@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { loadStripe } from "@stripe/stripe-js";
@@ -11,6 +11,7 @@ import {
   CardCvcElement,
 } from "@stripe/react-stripe-js";
 import { useLocation, useNavigate } from "react-router-dom";
+import SpeechToText from "../components/SpeechToText"
 
 function Donate() {
   const [amount, setAmount] = useState("");
@@ -27,6 +28,7 @@ function Donate() {
   // Stripe states
   const [stripePromise, setStripePromise] = useState(null);
   const [clientSecret, setClientSecret] = useState(null);
+  const textAreaRef = useRef(null)
 
   // 1) Create PaymentIntent on backend
   const handleDonate = async (e) => {
@@ -107,13 +109,15 @@ function Donate() {
           />
         </div>
 
-        <div className="mb-4">
+        <div className="mb-4 relative">
           <label className="block text-gray-700 mb-2">Message (Optional)</label>
           <textarea
+            ref={textAreaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            className="w-full px-4 py-2 border rounded-md focus:outline-none"
+            className="w-full px-4 py-2  min-h-[180px] border rounded-md focus:outline-none"
           />
+          <SpeechToText textAreaRef={textAreaRef} setText={(text) => setMessage(text)} left="10px" bottom="10px"/>
         </div>
 
         <button

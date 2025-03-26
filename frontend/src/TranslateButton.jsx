@@ -13,30 +13,11 @@ function TranslateButton() {
         };
 
         window.googleTranslateElementInit = () => {
-            new window.google.translate.TranslateElement(
-                {
-                    pageLanguage: "en",
-                    layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
-                },
-                "google_translate_element"
-            );
-            setTimeout(filterLanguages, 500); // Delay to allow dropdown to render
-        };
-
-        const filterLanguages = () => {
-            const allowedLanguages = [
-                "Assamese", "Bengali", "Gujarati", "Hindi", "Kannada", "Malayalam",
-                "Marathi", "Nepali", "Odia", "Punjabi", "Sanskrit", "Sindhi", "Tamil", 
-                "Telugu", "Urdu"
-            ];
-            const languageNodes = document.querySelectorAll(".goog-te-menu2-item span.text");
-
-            languageNodes.forEach((node) => {
-                const language = node.innerText;
-                if (!allowedLanguages.includes(language)) {
-                    node.parentElement.style.display = "none";
-                }
-            });
+            new window.google.translate.TranslateElement({
+                pageLanguage: 'en', // Default page language (e.g., English)
+                includedLanguages: 'as,bn,gu,hi,kn,ml,mr,ne,or,pa,sa,sd,ta,te,ur, en', // Only these languages
+                layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE // Dropdown style
+              }, 'google_translate_element');
         };
 
         addGoogleTranslateScript();
@@ -63,7 +44,7 @@ function TranslateButton() {
             cursor: "pointer",
         }} onClick={handleTranslate}>
             Translate
-            <div id="google_translate_element" className="hidden" style={{ marginTop: "5px" }}></div>
+            <div id="google_translate_element" className="hidden" style={{ marginTop: "0px" }}></div>
         </div>
     );
 }
