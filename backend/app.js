@@ -49,3 +49,9 @@ connectDB()
 //     console.log("Started listening at port 3000");
 // });
 
+app._router.stack.forEach((r) => {
+    if (r.route && r.route.path) {
+      console.log(`Registered route: ${r.route.path}`);
+    }
+  });
+  

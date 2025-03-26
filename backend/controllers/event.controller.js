@@ -3,7 +3,7 @@ import Event from '../models/event.model.js'
 import { User } from '../models/user.model.js'; // adjust the path as needed
 import { Task } from '../models/task.model.js';
 import mongoose from 'mongoose';
-import { Feedback } from '../models/feedback.model.js';
+
 import { Notification } from '../models/notification.model.js';
 import { sendRegistrationNotification } from './notification.controller.js';
 import {io} from "../server.js"
@@ -12,6 +12,7 @@ import EventSummary from '../models/eventSummary.model.js';
 import { sendEmail } from '../utils/sendEmail.js';
 import {generateTaskAssignmentEmailTemplate} from '../utils/emailTemplates.js';
 import { Donation } from '../models/donation.model.js';
+import { Feedback } from '../models/feedback.model.js';
 
 
 // Create a new event

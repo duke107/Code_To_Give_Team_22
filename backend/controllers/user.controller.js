@@ -22,6 +22,7 @@ export const register = async (req, res) => {
             return res.status(400).json({ msg: "Email is already registered" });
         }
         
+        
         if (password.length < 8 || password.length > 16) {
             return res.status(400).json({ msg: "Password must be between 8 and 16 characters" });
         }
