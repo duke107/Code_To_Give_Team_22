@@ -10,7 +10,8 @@ function Register() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [location, setLocation] = useState(''); // New state for location
+    const [location, setLocation] = useState(''); 
+    const [category, setCategory] = useState(''); 
 
     const dispatch = useDispatch();
     const {
@@ -31,6 +32,7 @@ function Register() {
         data.append('email', email);
         data.append('password', password);
         data.append('location', location); // Append location to the form data
+        data.append('category', category);
         dispatch(register(data));
     }
 
@@ -59,6 +61,15 @@ function Register() {
         animate: { opacity: 1, x: "0%", transition: { duration: 0.5, ease: "easeInOut" } },
         exit: { opacity: 0, x: "-50%", transition: { duration: 0.5, ease: "easeInOut" } }
     };
+
+    const Categories = [
+        "Education & Skill Development",
+        "Sports & Cultural Events",
+        "Health & Well-being",
+        "Women Empowerment",
+        "Environmental Sustainability",
+        "Social Inclusion & Awareness",
+      ];
 
     return (
         <>
@@ -91,64 +102,87 @@ function Register() {
                     animate="animate"
                     exit="exit"
                     variants={leftVariants}
-                >
+                    >
                     <div className="w-full max-w-sm">
                         <div className="flex justify-center mb-5">
-                            <div className="sm:flex-row items-center justify-center gap-5">
-                                <h3 className="font-medium text-4xl overflow-hidden">Sign Up</h3>
-                            </div>
+                        <div className="sm:flex-row items-center justify-center gap-5">
+                            <h3 className="font-medium text-4xl overflow-hidden">Sign Up</h3>
+                        </div>
                         </div>
                         <p className="text-gray-800 text-center mb-12">
-                            Please provide your information to sign up.
+                        Please provide your information to sign up.
                         </p>
                         <form onSubmit={handleRegister}>
-                            <div className="mb-2">
-                                <input
-                                    type="text"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    placeholder="Full Name"
-                                    className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
-                                />
-                            </div>
-                            <div className="mb-2">
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="Email"
-                                    className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
-                                />
-                            </div>
-                            <div className="mb-2">
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Password"
-                                    className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
-                                />
-                            </div>
-                            {/* New location field */}
-                            {/* Location Picker Field */}
-                            <div className="mb-2">
-                                <LocationPicker eventLocation={location} setEventLocation={setLocation} />
-                            </div>
-                            <div className="block md:hidden font-semibold mt-5">
-                                <p>Already have Account?</p>
-                                <Link to="/login" className="text-sm text-gray-500 hover:underline">
-                                    Sign In
-                                </Link>
-                            </div>
-                            <button
-                                type="submit"
-                                className="border-2 mt-5 border-black w-full font-semibold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
+                        <div className="mb-2">
+                            <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Full Name"
+                            className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
+                            />
+                        </div>
+                        <div className="mb-2">
+                            <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Email"
+                            className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
+                            />
+                        </div>
+                        <div className="mb-2">
+                            <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Password"
+                            className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
+                            />
+                        </div>
+
+                        {/* Event Category Dropdown */}
+                        <div className="mb-2">
+                            <select
+                            id="category"
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value)}
+                            className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
+                            required
                             >
-                                SIGN UP
-                            </button>
+                            <option value="" disabled>
+                                Select a category
+                            </option>
+                            {Categories.map((cat, index) => (
+                                <option key={index} value={cat}>
+                                {cat}
+                                </option>
+                            ))}
+                            </select>
+                        </div>
+
+                        {/* Location Picker Field */}
+                        <div className="mb-2">
+                            <LocationPicker eventLocation={location} setEventLocation={setLocation} />
+                        </div>
+
+                        <div className="block md:hidden font-semibold mt-5">
+                            <p>Already have an account?</p>
+                            <Link to="/login" className="text-sm text-gray-500 hover:underline">
+                            Sign In
+                            </Link>
+                        </div>
+
+                        <button
+                            type="submit"
+                            className="border-2 mt-5 border-black w-full font-semibold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
+                        >
+                            SIGN UP
+                        </button>
                         </form>
                     </div>
-                </motion.div>
+                    </motion.div>
+
             </div>
         </>
     )

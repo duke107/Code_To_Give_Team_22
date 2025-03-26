@@ -37,7 +37,7 @@ const TestimonialCarousel = ({ testimonials }) => {
   };
 
   return (
-    <div className="w-3/4 mx-auto mt-10">
+    <div className="w-3/4 mx-auto mt-5">
       <Slider {...settings}>
         {testimonials.map((t) => (
           <div key={t._id} className="bg-white shadow-lg rounded-xl p-5 h-[420px] flex flex-col justify-between mx-4 ml-5 mr-5">

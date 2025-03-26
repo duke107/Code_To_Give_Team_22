@@ -3,7 +3,7 @@ import Event from '../models/event.model.js'
 import { User } from '../models/user.model.js'; // adjust the path as needed
 import { Task } from '../models/task.model.js';
 import mongoose from 'mongoose';
-import { Feedback } from '../models/feedback.model.js';
+
 import { Notification } from '../models/notification.model.js';
 import { sendRegistrationNotification } from './notification.controller.js';
 import {io} from "../server.js"
@@ -12,6 +12,7 @@ import EventSummary from '../models/eventSummary.model.js';
 import { sendEmail } from '../utils/sendEmail.js';
 import {generateTaskAssignmentEmailTemplate} from '../utils/emailTemplates.js';
 import { Donation } from '../models/donation.model.js';
+import { Feedback } from '../models/feedback.model.js';
 
 
 // Create a new event
@@ -78,19 +79,32 @@ export const createEvent = async (req, res) => {
       _id: { $ne: user_id },
       role: { $ne: "Event Organiser" },
     });
-
-    for (const user of usersInArea) {
+    
+    const usersByCategory = await User.find({
+      category: event.category,
+      _id: { $ne: user_id },
+      role: { $ne: "Event Organiser" },
+    });
+    
+    // Merge both user lists, ensuring uniqueness
+    const uniqueUsers = new Set([
+      ...usersInArea.map((user) => user._id.toString()),
+      ...usersByCategory.map((user) => user._id.toString()),
+    ]);
+    
+    for (const userId of uniqueUsers) {
       await Notification.create({
-        userId: user._id,
-        message: `New event "${event.title}" is listed in your area.`,
+        userId,
+        message: `New event "${event.title}" is listed that matches your interests or location.`,
         type: "reminder",
         eventSlug: event.slug,
       });
-      io.to(user._id.toString()).emit("new-notification", {
-        message: `New event "${event.title}" is listed in your area.`,
+      io.to(userId).emit("new-notification", {
+        message: `New event "${event.title}" is listed that matches your interests or location.`,
         eventSlug: event.slug,
       });
     }
+    
 
     return res.status(201).json(event);
   } catch (error) {
@@ -273,6 +287,16 @@ export const getEvents = async (req, res) => {
     return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+export const getEventById = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.eventId);
+    if (!event) return res.status(404).json({ error: "Event not found" });
+    res.json({ name: event.name });
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
+}
 
 
 export const registerVolunteer = async (req, res) => {

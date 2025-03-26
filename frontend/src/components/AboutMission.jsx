@@ -4,10 +4,7 @@ const AboutMission = () => {
   return (
     <div className="py-16 px-6 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-4xl font-extrabold text-blue-800 mb-8 relative inline-block">
-          Our Mission & Vision
-          <span className="relative left-0 bottom-[-4px] w-full h-1 bg-gradient-to-r from-blue-400 to-purple-500"></span>
-        </h2>
+        
         <div className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-8 border border-gray-200/50">
           <h3 className="text-2xl font-semibold text-blue-700 mb-6 flex items-center justify-center gap-2">
             <svg

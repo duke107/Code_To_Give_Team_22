@@ -82,9 +82,7 @@ function App() {
       <ScreenReaderButton />
       <AccessibilityMenu />
       <TranslateButton />
-      <AccessibilityMenu/>
-      {/* <AccessibilityProvider >
-      <AccessibilityToolbar /> */}
+      
       <Routes>
         {/* Routes that require Header & Footer */}
         <Route element={<MainLayout notifications={notifications} />}>
@@ -139,7 +137,7 @@ function App() {
           <Route path="admin/event-summaries" element={<EventSummariesList/>} />
           <Route path="/admin/event-summaries/:id" element={<EventSummaryDetail />} />
         </Route>
-
+        
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
         

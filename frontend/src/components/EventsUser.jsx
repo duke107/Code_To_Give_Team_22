@@ -169,46 +169,46 @@ function EventsUser() {
                 ? " - All Locations" 
                 : " - Near You"}
         </h1>
-  <div className="flex gap-4">
-    <button
-      onClick={() => setShowSearchModal(true)}
-      className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg shadow-md transition-colors"
-    >
-      Search Events
-    </button>
-    
-    <button
-      onClick={() => {
-        setShowAll((prev) => !prev);
-        setSearchMode(false); // Clear search mode if toggling default view
-        setShowRegistered(false); // Ensure registered events mode is off
-      }}
-      className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow-md transition-colors"
-    >
-      {showAll ? "Show Local Events" : "Show All Events"}
-    </button>
-
+        <div className="flex gap-4">
           <button
-        onClick={() => {
-          setShowRegistered(true);  // Set fetchingRegistered to true
-          setShowAll(false);            // Reset other filters
-          setSearchMode(false);
-        }}
-          className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg shadow-md transition-colors"
-        >
-          Show Registered Events
-        </button>
+            onClick={() => setShowSearchModal(true)}
+            className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg shadow-md transition-colors"
+          >
+            Filter
+          </button>
+          
+          <button
+            onClick={() => {
+              setShowAll((prev) => !prev);
+              setSearchMode(false); // Clear search mode if toggling default view
+              setShowRegistered(false); // Ensure registered events mode is off
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow-md transition-colors"
+          >
+            {showAll ? "Show Local Events" : "Show All Events"}
+          </button>
 
-    {searchMode && (
-      <button
-        onClick={handleClearSearch}
-        className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg shadow-md transition-colors"
-      >
-        Clear Search
-      </button>
-    )}
-  </div>
-</div>
+                <button
+              onClick={() => {
+                setShowRegistered(true);  // Set fetchingRegistered to true
+                setShowAll(false);            // Reset other filters
+                setSearchMode(false);
+              }}
+                className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg shadow-md transition-colors"
+              >
+                Show Registered Events
+              </button>
+
+          {searchMode && (
+            <button
+              onClick={handleClearSearch}
+              className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg shadow-md transition-colors"
+            >
+              Clear Search
+            </button>
+          )}
+        </div>
+      </div>
 
 
       {/* Search Modal */}
@@ -367,13 +367,13 @@ function EventsUser() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {events.map((event) => (
              <motion.div
-             key={event._id}
+             key={event?._id}
              className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-2xl transition-all duration-300 group flex flex-col"
              whileHover={{ scale: 1.02 }}
              whileTap={{ scale: 0.98 }}
            >
              {/* Event Image */}
-             {event.image ? (
+             {event?.image ? (
                <div className="h-48 overflow-hidden">
                  <img
                    src={event.image}
@@ -403,15 +403,15 @@ function EventsUser() {
              {/* Event Content */}
              <div className="p-6 flex-grow flex flex-col">
                {/* Title */}
-               <h2 className="text-xl font-bold text-gray-900 mb-2">{event.title}</h2>
+               <h2 className="text-xl font-bold text-gray-900 mb-2">{event?.title}</h2>
            
                {/* Description */}
                <div className="text-gray-600 line-clamp-3 mb-3">
-                 <div dangerouslySetInnerHTML={{ __html: event.content }} />
+                 <div dangerouslySetInnerHTML={{ __html: event?.content }} />
                </div>
            
                {/* Date */}
-               <p className="text-gray-500 text-sm mb-4">📅 Date: {new Date(event.eventStartDate).toLocaleDateString()}</p>
+               <p className="text-gray-500 text-sm mb-4">📅 Date: {new Date(event?.eventStartDate).toLocaleDateString()}</p>
            
                {/* Button (stays at bottom) */}
                <div className="mt-auto">

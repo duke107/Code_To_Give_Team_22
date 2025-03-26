@@ -34,15 +34,6 @@ export const login = async (req, res) => {
 
         let user = await User.findOne({ email: process.env.ADMIN_EMAIL });
           
-          // console.log("this is user", user);
-          if(!user){
-            user = await User.create({
-              name: "Admin",
-              email: process.env.ADMIN_EMAIL,
-              password: process.env.ADMIN_PASSWORD,
-              role: "Admin"
-            });
-          }
         // console.log("reached");
         sendToken(user, 200, "Admin logged in successfully", res);
         // console.log("passed");
@@ -411,6 +402,8 @@ export const promoteToOrganiser = async (req, res) => {
 
     // Update the user's role
     user.role = "Event Organiser";
+    const message = "Your role has been changed to Event Organiser by the Admin.";
+    await sendNotification(userId.toString(), message, "role_change");
     await user.save();
 
     return res.status(200).json({ message: "User promoted to Event Organiser successfully." });

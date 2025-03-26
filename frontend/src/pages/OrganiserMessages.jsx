@@ -9,6 +9,17 @@ const OrganiserMessages = () => {
   const [replyText, setReplyText] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isMsgModalOpen, setIsMsgModalOpen] = useState(false);
+
+  const openMsgModal = (msg) => {
+    setSelectedMessage(msg);
+    setIsMsgModalOpen(true);
+  };
+
+  const closeMsgModal = () => {
+    setIsMsgModalOpen(false);
+    setSelectedMessage(null);
+  };
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -107,10 +118,10 @@ const OrganiserMessages = () => {
           </button>
         )}
       </div>
-
-      {messages.length > 0 ? (
-        <div className="space-y-3">
-          {messages.map((msg) => (
+  
+      <div className="space-y-3">
+        {messages.length > 0 ? (
+          messages.map((msg) => (
             <div
               key={msg._id}
               className="p-4 rounded-lg border bg-white flex justify-between items-center transition-all"
@@ -120,32 +131,45 @@ const OrganiserMessages = () => {
                 <p>
                   <strong>{msg.name} ({msg.email})</strong> - {msg.category}
                 </p>
-                <p className="text-gray-700">{msg.message}</p>
+                <p className="text-gray-700">
+                  {msg.message.split(" ").length > 30 ? (
+                    <>
+                      {msg.message.split(" ").slice(0, 30).join(" ")}...
+                      <button
+                        className="text-blue-600 hover:underline ml-1"
+                        onClick={() => openMsgModal(msg)}
+                      >
+                        Read more
+                      </button>
+                    </>
+                  ) : (
+                    msg.message
+                  )}
+                </p>
                 <div className="flex items-center mt-1 text-xs text-gray-500">
-                {msg.isReplied === true? (
-                  <>
-                    <FaCheck className="text-green-500 mr-1" size={14} />
-                    <span>Replied</span>
-                  </>
-                ) : (
-                  <span className="text-gray-400">Pending reply</span>
-                )}
+                  {msg.isReplied ? (
+                    <>
+                      <FaCheck className="text-green-500 mr-1" size={14} />
+                      <span>Replied</span>
+                    </>
+                  ) : (
+                    <span className="text-gray-400">Pending reply</span>
+                  )}
+                </div>
               </div>
-
-              </div>
-
+  
               {/* Right - Buttons */}
               <div className="flex space-x-2 flex-shrink-0">
-              {!msg.isReplied && (
-                <button
-                  onClick={() => openReplyModal(msg)}
-                  title="Reply"
-                  className="p-2 rounded-full text-blue-600 hover:bg-blue-200 transition-colors"
-                >
-                  <FaReply size={16} />
-                </button>
-              )}
-
+                {!msg.isReplied && (
+                  <button
+                    onClick={() => openReplyModal(msg)}
+                    title="Reply"
+                    className="p-2 rounded-full text-blue-600 hover:bg-blue-200 transition-colors"
+                  >
+                    <FaReply size={16} />
+                  </button>
+                )}
+  
                 <button
                   onClick={() => handleDeleteMessage(msg._id)}
                   title="Delete Message"
@@ -155,15 +179,39 @@ const OrganiserMessages = () => {
                 </button>
               </div>
             </div>
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-10 bg-gray-50 rounded-lg">
-          <p className="text-lg font-medium text-gray-500">No messages available</p>
-          <p className="text-sm text-gray-400 mt-1">You're all caught up!</p>
+          ))
+        ) : (
+          <div className="flex flex-col items-center justify-center py-10 bg-gray-50 rounded-lg">
+            <p className="text-lg font-medium text-gray-500">No messages available</p>
+            <p className="text-sm text-gray-400 mt-1">You're all caught up!</p>
+          </div>
+        )}
+      </div>
+  
+      {/* Read More Modal */}
+      {isMsgModalOpen && selectedMessage && (
+        <div
+          className="fixed inset-0 flex items-center justify-center w-screen h-screen bg-black bg-opacity-50 backdrop-blur-sm"
+          onClick={closeMsgModal}
+        >
+          <div
+            className="bg-white p-6 rounded-lg shadow-md mx-auto sm:w-96 lg:w-[500px] max-h-[80vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()} 
+          >
+            <h3 className="text-lg font-semibold mb-4">Message from {selectedMessage.name}</h3>
+            <p className="text-gray-700">{selectedMessage.message}</p>
+            <div className="flex justify-end mt-4">
+              <button
+                className="px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500"
+                onClick={closeMsgModal}
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
-
+  
       {/* Reply Modal */}
       {isModalOpen && selectedMessage && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
@@ -194,6 +242,7 @@ const OrganiserMessages = () => {
       )}
     </div>
   );
+  
 };
 
 export default OrganiserMessages;

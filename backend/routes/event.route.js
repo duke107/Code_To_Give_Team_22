@@ -1,7 +1,7 @@
 import express from "express";
 
 import { isAuthenticated } from "../middlewares/auth.middleware.js";
-import { createEvent, deleteEvent, getEventBySlug, getEvents, updateEvent, registerVolunteer, assignTask, updateTaskStatus, createFeedback, getFeedbacksForEvent, submitTestimonial, getRecentTestimonials, createEventSummary, getTasksUser, getEventsUser, submitTaskProof, approveTaskProof, rejectTaskProof, getAllDonations, searchEvents, addTaskUpdate, getTaskUpdates, getUserRegisteredEvents } from "../controllers/event.controller.js";
+import { createEvent, deleteEvent, getEventBySlug, getEvents, updateEvent, registerVolunteer, assignTask, updateTaskStatus, createFeedback, getFeedbacksForEvent, submitTestimonial, getRecentTestimonials, createEventSummary, getTasksUser, getEventsUser, submitTaskProof, approveTaskProof, rejectTaskProof, getAllDonations, searchEvents, addTaskUpdate, getTaskUpdates, getUserRegisteredEvents, getEventById } from "../controllers/event.controller.js";
 
 
 const router = express.Router();
@@ -34,7 +34,8 @@ router.patch("/proof/approve/:taskId",isAuthenticated,approveTaskProof)
 router.patch("/proof/reject/:taskId",isAuthenticated,rejectTaskProof)
 
 // Delete event by ID
-router.delete("/:eventId",isAuthenticated, deleteEvent);
+router.delete("/:eventId", isAuthenticated, deleteEvent);
+router.get("/:eventId", isAuthenticated, getEventById)
 
 
 export default router;

@@ -31,7 +31,7 @@ function Login() {
     useEffect(() => {
         if (message) {
             // toast.success(message);
-            user.role === 'Admin' ? navigateTo("/admin/dashboard") : navigateTo("/")
+            user?.role === 'Admin' ? navigateTo("/admin/dashboard") : navigateTo("/")
         }
         if (error) {
             // toast.error(error);

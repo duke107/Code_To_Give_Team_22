@@ -1,6 +1,16 @@
 import mongoose from "mongoose"
 import jwt from "jsonwebtoken"
 import crypto from "crypto"
+
+const categories = [
+  "Education & Skill Development",
+  "Sports & Cultural Events",
+  "Health & Well-being",
+  "Women Empowerment",
+  "Environmental Sustainability",
+  "Social Inclusion & Awareness"
+];
+
 const userSchema= new mongoose.Schema({
     name:{
         type: String,
@@ -17,7 +27,7 @@ const userSchema= new mongoose.Schema({
       },
     role: {
         type: String,
-        enum: ["Admin", "User","Event Organiser"],
+        enum: ["Admin", "User", "Event Organiser"],
         default: "User",
       },
       accountVerified:{
@@ -45,6 +55,7 @@ const userSchema= new mongoose.Schema({
       ],
       avatar:{ type: String },
       location: { type: String },
+      category: { type: String, enum: categories, required: true }, 
       availability: {
           weekdays: { type: Boolean, default: false },
           weekends: { type: Boolean, default: false }

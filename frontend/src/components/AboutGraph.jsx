@@ -5,11 +5,11 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title } from 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title);
 
 const data = {
-  labels: ["Students", "Trees", "Volunteers", "Events"],
+  labels: ["Students", "Trees", "Volunteers", "Events", "Youth"],
   datasets: [
     {
       label: "Impact Metrics",
-      data: [5000, 12000, 3000, 700],
+      data: [34000, 12000, 18000, 700, 30000],
       backgroundColor: ["#3498db", "#2ecc71", "#f39c12", "#e74c3c"],
     },
   ],

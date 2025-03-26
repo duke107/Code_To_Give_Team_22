@@ -10,10 +10,10 @@ import crypto from "crypto"
 export const register = async (req, res) => {
     try {
         // Destructure location along with other fields
-        let { name, email, password, location } = req.body;
+        let { name, email, password, location, category } = req.body;
         
         // Validate all required fields including location
-        if (!name || !email || !password || !location) {
+        if (!name || !email || !password || !location || !category) {
             return res.status(400).json({ msg: "Please fill in all fields, including location" });
         }
         
@@ -21,6 +21,7 @@ export const register = async (req, res) => {
         if (isAlreadyPresent) {
             return res.status(400).json({ msg: "Email is already registered" });
         }
+        
         
         if (password.length < 8 || password.length > 16) {
             return res.status(400).json({ msg: "Password must be between 8 and 16 characters" });
@@ -30,7 +31,7 @@ export const register = async (req, res) => {
         
         const hashedPassword = await bcrypt.hash(password, 10);
         // Include location when creating the new user
-        const user = await User.create({ name, email, password: hashedPassword, location });
+        const user = await User.create({ name, email, password: hashedPassword, location, category });
         
         const verificationCode = await user.generateVerificationCode();
         await user.save();
@@ -239,7 +240,11 @@ export const updateUser = async (req, res) => {
 
       if (typeof req.body.location !== "undefined") {
         user.location = req.body.location.charAt(0).toUpperCase() + req.body.location.slice(1).toLowerCase();
-    }   
+        }   
+        
+        if (typeof req.body.category !== 'undefined') {
+            user.category = req.body.category;
+        }
   
       if (typeof req.body.weekdays !== "undefined") {
         user.availability.weekdays =

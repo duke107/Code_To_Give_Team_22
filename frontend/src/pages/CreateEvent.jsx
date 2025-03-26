@@ -561,7 +561,7 @@ export default function CreateEvent() {
                     </div>
 
                     {/* WhatsApp Group Link Field */}
-                    <div className="mt-2">
+                    <div className="">
                       <div className="mb-1">
                         <Label
                           htmlFor={`position-whatsapp-${index}`}
