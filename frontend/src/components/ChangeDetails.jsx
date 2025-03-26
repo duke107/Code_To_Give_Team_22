@@ -24,6 +24,7 @@ function ChangeDetails() {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [category, setCategory] = useState("");
 
   // On component mount or when user changes, set initial form fields
   useEffect(() => {
@@ -90,6 +91,7 @@ function ChangeDetails() {
 
       if (location) payload.location = location;
       if (avatarURL) payload.avatarURL = avatarURL;
+      if (category) payload.category = category;
 
       const res = await fetch("http://localhost:3000/api/v1/auth/updateUser", {
         method: "PUT",
@@ -154,14 +156,21 @@ function ChangeDetails() {
     }
   };
 
+  const categories = [
+    "Education & Skill Development",
+    "Sports & Cultural Events",
+    "Health & Well-being",
+    "Women Empowerment",
+    "Environmental Sustainability",
+    "Social Inclusion & Awareness",
+  ];
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6 flex flex-col items-center">
-      <h2 className="text-2xl font-semibold mb-4">Change Details</h2>
       <div className="mb-4 px-6 py-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-md shadow-lg">
         <h3 className="text-2xl font-extrabold tracking-wide text-center">
           {user?.name || "User Name"}
         </h3>
-        <p className="text-center">{user.role}</p>
       </div>
 
 
@@ -206,40 +215,57 @@ function ChangeDetails() {
 
       {/* Location Field */}
       <div className="w-full max-w-md mb-4">
-        <label className="block mb-1 font-medium text-gray-700">Location</label>
-        <input
-          type="text"
-          placeholder="Enter your location"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-        />
-      </div>
+      <label className="block mb-1 font-medium text-gray-700">Location</label>
+      <input
+        type="text"
+        placeholder="Enter your location"
+        value={location}
+        onChange={(e) => setLocation(e.target.value)}
+        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+      />
+    </div>
 
-      {/* Availability */}
-      <div className="w-full max-w-md mb-6">
-        <label className="block mb-1 font-medium text-gray-700">Availability</label>
-        <div className="flex items-center gap-4 mt-2">
-          <label className="flex items-center gap-1">
-            <input
-              type="checkbox"
-              checked={weekdays}
-              onChange={() => setWeekdays(!weekdays)}
-              className="h-4 w-4"
-            />
-            <span>Weekdays</span>
-          </label>
-          <label className="flex items-center gap-1">
-            <input
-              type="checkbox"
-              checked={weekends}
-              onChange={() => setWeekends(!weekends)}
-              className="h-4 w-4"
-            />
-            <span>Weekends</span>
-          </label>
-        </div>
+    {/* Category Selection */}
+    <div className="w-full max-w-md mb-4">
+      <label className="block mb-1 font-medium text-gray-700">Event Category</label>
+      <select
+        value={category}
+        onChange={(e) => setCategory(e.target.value)}
+        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+      >
+        <option value="" disabled>Select a category</option>
+        {categories.map((cat, index) => (
+          <option key={index} value={cat}>
+            {cat}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* Availability */}
+    <div className="w-full max-w-md mb-6">
+      <label className="block mb-1 font-medium text-gray-700">Availability</label>
+      <div className="flex items-center gap-4 mt-2">
+        <label className="flex items-center gap-1">
+          <input
+            type="checkbox"
+            checked={weekdays}
+            onChange={() => setWeekdays(!weekdays)}
+            className="h-4 w-4"
+          />
+          <span>Weekdays</span>
+        </label>
+        <label className="flex items-center gap-1">
+          <input
+            type="checkbox"
+            checked={weekends}
+            onChange={() => setWeekends(!weekends)}
+            className="h-4 w-4"
+          />
+          <span>Weekends</span>
+        </label>
       </div>
+    </div>
 
       {/* Buttons */}
       <div className="flex flex-col items-center gap-4 w-full max-w-md">

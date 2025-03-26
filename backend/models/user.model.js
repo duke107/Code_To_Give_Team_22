@@ -27,7 +27,7 @@ const userSchema= new mongoose.Schema({
       },
     role: {
         type: String,
-        enum: ["Admin", "User","Event Organiser"],
+        enum: ["Admin", "User", "Event Organiser"],
         default: "User",
       },
       accountVerified:{

@@ -239,7 +239,11 @@ export const updateUser = async (req, res) => {
 
       if (typeof req.body.location !== "undefined") {
         user.location = req.body.location.charAt(0).toUpperCase() + req.body.location.slice(1).toLowerCase();
-    }   
+        }   
+        
+        if (typeof req.body.category !== 'undefined') {
+            user.category = req.body.category;
+        }
   
       if (typeof req.body.weekdays !== "undefined") {
         user.availability.weekdays =
