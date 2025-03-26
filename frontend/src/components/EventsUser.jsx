@@ -379,6 +379,11 @@ function EventsUser() {
       <h2 className="text-2xl font-semibold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors duration-300">
         {event.title}
       </h2>
+      { event.category &&
+        <span className="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full mb-3">
+          {event.category}
+        </span>
+      }
       <div
         className="text-gray-600 text-base leading-relaxed mb-4 line-clamp-3"
         dangerouslySetInnerHTML={{ __html: event.content }}

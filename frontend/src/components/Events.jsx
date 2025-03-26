@@ -108,64 +108,69 @@ function Events() {
                           whileTap={{ scale: 0.98 }}
                         >
                           <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl border border-gray-100 flex flex-col">
-                          {event.image ? (
-                                      <div className="h-48 overflow-hidden">
-                                        <img
-                                          src={event.image}
-                                          alt={event.title}
-                                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                                        />
-                                      </div>
-                                    ) : (
-                                      <div className="h-32 bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white">
-                                        <svg
-                                          xmlns="http://www.w3.org/2000/svg"
-                                          className="h-12 w-12"
-                                          fill="none"
-                                          viewBox="0 0 24 24"
-                                          stroke="currentColor"
-                                        >
-                                          <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                          />
-                                        </svg>
-                                      </div>
-                                    )}
-                          </div>
-
-                          <div className="p-6 flex-grow text-center">
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors duration-300">
-                              {event.title}
-                            </h2>
-                            <div
-                              className="text-gray-600 text-base leading-relaxed mb-4 line-clamp-3"
-                              dangerouslySetInnerHTML={{ __html: event.content }}
-                            />
-                          </div>
-
-                          <div className="px-6 pb-6 pt-2">
-                            <button
-                              onClick={() => handleViewEvent(event.slug)}
-                            className="w-full bg-gray-800 hover:bg-gray-900 text-white py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                              >
-                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                <path
-                                  fillRule="evenodd"
-                                  d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                                  clipRule="evenodd"
+                            {event.image ? (
+                              <div className="h-48 overflow-hidden">
+                                <img
+                                  src={event.image}
+                                  alt={event.title}
+                                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                                 />
-                              </svg>
-                              View Details
-                            </button>
+                              </div>
+                            ) : (
+                              <div className="h-32 bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-12 w-12"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                  />
+                                </svg>
+                              </div>
+                            )}
+
+                            <div className="p-6 flex-grow text-center">
+                              <h2 className="text-2xl font-semibold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors duration-300">
+                                {event.title}
+                              </h2>
+                              { event.category &&
+                                <span className="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full mb-3">
+                                  {event.category}
+                                </span>
+                              }
+                              <div
+                                className="text-gray-600 text-base leading-relaxed mb-4 line-clamp-3"
+                                dangerouslySetInnerHTML={{ __html: event.content }}
+                              />
+                            </div> 
+
+                            <div className="px-6 pb-6 pt-2">
+                              <button
+                                onClick={() => handleViewEvent(event.slug)}
+                                className="w-full bg-gray-800 hover:bg-gray-900 text-white py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-5 w-5"
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                >
+                                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                                View Details
+                              </button>
+                            </div>
                           </div>
                         </motion.div>
                     ))}
