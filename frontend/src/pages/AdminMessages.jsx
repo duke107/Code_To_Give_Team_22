@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { FaCheck, FaReply, FaTrashAlt } from "react-icons/fa";
 import axios from 'axios'
-import { Toast } from "flowbite-react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const AdminMessages = () => {
   const [messages, setMessages] = useState([]);
@@ -56,7 +57,7 @@ const AdminMessages = () => {
       });
 
       if (res.ok) {
-        Toast.success("Reply sent!");
+        toast.success("Reply sent!");
         setLoading(false)
         setMessages((prev) =>
           prev.map((m) =>
@@ -65,7 +66,7 @@ const AdminMessages = () => {
         );
         setIsReplyModalOpen(false);
       } else {
-        Toast.error("Failed to send reply.");
+        toast.error("Failed to send reply.");
       }
     } catch (err) {
       console.error("Error sending reply:", err);

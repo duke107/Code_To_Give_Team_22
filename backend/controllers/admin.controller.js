@@ -34,15 +34,6 @@ export const login = async (req, res) => {
 
         let user = await User.findOne({ email: process.env.ADMIN_EMAIL });
           
-          // console.log("this is user", user);
-          if(!user){
-            user = await User.create({
-              name: "Admin",
-              email: process.env.ADMIN_EMAIL,
-              password: process.env.ADMIN_PASSWORD,
-              role: "Admin"
-            });
-          }
         // console.log("reached");
         sendToken(user, 200, "Admin logged in successfully", res);
         // console.log("passed");
@@ -136,7 +127,7 @@ export const rejectEvent = async (req, res, io) => {
     // Notify the event creator
     const eventCreatorId = event.createdBy;
 
-    sendNotification(eventCreatorId, notification.message, notification.type);
+    // sendNotification(eventCreatorId, notification.message, notification.type);
 
     res.status(200).json({ success: true, message: "Event rejected successfully" });
 
