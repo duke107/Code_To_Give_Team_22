@@ -75,6 +75,7 @@ function App() {
       <ScreenReaderButton />
       <AccessibilityMenu />
       <TranslateButton />
+      
       <Routes>
         {/* Routes that require Header & Footer */}
         <Route element={<MainLayout notifications={notifications} />}>
@@ -120,7 +121,7 @@ function App() {
         <Route element={<AdminRoute />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
         </Route>
-
+        
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
         

@@ -5,7 +5,7 @@ const AboutPeople = () => {
   return (
     <div className="py-12 px-6 bg-white">
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold text-blue-700 text-center mb-8">Meet Our Team</h2>
+        <h2 className="text-3xl font-bold text-red-600 text-center mb-8">MEET OUR TEAM</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
           {People.map((member) => (
             <div

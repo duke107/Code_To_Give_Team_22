@@ -39,9 +39,16 @@ app.use("/api/v1/donate", donationRouter)
 app.use("/api/v1/volunteer", volunteerRouter);
 app.use("/api/v1/organizer", organizerRouter); 
 app.use("/api/v1/admin", adminRouter);
+
 connectDB()
 
 // app.listen(3000, () => {
 //     console.log("Started listening at port 3000");
 // });
 
+app._router.stack.forEach((r) => {
+    if (r.route && r.route.path) {
+      console.log(`Registered route: ${r.route.path}`);
+    }
+  });
+  

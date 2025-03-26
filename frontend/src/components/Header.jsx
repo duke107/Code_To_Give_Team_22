@@ -35,9 +35,10 @@ const Header = ({ notifications }) => {
           className="h-10 w-auto"
         />
       </Link>
+
   
       {/* Navigation Links */}
-      <nav className="hidden md:flex space-x-6 text-gray-700 font-medium">
+      <nav className="hidden md:flex space-x-6 text-gray-700 font-bold text-lg ">
         {[
           { path: "/about", label: "About Us" },
           { path: "/gallery", label: "Gallery" },
@@ -51,13 +52,17 @@ const Header = ({ notifications }) => {
             className={`${
               isActive(item.path)
                 ? "text-blue-700 font-bold border-b-2 border-blue-700"
-                : "hover:text-black transition duration-200"
+                : "text-black hover:text-red-600 transition-colors duration-200"
             }`}
           >
             {item.label}
           </Link>
         ))}
       </nav>
+
+    
+   
+       
   
       {/* Auth Buttons & Notifications */}
       <div className="flex items-center gap-4 relative">
