@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { toast, ToastContainer } from "react-toastify";
 import html2canvas from "html2canvas";
@@ -14,6 +14,7 @@ Chart.register(ArcElement, Tooltip, Legend);
 
 function EventOrganiser() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,6 +28,7 @@ function EventOrganiser() {
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [selectedVolunteer, setSelectedVolunteer] = useState(null);
   const [taskInputs, setTaskInputs] = useState([""]);
+  const [assignLoading, setAssignLoading] = useState(false);
 
   // State for feedback and visual summary
   const [feedbackVisible, setFeedbackVisible] = useState(false);
@@ -64,7 +66,7 @@ function EventOrganiser() {
   const [taskUpdatesLoading, setTaskUpdatesLoading] = useState(false);
   const [taskUpdatesError, setTaskUpdatesError] = useState(null);
 
-  // New: Generated Feedback Summary states
+  // Generated Feedback Summary states
   const [generatedSummary, setGeneratedSummary] = useState(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState(null);
@@ -107,7 +109,8 @@ function EventOrganiser() {
               0
             ) ?? 0,
           volunteersRegistered:
-            data.volunteeringPositions?.flatMap((pos) => pos.registeredUsers).length ?? 0,
+            data.volunteeringPositions?.flatMap((pos) => pos.registeredUsers)
+              .length ?? 0,
           organizerFeel: "",
           organizerEnjoyment: "",
           fileUrl: "",
@@ -122,16 +125,19 @@ function EventOrganiser() {
     fetchEventDetails();
   }, [slug]);
 
-  // Feedback functions
+  // Feedback
   const fetchFeedbacks = async () => {
     setFeedbackLoading(true);
     setFeedbackError(null);
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/events/feedbacks?eventId=${event._id}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
+      const res = await fetch(
+        `http://localhost:3000/api/v1/events/feedbacks?eventId=${event._id}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        }
+      );
       if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
       const data = await res.json();
       setFeedbacks(data);
@@ -141,17 +147,14 @@ function EventOrganiser() {
       setFeedbackLoading(false);
     }
   };
-
   const toggleFeedback = () => {
     if (!feedbackVisible) fetchFeedbacks();
     if (feedbackVisible) setShowVisualDisplay(false);
     setFeedbackVisible(!feedbackVisible);
   };
-
   const toggleVisualDisplay = () => {
     setShowVisualDisplay(!showVisualDisplay);
   };
-
   const handleDownloadVisual = async () => {
     if (pdfRef.current) {
       try {
@@ -169,16 +172,16 @@ function EventOrganiser() {
       }
     }
   };
-
   const getFeedbackSummary = () => {
     if (!feedbacks || feedbacks.length === 0) return null;
     const total = feedbacks.length;
-    const averageRating = (feedbacks.reduce((acc, cur) => acc + Number(cur.rating), 0) / total).toFixed(1);
+    const averageRating = (
+      feedbacks.reduce((acc, cur) => acc + Number(cur.rating), 0) / total
+    ).toFixed(1);
     const positiveCount = feedbacks.filter((fb) => fb.enjoyed).length;
     const negativeCount = total - positiveCount;
     return { total, averageRating, positiveCount, negativeCount };
   };
-
   const summary = getFeedbackSummary();
   const barData = {
     labels: ["Positive", "Negative"],
@@ -190,7 +193,6 @@ function EventOrganiser() {
       },
     ],
   };
-
   const ratingCounts = {};
   feedbacks.forEach((fb) => {
     ratingCounts[fb.rating] = (ratingCounts[fb.rating] || 0) + 1;
@@ -217,7 +219,7 @@ function EventOrganiser() {
     ],
   };
 
-  // Task assignment modal functions
+  // Task assignment
   const openTaskModal = (volunteer) => {
     setSelectedVolunteer(volunteer);
     setTaskInputs([""]);
@@ -235,7 +237,6 @@ function EventOrganiser() {
   const addTaskField = () => {
     setTaskInputs([...taskInputs, ""]);
   };
-  const [assignLoading, setAssignLoading] = useState(false);
   const handleAssignTasks = async () => {
     if (!selectedVolunteer) return;
     const tasksToAssign = taskInputs
@@ -279,6 +280,7 @@ function EventOrganiser() {
     }
   };
 
+  // Summary form
   const handleSummaryChange = (e) => {
     const { name, value } = e.target;
     setSummaryData((prev) => ({ ...prev, [name]: value }));
@@ -342,7 +344,6 @@ function EventOrganiser() {
       setImagesUploadLoading(false);
     }
   };
-
   const handleSubmitSummary = async (e) => {
     e.preventDefault();
     const organiserId = user._id;
@@ -377,7 +378,7 @@ function EventOrganiser() {
     }
   };
 
-  // Approve/Reject proof functions
+  // Approve/Reject proof
   const handleApproveProof = async () => {
     if (!reviewTask) return;
     try {
@@ -430,7 +431,7 @@ function EventOrganiser() {
     setShowReviewModal(true);
   };
 
-  // Open Task Updates Modal and fetch updates for a task
+  // Task Updates Modal
   const openTaskUpdatesModal = async (task) => {
     setTaskUpdates([]);
     setTaskUpdatesError(null);
@@ -452,7 +453,7 @@ function EventOrganiser() {
     }
   };
 
-  // New: Generate Feedback Summary
+  // Generate Feedback Summary
   const handleGenerateFeedbackSummary = async () => {
     setSummaryLoading(true);
     setSummaryError(null);
@@ -489,41 +490,57 @@ function EventOrganiser() {
   if (!event)
     return <p className="text-center text-gray-500">No event data available.</p>;
 
+  // Render
   return (
     <div className="max-w-3xl mx-auto bg-white rounded-2xl mt-5 shadow-lg p-8 pt-16 relative border border-gray-200">
+      <h1 className="text-3xl font-bold text-gray-900 mb-5">{event.title}</h1>
+      {event.image && (
+        <img
+          src={event.image}
+          alt={event.title}
+          className="w-full h-64 object-contain rounded-xl mb-5 shadow"
+        />
+      )}
 
-    <h1 className="text-3xl font-bold text-gray-900 mb-5">{event.title}</h1>
-    {event.image && (
-<img src={event.image} alt={event.title} className="w-full h-64 object-contain rounded-xl mb-5 shadow" />
-)}
+      <div
+        className="text-gray-700 mb-5 leading-relaxed"
+        dangerouslySetInnerHTML={{ __html: event.content }}
+      />
+      <div className="bg-gray-100 p-5 rounded-xl mb-5 shadow-sm">
+        <p className="text-lg font-semibold">📍 Location: {event.eventLocation}</p>
+        <p className="text-gray-600">
+          📅 Start: {new Date(event.eventStartDate).toLocaleDateString()}
+        </p>
+        <p className="text-gray-600">
+          📅 End: {new Date(event.eventEndDate).toLocaleDateString()}
+        </p>
+      </div>
 
-    <div className="text-gray-700 mb-5 leading-relaxed" dangerouslySetInnerHTML={{ __html: event.content }} />
-    <div className="bg-gray-100 p-5 rounded-xl mb-5 shadow-sm">
-      <p className="text-lg font-semibold">📍 Location: {event.eventLocation}</p>
-      <p className="text-gray-600">📅 Start: {new Date(event.eventStartDate).toLocaleDateString()}</p>
-      <p className="text-gray-600">📅 End: {new Date(event.eventEndDate).toLocaleDateString()}</p>
-    </div>
-    {/* Top Buttons */}
-    <div className="absolute top-6 right-6 flex space-x-2">
-      <button onClick={toggleFeedback} className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition duration-200 shadow-md">
-        {feedbackVisible ? "Hide Feedback" : "View Feedback"}
-      </button>
-      <button onClick={toggleVisualDisplay} className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition duration-200 shadow-md">
-        View Visual Summary
-      </button>
-      <button onClick={handleGenerateFeedbackSummary} className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition duration-200 shadow-md">
-        {summaryLoading ? "Generating..." : "Generate Feedback Summary"}
-      </button>
-    </div>
+      {/* Top Buttons */}
+      <div className="absolute top-6 right-6 flex space-x-2">
+        <button
+          onClick={toggleFeedback}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition duration-200 shadow-md"
+        >
+          {feedbackVisible ? "Hide Feedback" : "View Feedback"}
+        </button>
+        <button
+          onClick={toggleVisualDisplay}
+          className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition duration-200 shadow-md"
+        >
+          View Visual Summary
+        </button>
+        <button
+          onClick={handleGenerateFeedbackSummary}
+          className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition duration-200 shadow-md"
+        >
+          {summaryLoading ? "Generating..." : "Generate Feedback Summary"}
+        </button>
+      </div>
+
       {/* Generated Feedback Summary Modal */}
       {showGeneratedSummaryModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          {/* 
-      The main container for the modal content: 
-      - max-w-xl for a moderate width
-      - max-h-[70vh] to limit the vertical size
-      - overflow-y-auto to allow scrolling if content is long 
-    */}
           <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-xl max-h-[70vh] overflow-y-auto relative">
             <button
               onClick={() => setShowGeneratedSummaryModal(false)}
@@ -532,19 +549,21 @@ function EventOrganiser() {
               ✖
             </button>
             <h3 className="text-xl font-bold mb-4">Feedback Summary Report</h3>
-
-            {/* Use your RenderGeneratedSummary component here */}
             <RenderGeneratedSummary summary={generatedSummary} />
           </div>
         </div>
       )}
 
-
       {/* Feedback Modal */}
       {feedbackVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-lg w-full relative">
-            <button onClick={toggleFeedback} className="absolute top-4 right-4 bg-gray-300 hover:bg-gray-400 rounded-full p-2">✖</button>
+            <button
+              onClick={toggleFeedback}
+              className="absolute top-4 right-4 bg-gray-300 hover:bg-gray-400 rounded-full p-2"
+            >
+              ✖
+            </button>
             <h3 className="text-xl font-bold mb-4">💬 Event Feedback</h3>
             <div className="max-h-64 overflow-y-auto space-y-4">
               {feedbackLoading ? (
@@ -553,33 +572,69 @@ function EventOrganiser() {
                 <p className="text-red-500">Error: {feedbackError}</p>
               ) : feedbacks.length > 0 ? (
                 feedbacks.slice(0, 5).map((fb) => (
-                  <div key={fb._id} className="p-4 border rounded bg-gray-50 shadow-sm">
+                  <div
+                    key={fb._id}
+                    className="p-4 border rounded bg-gray-50 shadow-sm"
+                  >
                     <p className="font-semibold">⭐ Rating: {fb.rating} / 10</p>
                     <p>🎉 Enjoyed: {fb.enjoyed ? "Yes" : "No"}</p>
-                    {fb.comments && <p className="text-sm text-gray-700">💬 {fb.comments}</p>}
-                    {fb.suggestions && <p className="text-sm text-gray-700">💡 {fb.suggestions}</p>}
-                    <p className="text-xs text-gray-500 mt-1">{new Date(fb.createdAt).toLocaleDateString()}</p>
+                    {fb.comments && (
+                      <p className="text-sm text-gray-700">💬 {fb.comments}</p>
+                    )}
+                    {fb.suggestions && (
+                      <p className="text-sm text-gray-700">
+                        💡 {fb.suggestions}
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      {new Date(fb.createdAt).toLocaleDateString()}
+                    </p>
                   </div>
                 ))
               ) : (
-                <p className="text-gray-500">No feedback available for this event.</p>
+                <p className="text-gray-500">
+                  No feedback available for this event.
+                </p>
               )}
             </div>
           </div>
         </div>
       )}
+
       {/* Visual Summary Modal */}
       {showVisualDisplay && (
-        <div ref={pdfRef} className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+        <div
+          ref={pdfRef}
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
+        >
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-lg w-full relative">
-            <button onClick={toggleVisualDisplay} className="absolute top-4 right-4 bg-gray-300 hover:bg-gray-400 rounded-full p-2">✖</button>
+            <button
+              onClick={toggleVisualDisplay}
+              className="absolute top-4 right-4 bg-gray-300 hover:bg-gray-400 rounded-full p-2"
+            >
+              ✖
+            </button>
             <h3 className="text-xl font-bold mb-4">📊 Feedback Summary</h3>
             {summary ? (
               <div className="mb-5">
-                <p>Total Reviews: <span className="font-semibold">{summary.total}</span></p>
-                <p>Average Rating: <span className="font-semibold">{summary.averageRating} / 10</span></p>
-                <p>Positive Reviews: <span className="font-semibold">{summary.positiveCount}</span></p>
-                <p>Negative Reviews: <span className="font-semibold">{summary.negativeCount}</span></p>
+                <p>
+                  Total Reviews:{" "}
+                  <span className="font-semibold">{summary.total}</span>
+                </p>
+                <p>
+                  Average Rating:{" "}
+                  <span className="font-semibold">
+                    {summary.averageRating} / 10
+                  </span>
+                </p>
+                <p>
+                  Positive Reviews:{" "}
+                  <span className="font-semibold">{summary.positiveCount}</span>
+                </p>
+                <p>
+                  Negative Reviews:{" "}
+                  <span className="font-semibold">{summary.negativeCount}</span>
+                </p>
               </div>
             ) : (
               <p>No summary available.</p>
@@ -588,39 +643,63 @@ function EventOrganiser() {
               <div>
                 <h4 className="font-semibold mb-2">Review Breakdown</h4>
                 <div className="h-40">
-                  <Bar data={barData} options={{ responsive: true, maintainAspectRatio: false }} />
+                  <Bar
+                    data={barData}
+                    options={{ responsive: true, maintainAspectRatio: false }}
+                  />
                 </div>
               </div>
               <div>
                 <h4 className="font-semibold mb-2">Rating Distribution</h4>
                 <div className="h-40">
-                  <Pie data={pieData} options={{ responsive: true, maintainAspectRatio: false }} />
+                  <Pie
+                    data={pieData}
+                    options={{ responsive: true, maintainAspectRatio: false }}
+                  />
                 </div>
               </div>
             </div>
-            <button onClick={handleDownloadVisual} className="mt-5 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition duration-200">
+            <button
+              onClick={handleDownloadVisual}
+              className="mt-5 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition duration-200"
+            >
               ⬇️ Download Visual Summary as Image
             </button>
           </div>
         </div>
       )}
-      {/* Collapsible Volunteering Positions */}
+
+      {/* Volunteering Positions */}
       {event.volunteeringPositions?.length > 0 && (
         <div className="mt-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">🙌 Volunteering Positions</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            🙌 Volunteering Positions
+          </h2>
           {event.volunteeringPositions.map((position) => (
-            <div key={position._id} className="mb-4 border rounded shadow-sm">
-              <div className="flex justify-between items-center bg-gray-200 p-3 cursor-pointer" onClick={() => togglePosition(position._id)}>
+            <div
+              key={position._id}
+              className="mb-4 border rounded shadow-sm"
+            >
+              <div
+                className="flex justify-between items-center bg-gray-200 p-3 cursor-pointer"
+                onClick={() => togglePosition(position._id)}
+              >
                 <p className="font-semibold">{position.title}</p>
-                <span className="text-xl">{expandedPositions[position._id] ? "▲" : "▼"}</span>
+                <span className="text-xl">
+                  {expandedPositions[position._id] ? "▲" : "▼"}
+                </span>
               </div>
               {expandedPositions[position._id] && (
                 <div className="p-3">
                   <p className="text-sm text-gray-700 mb-2">
-                    Slots available: <span className="font-medium">{position.slots}</span>
+                    Slots available:{" "}
+                    <span className="font-medium">{position.slots}</span>
                   </p>
                   <p className="text-sm text-gray-700 mb-2">
-                    Positions Allocated: <span className="font-medium">{position.registeredUsers?.length || 0}</span>
+                    Positions Allocated:{" "}
+                    <span className="font-medium">
+                      {position.registeredUsers?.length || 0}
+                    </span>
                   </p>
                   {position.registeredUsers && position.registeredUsers.length > 0 ? (
                     <div>
@@ -628,34 +707,54 @@ function EventOrganiser() {
                       <ul className="space-y-2">
                         {position.registeredUsers.map((volunteer) => (
                           <li key={volunteer._id} className="border rounded p-2">
-                            <div className="flex justify-between items-center cursor-pointer" onClick={() => toggleVolunteer(volunteer._id)}>
-                              <span className="font-semibold">{volunteer.name} ({volunteer.email})</span>
-                              <span className="text-lg">{expandedVolunteers[volunteer._id] ? "▲" : "▼"}</span>
+                            <div
+                              className="flex justify-between items-center cursor-pointer"
+                              onClick={() => toggleVolunteer(volunteer._id)}
+                            >
+                              <span className="font-semibold">
+                                {volunteer.name} ({volunteer.email})
+                              </span>
+                              <span className="text-lg">
+                                {expandedVolunteers[volunteer._id] ? "▲" : "▼"}
+                              </span>
                             </div>
                             {expandedVolunteers[volunteer._id] && (
                               <div className="mt-2 ml-4">
                                 {volunteer.tasks && volunteer.tasks.length > 0 ? (
                                   <ul className="space-y-2">
                                     {volunteer.tasks.map((task, idx) => (
-                                      <li key={idx} className="border p-2 rounded flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                                      <li
+                                        key={idx}
+                                        className="border p-2 rounded flex flex-col sm:flex-row sm:items-center sm:justify-between"
+                                      >
                                         <div>
-                                          <p className="font-semibold">Task:</p>
+                                          <p className="font-semibold">
+                                            Task:
+                                          </p>
                                           <p>{task.description}</p>
                                           <p className="text-sm italic">
                                             {task.status === "completed"
                                               ? "Task Completed"
                                               : task.proofSubmitted
-                                                ? "Proof Submitted"
-                                                : "Pending"}
+                                              ? "Proof Submitted"
+                                              : "Pending"}
                                           </p>
                                         </div>
                                         <div className="flex gap-2 mt-2 sm:mt-0">
                                           {task.proofSubmitted && (
-                                            <button onClick={() => openReviewModal(task)} className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-2 rounded text-xs">
-                                              {task.status === "completed" ? "View Task Proof" : "Review Task Proof"}
+                                            <button
+                                              onClick={() => openReviewModal(task)}
+                                              className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-2 rounded text-xs"
+                                            >
+                                              {task.status === "completed"
+                                                ? "View Task Proof"
+                                                : "Review Task Proof"}
                                             </button>
                                           )}
-                                          <button onClick={() => openTaskUpdatesModal(task)} className="bg-gray-600 hover:bg-gray-700 text-white py-1 px-2 rounded text-xs">
+                                          <button
+                                            onClick={() => openTaskUpdatesModal(task)}
+                                            className="bg-gray-600 hover:bg-gray-700 text-white py-1 px-2 rounded text-xs"
+                                          >
                                             View Task Updates
                                           </button>
                                         </div>
@@ -663,12 +762,17 @@ function EventOrganiser() {
                                     ))}
                                   </ul>
                                 ) : (
-                                  <p className="text-gray-500 text-sm">No tasks assigned.</p>
+                                  <p className="text-gray-500 text-sm">
+                                    No tasks assigned.
+                                  </p>
                                 )}
                               </div>
                             )}
                             {/* Single Assign Task Button per volunteer */}
-                            <button onClick={() => openTaskModal(volunteer)} className="mt-2 bg-purple-600 hover:bg-purple-700 text-white py-1 px-2 rounded text-xs">
+                            <button
+                              onClick={() => openTaskModal(volunteer)}
+                              className="mt-2 bg-purple-600 hover:bg-purple-700 text-white py-1 px-2 rounded text-xs"
+                            >
                               Assign Task
                             </button>
                           </li>
@@ -676,7 +780,9 @@ function EventOrganiser() {
                       </ul>
                     </div>
                   ) : (
-                    <p className="text-gray-500 text-sm">No registrations for this position yet.</p>
+                    <p className="text-gray-500 text-sm">
+                      No registrations for this position yet.
+                    </p>
                   )}
                 </div>
               )}
@@ -684,62 +790,90 @@ function EventOrganiser() {
           ))}
         </div>
       )}
-      <p className="text-gray-500 mt-4 text-sm">Created by: {event.createdBy?.name || "Unknown"}</p>
-      <div className="mt-6">
-        {/* If event.isSummaryPublished is true, disable the button and change the text */}
+
+      <p className="text-gray-500 mt-4 text-sm">
+        Created by: {event.createdBy?.name || "Unknown"}
+      </p>
+
+      {/* Buttons for Summary and Update Event */}
+      <div className="mt-6 flex gap-4">
+        {/* Submit Event Summary Button */}
         <button
           onClick={() => setShowSummaryForm(true)}
           disabled={event.isSummaryPublished} // Disables if summary is published
-          className={`py-2 px-4 rounded text-white transition-colors ${event.isSummaryPublished
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-yellow-600 hover:bg-yellow-700"
-            }`}
+          className={`py-2 px-4 rounded text-white transition-colors ${
+            event.isSummaryPublished
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-yellow-600 hover:bg-yellow-700"
+          }`}
         >
-          {event.isSummaryPublished ? "Summary Already Published" : "Submit Event Summary"}
+          {event.isSummaryPublished
+            ? "Summary Already Published"
+            : "Submit Event Summary"}
+        </button>
+
+        {/* New: Update Event Details Button */}
+        <button
+          onClick={() => navigate(`/update-event/${slug}`)}
+          className="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+        >
+          Update Event Details
         </button>
       </div>
+
       {/* Task Assignment Modal */}
       {showTaskModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-md">
-            <h2 className="text-xl font-bold mb-4">Assign Tasks for {selectedVolunteer && selectedVolunteer.name}</h2>
+            <h2 className="text-xl font-bold mb-4">
+              Assign Tasks for {selectedVolunteer && selectedVolunteer.name}
+            </h2>
             {taskInputs.map((task, index) => (
-              <input key={index} type="text" value={task} onChange={(e) => handleTaskInputChange(index, e.target.value)} placeholder="Enter task description" className="w-full mb-2 p-2 border rounded" />
+              <input
+                key={index}
+                type="text"
+                value={task}
+                onChange={(e) => handleTaskInputChange(index, e.target.value)}
+                placeholder="Enter task description"
+                className="w-full mb-2 p-2 border rounded"
+              />
             ))}
-            <button onClick={addTaskField} className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-2 rounded text-sm mb-4">
+            <button
+              onClick={addTaskField}
+              className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-2 rounded text-sm mb-4"
+            >
               Add Another Task
             </button>
             <div className="flex gap-4">
-              <button onClick={handleAssignTasks} className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg" disabled={assignLoading}>
+              <button
+                onClick={handleAssignTasks}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg"
+                disabled={assignLoading}
+              >
                 {assignLoading ? "Assigning..." : "Assign Tasks"}
               </button>
-              <button onClick={closeTaskModal} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg">
+              <button
+                onClick={closeTaskModal}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg"
+              >
                 Cancel
               </button>
             </div>
           </div>
         </div>
       )}
+
       {/* Event Summary Form Modal */}
       {showSummaryForm && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          {/* 
-      Modal Container:
-      - max-w-md: limit width
-      - max-h-[80vh]: limit height
-      - overflow-y-auto: scroll if content exceeds 80% of viewport
-    */}
           <div className="relative bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-md max-h-[80vh] overflow-y-auto">
-            {/* Close Button in Top-Right */}
             <button
               onClick={() => setShowSummaryForm(false)}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
             >
               ✖
             </button>
-
             <h2 className="text-xl font-bold mb-4">Submit Event Summary</h2>
-
             {event.volunteeringPositions && event.volunteeringPositions.length > 0 && (
               <div className="mb-4">
                 <h3 className="text-lg font-semibold mb-2">Volunteering Positions</h3>
@@ -752,10 +886,11 @@ function EventOrganiser() {
                 </ul>
               </div>
             )}
-
             <form onSubmit={handleSubmitSummary} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Event Name</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Event Name
+                </label>
                 <input
                   type="text"
                   name="eventName"
@@ -767,7 +902,9 @@ function EventOrganiser() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Location</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Location
+                </label>
                 <input
                   type="text"
                   name="location"
@@ -780,7 +917,9 @@ function EventOrganiser() {
 
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700">Start Date</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Start Date
+                  </label>
                   <input
                     type="date"
                     name="startDate"
@@ -791,7 +930,9 @@ function EventOrganiser() {
                   />
                 </div>
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700">End Date</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    End Date
+                  </label>
                   <input
                     type="date"
                     name="endDate"
@@ -804,7 +945,9 @@ function EventOrganiser() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Volunteers Registered</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Volunteers Registered
+                </label>
                 <input
                   type="number"
                   name="volunteersRegistered"
@@ -818,7 +961,9 @@ function EventOrganiser() {
 
               {/* File Upload Section */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Upload File (Optional)</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Upload File (Optional)
+                </label>
                 <div className="flex items-center gap-2 mt-1">
                   <input type="file" onChange={handleFileChange} className="block w-full" />
                   <button
@@ -831,9 +976,10 @@ function EventOrganiser() {
                   </button>
                 </div>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700">Upload Event Images (Optional)</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Upload Event Images (Optional)
+                </label>
                 <div className="flex items-center gap-2 mt-1">
                   <input type="file" multiple onChange={handleImagesChange} className="block w-full" />
                   <button
@@ -846,9 +992,10 @@ function EventOrganiser() {
                   </button>
                 </div>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700">How was the feel of the event?</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  How was the feel of the event?
+                </label>
                 <textarea
                   name="organizerFeel"
                   value={summaryData.organizerFeel}
@@ -858,9 +1005,10 @@ function EventOrganiser() {
                   required
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700">Did you enjoy organising the event?</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Did you enjoy organising the event?
+                </label>
                 <textarea
                   name="organizerEnjoyment"
                   value={summaryData.organizerEnjoyment}
@@ -870,7 +1018,6 @@ function EventOrganiser() {
                   required
                 />
               </div>
-
               <div className="flex gap-4">
                 <button
                   type="submit"
@@ -912,7 +1059,12 @@ function EventOrganiser() {
                 <p className="font-semibold mb-2">Proof Images:</p>
                 <div className="flex flex-wrap gap-2">
                   {reviewTask.proofImages.map((img, idx) => (
-                    <img key={idx} src={img} alt={`Proof ${idx + 1}`} className="w-20 h-20 object-cover rounded" />
+                    <img
+                      key={idx}
+                      src={img}
+                      alt={`Proof ${idx + 1}`}
+                      className="w-20 h-20 object-cover rounded"
+                    />
                   ))}
                 </div>
               </div>
@@ -920,21 +1072,31 @@ function EventOrganiser() {
             <div className="flex gap-4">
               {reviewTask.status !== "completed" ? (
                 <>
-                  <button onClick={handleApproveProof} className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">
+                  <button
+                    onClick={handleApproveProof}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg"
+                  >
                     Approve
                   </button>
-                  <button onClick={handleRejectProof} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">
+                  <button
+                    onClick={handleRejectProof}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg"
+                  >
                     Reject
                   </button>
                 </>
               ) : null}
-              <button onClick={() => setShowReviewModal(false)} className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg">
+              <button
+                onClick={() => setShowReviewModal(false)}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg"
+              >
                 Close
               </button>
             </div>
           </div>
         </div>
       )}
+
       {/* Task Updates Modal */}
       {showTaskUpdatesModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -950,19 +1112,25 @@ function EventOrganiser() {
                   <li key={idx} className="p-3 border rounded">
                     <p className="font-semibold">{update.title}</p>
                     <p>{update.content}</p>
-                    <p className="text-xs text-gray-500">{new Date(update.createdAt).toLocaleDateString()}</p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(update.createdAt).toLocaleDateString()}
+                    </p>
                   </li>
                 ))}
               </ul>
             ) : (
               <p className="text-gray-500">No updates found for this task.</p>
             )}
-            <button onClick={() => setShowTaskUpdatesModal(false)} className="mt-4 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded">
+            <button
+              onClick={() => setShowTaskUpdatesModal(false)}
+              className="mt-4 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded"
+            >
               Close
             </button>
           </div>
         </div>
       )}
+
       <ToastContainer />
       <style jsx global>{`
         .goog-te-combo {

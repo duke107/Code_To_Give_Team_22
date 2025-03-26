@@ -41,6 +41,7 @@ import AccessibilityMenu from './components/AccessibilityMenu'
 import CityDetails from './components/CityDetails'
 import EventSummaryDetail from './components/EventSummaryDetail'
 import EventSummariesList from './components/EventSummariesList'
+import UpdateEvent from './pages/UpdateEvent'
 
 function App() {
   const dispatch = useDispatch();
@@ -98,6 +99,7 @@ function App() {
           />
           <Route path="/change-details" element={<ChangeDetails />} />
           <Route path="/create" element={<CreateEvent />} />
+          <Route path="/update-event/:slug" element={<UpdateEvent />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/stories/:id" element={<FullStory />} />
           <Route

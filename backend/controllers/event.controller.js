@@ -102,6 +102,77 @@ export const createEvent = async (req, res) => {
 };
 
 
+
+export const updateEvent = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const {
+      title,
+      content,
+      image,
+      category,
+      eventLocation,
+      eventStartDate,
+      eventEndDate,
+      volunteeringPositions,
+    } = req.body;
+
+    // Find the existing event
+    let event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: "Event not found." });
+    }
+
+    // Update basic fields if provided
+    if (title) event.title = title;
+    if (content) event.content = content;
+    if (image) event.image = image;
+    if (category) event.category = category;
+    if (eventLocation) event.eventLocation = eventLocation;
+    if (eventStartDate) event.eventStartDate = new Date(eventStartDate);
+    if (eventEndDate) event.eventEndDate = new Date(eventEndDate);
+
+    // Update volunteering positions if provided
+    // We'll preserve old 'registeredUsers' if the position's title is the same
+    if (Array.isArray(volunteeringPositions)) {
+      // Build a map of old positions by title for quick lookup
+      const oldPositionsMap = {};
+      event.volunteeringPositions.forEach((oldPos) => {
+        oldPositionsMap[oldPos.title] = oldPos.registeredUsers;
+      });
+
+      // Construct a new array of positions
+      const updatedPositions = volunteeringPositions.map((newPos) => {
+        const oldRegistered =
+          oldPositionsMap[newPos.title] || []; // preserve old users if title matches
+        return {
+          title: newPos.title,
+          slots: Number(newPos.slots) || 0,
+          whatsappGroupLink: newPos.whatsappGroupLink || "",
+          // Keep old registeredUsers if found, else empty
+          registeredUsers: oldRegistered,
+        };
+      });
+
+      event.volunteeringPositions = updatedPositions;
+    }
+
+    // Save updated event
+    await event.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Event updated successfully",
+      event,
+    });
+  } catch (error) {
+    console.error("Error updating event:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
 export const getEventBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
@@ -159,27 +230,7 @@ export const getEventBySlug = async (req, res) => {
   }
 };
 
-// Update an existing event by ID
-export const updateEvent = async (req, res) => {
-  try {
-    const { eventId } = req.params;
-    const updateData = req.body;
 
-    const event = await Event.findByIdAndUpdate(eventId, updateData, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!event) {
-      return res.status(404).json({ message: "Event not found" });
-    }
-
-    return res.status(200).json(event);
-  } catch (error) {
-    console.error("Error updating event:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
 
 // Delete an event by ID
 export const deleteEvent = async (req, res) => {
