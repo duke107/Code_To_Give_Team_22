@@ -10,10 +10,10 @@ import crypto from "crypto"
 export const register = async (req, res) => {
     try {
         // Destructure location along with other fields
-        let { name, email, password, location } = req.body;
+        let { name, email, password, location, category } = req.body;
         
         // Validate all required fields including location
-        if (!name || !email || !password || !location) {
+        if (!name || !email || !password || !location || !category) {
             return res.status(400).json({ msg: "Please fill in all fields, including location" });
         }
         
@@ -30,7 +30,7 @@ export const register = async (req, res) => {
         
         const hashedPassword = await bcrypt.hash(password, 10);
         // Include location when creating the new user
-        const user = await User.create({ name, email, password: hashedPassword, location });
+        const user = await User.create({ name, email, password: hashedPassword, location, category });
         
         const verificationCode = await user.generateVerificationCode();
         await user.save();
