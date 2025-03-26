@@ -552,18 +552,20 @@ const Event = () => {
           </div>
 
           {/* Feedback / Testimonial Buttons */}
-          <button
+          {hasEventEnded(event) && <button
             onClick={openFeedbackModal}
             className="w-full mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-xl transition-all shadow-md hover:shadow-lg"
           >
             Give Feedback
           </button>
-          <button
+          }
+          {hasEventEnded(event) && <button
             onClick={openTestimonialModal}
             className="w-full mt-4 bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition-all shadow-md hover:shadow-lg"
           >
             Leave a Testimonial
           </button>
+          } 
         </>
       )}
 

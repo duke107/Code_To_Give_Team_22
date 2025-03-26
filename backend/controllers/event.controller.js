@@ -923,3 +923,12 @@ export const getTaskUpdates = async (req, res) => {
   }
 };
 
+export const getUserRegisteredEvents = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).populate("events.eventId");
+    const registeredEvents = user.events.map((e) => e.eventId);
+    res.json(registeredEvents);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching registered events" });
+  }
+};
