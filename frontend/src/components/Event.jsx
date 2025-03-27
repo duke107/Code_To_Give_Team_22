@@ -56,6 +56,7 @@ const Event = () => {
   const textAreaRef = useRef();
   const state = useSelector((state) => state.auth);
 
+
   // Helper: Check if event has ended
   const hasEventEnded = (event) => {
     return new Date(event.eventEndDate) < Date.now();
@@ -635,13 +636,16 @@ const Event = () => {
               <label className="block text-gray-700 font-semibold mb-1">
                 Completion Message
               </label>
-              <textarea
+              <div className="relative">
+                <textarea
+                  ref={textAreaRef}
                 value={proofMessage}
                 onChange={(e) => setProofMessage(e.target.value)}
-                className="w-full border rounded p-2"
+                className="w-full border rounded p-2 min-h-[120px]"
                 rows="3"
                 placeholder="Enter a message regarding your task completion..."
-              ></textarea>
+                /><SpeechToText textAreaRef={textAreaRef} setText={setProofMessage} left="10px" bottom="10px"/>
+                </div>
             </div>
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-1">

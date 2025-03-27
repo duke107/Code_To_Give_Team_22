@@ -22,7 +22,7 @@ const options = {
 
 const AboutGraph = () => {
   return (
-    <div className="relative w-3/4 mx-auto my-12">
+    <div className="relative w-full max-w-5xl mx-auto my-12"> {/* Increased width */}
       <Bar data={data} options={options} />
     </div>
   );
