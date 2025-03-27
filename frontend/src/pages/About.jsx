@@ -20,7 +20,6 @@ const About = () => {
       <AboutPeople />
       <AboutStats />
       <AboutGraph />
-      <AboutSlideshow images={slideshowImages} slideDuration={6000} />
     </div>
   );
 };

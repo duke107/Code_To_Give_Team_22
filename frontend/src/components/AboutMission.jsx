@@ -26,7 +26,7 @@ const AboutMission = () => {
             Our Mission
           </h3>
           <p className="text-gray-700 text-lg leading-relaxed mb-6 text-justify">
-            To empower individuals with disabilities, promote inclusive education, and foster sustainable livelihoods through innovative initiatives. We strive to create a world where everyone has theopportunity to reach their full potential. We are dedicated to fostering a supportive and inclusive environment where every person feels valued, respected, and empowered to achieve their goals. Our commitment extends to breaking down barriers, challenging stereotypes, and advocating for the rights of individuals with disabilities.
+            To empower individuals with disabilities, promote inclusive education, and foster sustainable livelihoods through innovative initiatives. We strive to create a world where everyone has the opportunity to reach their full potential. We are dedicated to fostering a supportive and inclusive environment where every person feels valued, respected, and empowered to achieve their goals. Our commitment extends to breaking down barriers, challenging stereotypes, and advocating for the rights of individuals with disabilities.
           </p>
           <h3 className="text-2xl font-semibold text-blue-700 mb-4 flex items-center justify-center gap-2">
             <svg

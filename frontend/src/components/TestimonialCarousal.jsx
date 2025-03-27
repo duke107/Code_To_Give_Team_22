@@ -67,13 +67,13 @@ const TestimonialCarousel = ({ testimonials }) => {
 
             {/* Testimonial Text */}
             <p className="text-gray-600 text-center mt-3">
-              {t.testimonial.split(" ").slice(0, 40).join(" ")}...
+              {t.testimonial.split(" ").slice(0, 60).join(" ")}...
             </p>
 
             {/* Read More Button */}
-            <button onClick={() => setSelectedTestimonial(t)} className="mt-3 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+            {/* <button onClick={() => setSelectedTestimonial(t)} className="mt-3 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
               Read More
-            </button>
+            </button> */}
           </div>
         ))}
       </Slider>

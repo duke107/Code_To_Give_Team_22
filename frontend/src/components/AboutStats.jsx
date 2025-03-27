@@ -1,11 +1,11 @@
 import React from "react";
 import CountUp from "react-countup";
-import { FaUsers, FaTree, FaHandsHelping, FaCalendarAlt } from "react-icons/fa"; // Icons
+import { FaUsers, FaTree, FaHandsHelping, FaCalendarAlt, FaPeopleCarry } from "react-icons/fa"; // Icons
 
 const stats = [
-  { label: "Students Helped", value: 5000, icon: FaUsers },
+  { label: "Students Helped", value: 34000, icon: FaUsers },
   { label: "Trees Planted", value: 12000, icon: FaTree },
-  { label: "Volunteers", value: 3000, icon: FaHandsHelping },
+  { label: "Volunteers", value: 18000, icon: FaHandsHelping },
   { label: "Events Conducted", value: 700, icon: FaCalendarAlt },
 ];
 

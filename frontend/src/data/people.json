@@ -10,14 +10,29 @@
     "id": 2,
     "name": "Late Sugur Paramashivaiah Nagesh",
     "title": "Founder Trustee",
-    "image": "/assets/team/SPN.jpg",
+    "image": "/people/SPN.png",
     "bio": "SP Nagesh is the Co-founder of Samarthanam Trust and Founder President for Cricket Association for the Blind in India (CABI).He was the major driving force behind initiating blind cricket and improved the skilling and livelihood training programmes at Samarthanam with his fundraising skills. His legacy to cricket for the blind and his contributions to the growth story of blind cricket will not be forgotten."
   },
   {
     "id": 3,
     "name": "Vasanti Savanur",
     "title": "Trustee",
-    "image": "/assets/team/VS.jpg",
+    "image": "/people/VS.jpg",
     "bio": "Vasanti Savanur is the Trustee of Samarthanam Trust. An educationalist by profession, Vasanti has been instrumental in inspiring students with disabilities to excel in their chosen fields of academics.Vasanti also  Sunadha, the cultural wing of Samarthanam"
+  },
+  {
+    "id": 4,
+    "name": "Uday Kumar Y Bagunavar",
+    "title": "Trustee",
+    "image": "/people/UKYB.jpg",
+    "bio": "Uday Kumar is the Trustee of Samarthanam Trust who is also a passionate sportsperson.Under his leadership, Samarthanam LRCs( Livelihood Resource Centre ) are up and operational in Dharwad, Belgaum and Bellary which are pivotal for the disabled communities in North Karnataka."
+  },
+  {
+    "id": 5,
+    "name": "Buse Gowda S",
+    "title": "Trustee",
+    "image": "/people/BGS.jpg",
+    "bio": "Buse Gowda is the Trustee of Samarthanam Trust who is also a professional classical dancer.He joined Samarthanam Board of Trustees in 2016 to support the organization with his expertise in arts and sports."
   }
+
 ]

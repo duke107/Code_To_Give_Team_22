@@ -72,15 +72,6 @@ function Footer() {
               <FaTwitter size={20} />
             </a>
             <a 
-              href="https://api.whatsapp.com/send?phone=919449864687" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-white hover:text-green-400" 
-              aria-label="WhatsApp"
-            >
-              <FaWhatsapp size={20} />
-            </a>
-            <a 
               href="https://www.linkedin.com/company/samarthanam-trust/" 
               target="_blank" 
               rel="noopener noreferrer"

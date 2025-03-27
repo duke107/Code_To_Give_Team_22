@@ -22,7 +22,7 @@ const AboutSlideshow = ({ images, slideDuration = 5000 }) => {
       marginBottom: '80px' // Space before footer
     }}>
       <div style={{
-        maxWidth: '1200px', // Constrain content width
+        maxWidth: '1800px', // Constrain content width
         margin: '0 auto', // Center content
         padding: '0 20px' // Side padding
       }}>
