@@ -56,7 +56,7 @@ const CityDetails = () => {
           className={`px-4 py-2 rounded ${activeSection === "users" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
           onClick={() => setActiveSection("users")}
         >
-          Users
+          Volunteers
         </button>
         <button
           className={`px-4 py-2 rounded ${activeSection === "organizers" ? "bg-blue-500 text-white" : "bg-gray-200"}`}

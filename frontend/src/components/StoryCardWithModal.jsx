@@ -84,7 +84,6 @@ const StoryCardWithModal = ({ event }) => {
                   ? event.volunteeringPositions.map((user) => `${user.title} (${user.slots})`).join(", ")
                   : "N/A"}
               </p>
-              <p className="text-gray-600 mt-2"><strong>Registered Volunteers:</strong> {event.registeredVolunteers.length > 0 ? event.registeredVolunteers.length : "0"}</p>
               <div className="flex justify-end mt-4">
                 <button
                   onClick={() => setIsModalOpen(false)}

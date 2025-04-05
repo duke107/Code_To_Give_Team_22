@@ -12,7 +12,7 @@ const UserCard = ({ user, onShowDetails }) => (
     {/* User Info */}
     <div className="ml-4 flex-1">
       <h3 className="text-lg font-semibold">{user.name}</h3>
-      <p className="text-sm text-gray-600">{user.role}</p>
+      <p className="text-sm text-gray-600">{user.role === "User" ? "Volunteer" : user.role === "Event Organiser" ? "Event Organizer" : user.role}</p>
     </div>
 
     {/* Show Details Button */}
