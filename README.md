@@ -4,6 +4,11 @@
 
 A **community-driven accessibility-first platform** designed to streamline **volunteer management, event coordination, and fundraising** for **Samarthanam Trust**. Our project enhances inclusivity, simplifies event participation, and fosters collaboration between volunteers, event organizers, and administrators.
 
+## 🎥 Demo Video
+
+👉 [Click here to watch the full demo](https://www.youtube.com/watch?v=167SYqkb820&t=3s)  
+
+
 ## ✨ Features
 
 ### 🏠 Public Landing Page
